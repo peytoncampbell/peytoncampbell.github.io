@@ -14,20 +14,20 @@ export default function About() {
             Meet Peyton
           </h2>
           <p className="mt-6 leading-relaxed text-muted">
-            I&apos;m a full-stack developer and AI engineer based in Canada.
-            I studied Computer Science at Western University and earned an
+            Full Stack Developer at OES (Ontario Educational Services) in
+            London, ON. Computer Science degree from Western University,
             AI &amp; Machine Learning certification from Fanshawe College.
           </p>
           <p className="mt-4 leading-relaxed text-muted">
-            As a former varsity athlete, I bring the same discipline,
-            competitiveness, and relentless work ethic to engineering. I
-            don&apos;t ship half-baked solutions — I build systems that
-            work, scale, and deliver real results.
+            Former varsity basketball player — I bring the same intensity,
+            discipline, and competitive drive to every system I build.
+            I don&apos;t do half-measures. If it ships, it works.
           </p>
           <p className="mt-4 leading-relaxed text-muted">
-            Campbell Solutions is where that all comes together: deep
-            technical skill applied to real business problems, with AI at
-            the core.
+            I&apos;m pivoting into tech consulting because I&apos;ve seen
+            firsthand how much value AI automation creates. Campbell
+            Solutions is where deep technical skill meets real business
+            problems — no fluff, just results.
           </p>
         </div>
       </div>

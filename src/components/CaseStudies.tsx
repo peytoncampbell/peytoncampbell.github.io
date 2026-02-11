@@ -1,18 +1,18 @@
 const cases = [
   {
-    title: "Automated Job Application System",
-    desc: "End-to-end automation that navigates ATS platforms, tailors resumes per role, and submits applications at scale.",
-    metrics: ["50+ applications/week", "ATS navigation", "Resume tailoring"],
+    title: "AI-Powered Job Application System",
+    desc: "Fully autonomous pipeline that navigates ATS platforms — Workday, Greenhouse, Lever, Avature, Taleo, iCIMS — tailors resumes with AI, and submits applications at scale with human-level accuracy.",
+    metrics: ["6 ATS platforms", "AI resume tailoring", "Fully autonomous"],
   },
   {
-    title: "Prediction Market Trading Bot",
-    desc: "Real-time market analysis engine that identifies opportunities, calculates edge, and manages positions autonomously.",
-    metrics: ["Real-time analysis", "60%+ accuracy", "Automated trading"],
+    title: "BTC Trading Bot",
+    desc: "ML-powered trading engine running RandomForest and XGBoost models across 15+ strategies. Ingests real-time multi-source market data and executes trades autonomously 24/7.",
+    metrics: ["28,000+ trades", "15+ strategies", "ML-powered"],
   },
   {
-    title: "Intelligent Personal Assistant",
-    desc: "Multi-platform AI agent with persistent memory, calendar management, proactive monitoring, and cross-app orchestration.",
-    metrics: ["Multi-platform", "Persistent memory", "Proactive alerts"],
+    title: "AI Personal Assistant",
+    desc: "Multi-platform agent deployed across Telegram, Discord, and Signal with persistent memory, cron scheduling, proactive monitoring, and full browser automation for complex tasks.",
+    metrics: ["3 platforms", "Persistent memory", "Browser automation"],
   },
 ];
 

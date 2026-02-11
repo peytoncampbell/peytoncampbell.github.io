@@ -100,7 +100,7 @@ export default function Contact() {
         {/* Social links */}
         <div className="mt-12 flex items-center justify-center gap-6">
           <a
-            href="https://github.com"
+            href="https://github.com/peytoncampbell"
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-muted transition-colors hover:text-foreground"
@@ -109,7 +109,7 @@ export default function Contact() {
           </a>
           <span className="text-card-border">•</span>
           <a
-            href="https://linkedin.com"
+            href="https://linkedin.com/in/peytoncampbell"
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-muted transition-colors hover:text-foreground"
