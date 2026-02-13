@@ -11,8 +11,9 @@ import {
   Menu,
   X,
   CalendarClock,
+  Star,
 } from 'lucide-react';
-import { NAV_LINKS, HERO, EXPERIENCE, PROJECTS, EDUCATION, SCOUTING_REPORT, HIGHLIGHTS } from './data';
+import { NAV_LINKS, HERO, EXPERIENCE, PROJECTS, EDUCATION, SCOUTING_REPORT, HIGHLIGHTS, TECH_STACK, BUILDING_NOW, SKILLS } from './data';
 import LiveTicker from './LiveTicker';
 import RadarChart from './RadarChart';
 import clsx from 'clsx';
@@ -94,6 +95,8 @@ export default function App() {
   };
 
   const filteredProjects = projectFilter === 'All' ? PROJECTS : PROJECTS.filter((p) => p.category === projectFilter);
+  const featuredProject = PROJECTS.find((p) => p.featured);
+  const nonFeaturedFiltered = filteredProjects.filter((p) => !p.featured);
 
   return (
     <div className="min-h-screen text-slate-300 selection:bg-blue-500/30">
@@ -128,7 +131,6 @@ export default function App() {
             </a>
           </div>
 
-          {/* Mobile Menu Button */}
           <button
             className="md:hidden text-white p-2"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -194,10 +196,10 @@ export default function App() {
 
               <motion.div variants={fadeInUp} className="flex items-center gap-4 flex-wrap">
                 <a
-                  href="#projects"
+                  href="#dashboard"
                   className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-all flex items-center gap-2 shadow-lg shadow-blue-600/20"
                 >
-                  See Latest Work <ArrowRight size={18} />
+                  See Live Dashboard <ArrowRight size={18} />
                 </a>
                 <a
                   href={`${import.meta.env.BASE_URL}PeytonCampbellResume.pdf`}
@@ -276,6 +278,84 @@ export default function App() {
         </div>
       </section>
 
+      {/* Live Dashboard Preview */}
+      <section className="py-20 bg-slate-950 relative overflow-hidden" id="dashboard">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute w-[600px] h-[600px] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-blue-600/10 via-transparent to-amber-500/10 blur-3xl" />
+        </div>
+        <div className="container mx-auto px-6 relative z-10">
+          <SectionHeading>Live Trading Dashboard</SectionHeading>
+          <p className="text-slate-400 text-lg mb-8 max-w-2xl -mt-6">
+            The crown jewel — a real-time performance dashboard for my autonomous BTC trading bot. Live P&L, strategy breakdowns, regime detection, and 62K+ trade history.
+          </p>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="relative rounded-2xl overflow-hidden border border-slate-700/50 shadow-2xl shadow-blue-900/20 bg-slate-900/50"
+          >
+            <div className="absolute top-0 left-0 right-0 h-10 bg-slate-900/90 backdrop-blur-sm border-b border-slate-800 flex items-center px-4 gap-2 z-10">
+              <div className="w-3 h-3 rounded-full bg-red-500/80" />
+              <div className="w-3 h-3 rounded-full bg-amber-500/80" />
+              <div className="w-3 h-3 rounded-full bg-green-500/80" />
+              <span className="ml-3 text-xs text-slate-500 font-mono">btc-dashboard-amber.vercel.app</span>
+            </div>
+            <div className="pt-10">
+              <iframe
+                src="https://btc-dashboard-amber.vercel.app"
+                title="BTC Trading Dashboard"
+                className="w-full h-[500px] md:h-[600px] border-0"
+                loading="lazy"
+              />
+            </div>
+          </motion.div>
+          <div className="mt-6 flex justify-center">
+            <a
+              href="https://btc-dashboard-amber.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-3 px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:brightness-110 text-white font-bold rounded-full transition-all shadow-lg shadow-blue-600/20"
+            >
+              <ExternalLink size={18} />
+              View Live Dashboard
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* What I'm Building Now */}
+      <section className="py-16 bg-slate-950/80 border-y border-slate-900">
+        <div className="container mx-auto px-6">
+          <SectionHeading>What I'm Building Now</SectionHeading>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {BUILDING_NOW.map((item, idx) => (
+              <motion.div
+                key={item.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.1 }}
+                className="glass rounded-xl p-6 border border-slate-800/80 hover:border-blue-500/30 transition-all group"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <item.icon className="text-blue-400" size={22} />
+                  <span className={clsx(
+                    'text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wider',
+                    item.statusColor === 'green' && 'bg-green-900/40 text-green-400 border border-green-800/50',
+                    item.statusColor === 'amber' && 'bg-amber-900/40 text-amber-400 border border-amber-800/50',
+                    item.statusColor === 'blue' && 'bg-blue-900/40 text-blue-400 border border-blue-800/50',
+                  )}>
+                    {item.status}
+                  </span>
+                </div>
+                <h3 className="text-white font-bold text-lg mb-1 group-hover:text-blue-400 transition-colors">{item.name}</h3>
+                <p className="text-slate-400 text-sm">{item.detail}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Scouting Report (Radar Chart) */}
       <section className="py-12 bg-slate-950/50 border-y border-slate-900">
         <div className="container mx-auto px-6">
@@ -299,7 +379,15 @@ export default function App() {
                 </li>
                 <li className="flex items-center gap-3">
                   <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                  <strong>Leadership:</strong> Agile Team Lead, Mentorship
+                  <strong>ML / AI:</strong> 23 strategies, regime detection, NLP
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="w-2 h-2 bg-amber-500 rounded-full"></span>
+                  <strong>Trading Systems:</strong> 62K+ autonomous trades
+                </li>
+                <li className="flex items-center gap-3">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                  <strong>Leadership:</strong> Agile, Consulting, Mentorship
                 </li>
               </ul>
             </div>
@@ -310,6 +398,76 @@ export default function App() {
                 <RadarChart data={SCOUTING_REPORT} size={window.innerWidth < 768 ? 320 : 400} />
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Skills */}
+      <section className="py-16 bg-slate-950">
+        <div className="container mx-auto px-6">
+          <SectionHeading>Core Skills</SectionHeading>
+          <div className="grid gap-6 md:grid-cols-3">
+            {SKILLS.map((skill, idx) => (
+              <motion.div
+                key={skill.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.1 }}
+                className="glass rounded-xl p-6 border border-slate-800/80 hover:border-blue-500/30 transition-all"
+              >
+                <skill.icon className="text-blue-400 mb-4" size={28} />
+                <h3 className="text-xl font-bold text-white mb-2">{skill.title}</h3>
+                <p className="text-slate-400 text-sm mb-4">{skill.copy}</p>
+                <div className="flex flex-wrap gap-2">
+                  {skill.tags.map((tag) => (
+                    <span key={tag} className="text-xs bg-slate-800/80 text-slate-300 px-2 py-1 rounded-full border border-slate-700/50">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Tech Stack */}
+      <section className="py-16 bg-slate-950/80 border-y border-slate-900">
+        <div className="container mx-auto px-6">
+          <SectionHeading>Tech Stack</SectionHeading>
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={staggerContainer}
+            className="flex flex-wrap gap-3 justify-center"
+          >
+            {TECH_STACK.map((tech) => (
+              <motion.span
+                key={tech.name}
+                variants={fadeInUp}
+                className={clsx(
+                  'px-4 py-2 rounded-full text-sm font-semibold border backdrop-blur-sm transition-all hover:scale-105 cursor-default',
+                  tech.category === 'Languages' && 'bg-blue-900/30 border-blue-700/50 text-blue-300',
+                  tech.category === 'Frontend' && 'bg-cyan-900/30 border-cyan-700/50 text-cyan-300',
+                  tech.category === 'ML/AI' && 'bg-purple-900/30 border-purple-700/50 text-purple-300',
+                  tech.category === 'Trading' && 'bg-amber-900/30 border-amber-700/50 text-amber-300',
+                  tech.category === 'Infrastructure' && 'bg-green-900/30 border-green-700/50 text-green-300',
+                  tech.category === 'Tools' && 'bg-slate-800/50 border-slate-600/50 text-slate-300',
+                )}
+              >
+                {tech.name}
+              </motion.span>
+            ))}
+          </motion.div>
+          <div className="flex justify-center gap-6 mt-6 text-xs text-slate-500 flex-wrap">
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500" /> Languages</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-cyan-500" /> Frontend</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-purple-500" /> ML/AI</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" /> Trading</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> Infrastructure</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-slate-400" /> Tools</span>
           </div>
         </div>
       </section>
@@ -337,9 +495,67 @@ export default function App() {
             </div>
           </div>
 
+          {/* Featured Project - Full Width */}
+          {featuredProject && (projectFilter === 'All' || projectFilter === featuredProject.category) && (
+            <motion.div
+              layout
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mb-8 glass rounded-2xl overflow-hidden border-2 border-amber-500/40 hover:border-amber-400/60 transition-all relative"
+            >
+              <div className="absolute top-4 right-4 z-10">
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-200 uppercase tracking-wider bg-amber-500/20 border border-amber-500/40 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                  <Star size={12} className="fill-amber-400 text-amber-400" />
+                  Featured
+                </span>
+              </div>
+              <div className="p-8 md:p-10">
+                <div className="flex flex-col md:flex-row md:items-start gap-8">
+                  <div className="flex-1">
+                    <span className="text-xs font-bold text-blue-400 uppercase tracking-wider border border-blue-900/50 bg-blue-900/20 px-2 py-1 rounded">
+                      {featuredProject.category}
+                    </span>
+                    <h3 className="text-2xl md:text-3xl font-bold text-white mt-3 mb-1">{featuredProject.title}</h3>
+                    <p className="text-xs text-amber-300 font-semibold mb-3">{featuredProject.role}</p>
+                    <p className="text-slate-300 text-base mb-6 max-w-2xl">{featuredProject.description}</p>
+                    <div className="flex flex-wrap gap-2 mb-6">
+                      {featuredProject.tech.map((t) => (
+                        <span key={t} className="text-xs bg-slate-800/80 text-slate-300 px-3 py-1 rounded-full border border-slate-700/50">
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                    {featuredProject.cta?.url && (
+                      <a
+                        href={featuredProject.cta.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center text-sm font-bold px-6 py-3 rounded-full bg-gradient-to-r from-amber-500 to-amber-400 text-slate-950 hover:brightness-110 transition-all"
+                      >
+                        {featuredProject.cta.label} <ChevronRight size={16} className="ml-1" />
+                      </a>
+                    )}
+                  </div>
+                  <div className="flex-shrink-0">
+                    {featuredProject.metrics && (
+                      <ul className="space-y-2 text-sm text-slate-200">
+                        {featuredProject.metrics.map((metric: string, idx: number) => (
+                          <li key={idx} className="flex items-start gap-2">
+                            <span className="mt-1 w-2 h-2 rounded-full bg-amber-400 flex-shrink-0" />
+                            <span className="font-semibold">{metric}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <AnimatePresence>
-              {filteredProjects.map((project) => (
+              {nonFeaturedFiltered.map((project) => (
                 <motion.div
                   layout
                   key={project.id}
@@ -410,6 +626,34 @@ export default function App() {
         </div>
       </section>
 
+      {/* Campbell Solutions Callout */}
+      <section className="py-12 bg-slate-950/60">
+        <div className="container mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="glass rounded-2xl p-8 md:p-10 border border-blue-800/40 bg-gradient-to-r from-blue-950/40 to-slate-950/40 flex flex-col md:flex-row items-center justify-between gap-6"
+          >
+            <div>
+              <h3 className="text-2xl font-bold text-white mb-2">Campbell Solutions</h3>
+              <p className="text-slate-400 max-w-xl">
+                Need a trading system, AI integration, or full-stack development? I offer consulting and development services through Campbell Solutions.
+              </p>
+            </div>
+            <a
+              href="https://campbell-solutions.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:brightness-110 text-white font-bold rounded-full transition-all whitespace-nowrap shadow-lg shadow-blue-600/20"
+            >
+              <ExternalLink size={18} />
+              Visit Campbell Solutions
+            </a>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Experience Timeline */}
       <section className="py-20 relative" id="experience">
         <div className="container mx-auto px-6">
@@ -452,7 +696,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* Education - Small Section */}
+      {/* Education */}
       <section className="py-10">
         <div className="container mx-auto px-6">
           <div className="max-w-3xl mx-auto pl-8 md:pl-24">
@@ -473,7 +717,6 @@ export default function App() {
       {/* Duality - On & Off The Court */}
       <section className="flex flex-col md:flex-row min-h-[600px]" id="duality">
         <div className="flex-1 relative flex flex-col justify-center p-12 md:p-20 border-b md:border-b-0 md:border-r border-slate-800 overflow-hidden group">
-          {/* Background Image Cycle */}
           <AnimatePresence mode="wait">
             <motion.div
               key={athleteImageIndex}
@@ -486,7 +729,6 @@ export default function App() {
             />
           </AnimatePresence>
 
-          {/* Dark Overlay */}
           <div className="absolute inset-0 bg-slate-950/70 group-hover:bg-slate-950/60 transition-colors z-10" />
 
           <div className="relative z-20">
@@ -505,11 +747,10 @@ export default function App() {
           <div className="absolute inset-0 bg-slate-800/20 opacity-0 group-hover:opacity-100 transition-opacity" />
           <h3 className="text-3xl font-black text-white mb-6 uppercase tracking-tighter">The Engineer</h3>
           <p className="text-lg text-slate-300 leading-relaxed max-w-md">
-            AI enthusiast and analytics nerd.
+            AI systems builder and trading bot architect.
             <br />
             <br />
-            I am obsessed with structure and performance. Whether architecting a .NET solution or fine-tuning an ML model, I build
-            systems that are robust, scalable, and maintainable.
+            I am obsessed with autonomous systems. Whether building a 24/7 BTC trading bot with 23 ML strategies, deploying AI agents across multiple platforms, or architecting real-time dashboards — I build systems that run, learn, and scale without intervention.
           </p>
         </div>
       </section>

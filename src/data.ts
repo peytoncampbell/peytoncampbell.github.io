@@ -1,7 +1,8 @@
-import { Code2, Database, Trophy, Brain, Layout, Users, Compass, Target, Zap, RefreshCw, Sparkles, Award } from 'lucide-react';
+import { Code2, Database, Trophy, Brain, Layout, Users, Compass, Target, Zap, RefreshCw, Sparkles, Award, Rocket, Globe, Bot, Briefcase } from 'lucide-react';
 
 export const NAV_LINKS = [
   { label: 'About', href: '#about' },
+  { label: 'Dashboard', href: '#dashboard' },
   { label: 'Experience', href: '#experience' },
   { label: 'Projects', href: '#projects' },
   { label: 'My Story', href: '#duality' },
@@ -40,20 +41,20 @@ export const HIGHLIGHTS = [
 export const SKILLS = [
   {
     title: 'Production Engineering',
-    tags: ['C#', 'React', '.NET MAUI', 'Clean Architecture', 'CI/CD'],
-    copy: 'Building scalable, cross-platform tools. Focused on clean architecture, automated pipelines, and maintainable codebases.',
+    tags: ['C#', 'React', '.NET MAUI', 'Trading Bots', 'Dashboards'],
+    copy: 'Building autonomous trading systems, real-time dashboards, and cross-platform apps. From 24/7 BTC bots to scoreboard control software — I ship production systems that run without hand-holding.',
     icon: Layout,
   },
   {
     title: 'Data & ML Intelligence',
-    tags: ['Python', 'PyTorch', 'Pandas', 'XGBoost', 'NLP'],
-    copy: 'Transforming raw data into actionable insights. From Moneyball-style analytics to transformer-based sentiment analysis.',
+    tags: ['Python', 'scikit-learn', 'XGBoost', 'Regime Detection', 'NLP'],
+    copy: '62,000+ trades executed across 23 ML strategies. Real-time regime detection, feature engineering on market microstructure, and transformer-based sentiment analysis.',
     icon: Database,
   },
   {
     title: 'Leadership & Strategy',
-    tags: ['Agile', 'Communication', 'Team Strategy'],
-    copy: 'Translating athletic discipline into development velocity. Bridging the gap between complex technical logic and business goals.',
+    tags: ['Consulting', 'Campbell Solutions', 'Agile', 'Team Strategy'],
+    copy: 'Running Campbell Solutions for consulting engagements. Translating athletic discipline into development velocity — bridging complex technical systems with business outcomes.',
     icon: Users,
   },
 ];
@@ -61,10 +62,11 @@ export const SKILLS = [
 export const SCOUTING_REPORT = [
   { axis: 'Frontend', value: 0.9, fullMark: 1 },
   { axis: 'Backend', value: 0.85, fullMark: 1 },
-  { axis: 'ML / AI', value: 0.8, fullMark: 1 },
+  { axis: 'ML / AI', value: 0.92, fullMark: 1 },
   { axis: 'Architecture', value: 0.85, fullMark: 1 },
   { axis: 'Leadership', value: 0.95, fullMark: 1 },
-  { axis: 'Data Eng', value: 0.75, fullMark: 1 },
+  { axis: 'Data Eng', value: 0.85, fullMark: 1 },
+  { axis: 'Trading Systems', value: 0.88, fullMark: 1 },
 ];
 
 export const PROCESS = [
@@ -99,9 +101,10 @@ export const PROCESS = [
 ];
 
 export const LIVE_STATUS = [
-  { label: 'Focus', value: 'React Native & GraphQL' },
-  { label: 'Status', value: 'Working Hard' },
-  { label: 'Location', value: 'London, ON' },
+  { label: 'Focus', value: 'BTC Bot + AI Systems' },
+  { label: 'Status', value: 'Building 24/7' },
+  { label: 'Location', value: 'London, ON → Toronto' },
+  { label: 'Bot', value: '62K+ trades' },
 ];
 
 export const EXPERIENCE = [
@@ -150,6 +153,7 @@ export const PROJECTS = [
     id: 10,
     title: 'BTC Trading Bot',
     category: 'ML/AI',
+    featured: true,
     description:
       'Autonomous crypto trading system running 24/7 with 23 ML-powered strategies. Real-time regime detection via RandomForest/XGBoost, automatic position sizing, and a live performance dashboard via Cloudflare tunnel.',
     tech: ['Python', 'scikit-learn', 'XGBoost', 'Binance API', 'OKX API'],
@@ -158,9 +162,22 @@ export const PROJECTS = [
     cta: { label: 'Live Dashboard', url: 'https://btc-dashboard-amber.vercel.app' },
   },
   {
+    id: 14,
+    title: 'Campbell Solutions',
+    category: 'Production',
+    featured: false,
+    description:
+      'Technology consulting practice offering full-stack development, AI/ML integration, and trading system architecture for businesses and startups.',
+    tech: ['React', 'Next.js', 'Python', 'AI/ML', 'Consulting'],
+    role: 'Founder',
+    metrics: ['Full-stack consulting', 'AI integration', 'Trading systems'],
+    cta: { label: 'Visit Site', url: 'https://campbell-solutions.vercel.app' },
+  },
+  {
     id: 11,
     title: 'Polymarket Trading Bot',
     category: 'ML/AI',
+    featured: false,
     description:
       'Prediction market bot that scans for mispriced contracts using AI-powered research. Automated order execution with risk management, portfolio tracking, and arbitrage detection.',
     tech: ['Python', 'Polymarket CLOB', 'Web3', 'Polygon'],
@@ -172,6 +189,7 @@ export const PROJECTS = [
     id: 12,
     title: 'AI Personal Assistant (Jarvis)',
     category: 'Tools',
+    featured: false,
     description:
       'Multi-platform AI agent with persistent memory, cron scheduling, autonomous job applications across 6 ATS platforms, browser automation, and proactive monitoring.',
     tech: ['TypeScript', 'Claude API', 'Playwright', 'Node.js'],
@@ -183,6 +201,7 @@ export const PROJECTS = [
     id: 13,
     title: 'Real-Time Trading Dashboard',
     category: 'Production',
+    featured: false,
     description:
       'Live performance dashboard for the BTC bot. Pulls real-time data through Cloudflare tunnel, displays P&L, strategy breakdowns, regime detection, and trade history.',
     tech: ['Next.js', 'TypeScript', 'Tailwind', 'Cloudflare Tunnel', 'Vercel'],
@@ -194,6 +213,7 @@ export const PROJECTS = [
     id: 1,
     title: 'Topspin360',
     category: 'Production',
+    featured: false,
     description:
       'iOS app migration and full development. Dedicated neck-strength training tool for athletes; shipped analytics and improved crash-free sessions.',
     tech: ['Swift', 'iOS', 'Mobile Architecture'],
@@ -205,6 +225,7 @@ export const PROJECTS = [
     id: 2,
     title: 'Score Controller',
     category: 'Production',
+    featured: false,
     description:
       'Real-time mobile control system for OES scoreboards, enabling remote game data management with offline-first sync.',
     tech: ['iOS', 'Bluetooth/WiFi', 'Real-time Systems'],
@@ -216,6 +237,7 @@ export const PROJECTS = [
     id: 3,
     title: 'Player Performance Predictor',
     category: 'ML/AI',
+    featured: false,
     description:
       'Roster construction engine with WAR predictions (R^2 0.59) using XGBoost, feature engineering, and Optuna tuning.',
     tech: ['Python', 'XGBoost', 'Optuna', 'Pandas'],
@@ -227,11 +249,64 @@ export const PROJECTS = [
     id: 4,
     title: 'Customer Sentiment Analyzer',
     category: 'ML/AI',
+    featured: false,
     description:
       'Multi-channel sentiment classifier fine-tuned on support tickets; delivered 85% accuracy and a real-time insights dashboard.',
     tech: ['Transformers', 'Python', 'TensorFlow', 'NLP'],
     role: 'ML engineer',
     metrics: ['Accuracy 85%', 'Latency <300ms p95', 'Coverage: email + chat + reviews'],
     cta: { label: 'View repo', url: 'https://github.com/peytoncampbell' },
+  },
+];
+
+export const TECH_STACK = [
+  { name: 'Python', category: 'Languages' },
+  { name: 'TypeScript', category: 'Languages' },
+  { name: 'C# / .NET', category: 'Languages' },
+  { name: 'React', category: 'Frontend' },
+  { name: 'Next.js', category: 'Frontend' },
+  { name: 'Tailwind', category: 'Frontend' },
+  { name: 'scikit-learn', category: 'ML/AI' },
+  { name: 'XGBoost', category: 'ML/AI' },
+  { name: 'Claude API', category: 'ML/AI' },
+  { name: 'Binance API', category: 'Trading' },
+  { name: 'OKX API', category: 'Trading' },
+  { name: 'Polymarket', category: 'Trading' },
+  { name: 'Web3', category: 'Trading' },
+  { name: 'PostgreSQL', category: 'Infrastructure' },
+  { name: 'Cloudflare', category: 'Infrastructure' },
+  { name: 'Vercel', category: 'Infrastructure' },
+  { name: 'Playwright', category: 'Tools' },
+  { name: 'Git', category: 'Tools' },
+];
+
+export const BUILDING_NOW = [
+  {
+    name: 'BTC Trading Bot',
+    status: 'Live',
+    statusColor: 'green',
+    detail: '62K+ trades, 23 ML strategies, running 24/7',
+    icon: Bot,
+  },
+  {
+    name: 'Polymarket Bot',
+    status: 'In Development',
+    statusColor: 'amber',
+    detail: 'AI-powered prediction market arbitrage',
+    icon: Rocket,
+  },
+  {
+    name: 'Jarvis AI',
+    status: 'Live',
+    statusColor: 'green',
+    detail: 'Personal AI agent across 3 platforms',
+    icon: Brain,
+  },
+  {
+    name: 'Campbell Solutions',
+    status: 'Consulting',
+    statusColor: 'blue',
+    detail: 'Tech consulting & development services',
+    icon: Briefcase,
   },
 ];
