@@ -9,30 +9,30 @@ export const NAV_LINKS = [
 ];
 
 export const HERO = {
-  headline: 'Full-Stack Engineer shipping resilient .NET, React, and ML products.',
+  headline: 'I build things that work autonomously.',
   subheadline:
-    'I build cross-platform experiences and data products that boost release speed, observability, and decision-making.',
+    'Full-stack engineer and ML developer. I design systems that trade, learn, and deliver — without human intervention.',
   stats: [
-    { label: 'Full-Stack & ML', icon: Code2 },
-    { label: 'Production Ready', icon: Brain },
-    { label: 'High Performance', icon: Trophy },
+    { label: '62,000+ Trades Executed', icon: Code2 },
+    { label: '23 ML Strategies Live', icon: Brain },
+    { label: '510% Paper ROI', icon: Trophy },
   ],
 };
 
 export const HIGHLIGHTS = [
   {
-    label: 'Cut test time by 40%',
-    detail: 'Python automation + telemetry-first approach.',
+    label: '24/7 Autonomous Trading Bot',
+    detail: 'BTC scalper with 23 ML strategies, real-time regime detection, and live dashboard.',
     icon: Sparkles,
   },
   {
     label: 'Shipped cross-platform MAUI apps',
-    detail: 'Shared libraries, MVVM, and offline-first sync.',
+    detail: 'Shared libraries, MVVM, and offline-first sync at OES.',
     icon: Award,
   },
   {
-    label: 'Data-driven decisions',
-    detail: 'ML + analytics pipelines for roster and sentiment insights.',
+    label: 'AI-Powered Automation',
+    detail: 'Personal AI agent running 24/7 across Telegram, Discord, and Signal with persistent memory.',
     icon: Database,
   },
 ];
@@ -146,6 +146,50 @@ export const EDUCATION = [
 ];
 
 export const PROJECTS = [
+  {
+    id: 10,
+    title: 'BTC Trading Bot',
+    category: 'ML/AI',
+    description:
+      'Autonomous crypto trading system running 24/7 with 23 ML-powered strategies. Real-time regime detection via RandomForest/XGBoost, automatic position sizing, and a live performance dashboard via Cloudflare tunnel.',
+    tech: ['Python', 'scikit-learn', 'XGBoost', 'Binance API', 'OKX API'],
+    role: 'Solo builder',
+    metrics: ['62,000+ trades executed', '510% paper ROI', '23 concurrent ML strategies', 'Live dashboard'],
+    cta: { label: 'Live Dashboard', url: 'https://btc-dashboard-amber.vercel.app' },
+  },
+  {
+    id: 11,
+    title: 'Polymarket Trading Bot',
+    category: 'ML/AI',
+    description:
+      'Prediction market bot that scans for mispriced contracts using AI-powered research. Automated order execution with risk management, portfolio tracking, and arbitrage detection.',
+    tech: ['Python', 'Polymarket CLOB', 'Web3', 'Polygon'],
+    role: 'Solo builder',
+    metrics: ['Arbitrage detection', 'AI research engine', 'Auto-execution'],
+    cta: null,
+  },
+  {
+    id: 12,
+    title: 'AI Personal Assistant (Jarvis)',
+    category: 'Tools',
+    description:
+      'Multi-platform AI agent with persistent memory, cron scheduling, autonomous job applications across 6 ATS platforms, browser automation, and proactive monitoring.',
+    tech: ['TypeScript', 'Claude API', 'Playwright', 'Node.js'],
+    role: 'Solo builder',
+    metrics: ['3 platforms (Telegram/Discord/Signal)', '6 ATS integrations', 'Persistent memory', '24/7 uptime'],
+    cta: null,
+  },
+  {
+    id: 13,
+    title: 'Real-Time Trading Dashboard',
+    category: 'Production',
+    description:
+      'Live performance dashboard for the BTC bot. Pulls real-time data through Cloudflare tunnel, displays P&L, strategy breakdowns, regime detection, and trade history.',
+    tech: ['Next.js', 'TypeScript', 'Tailwind', 'Cloudflare Tunnel', 'Vercel'],
+    role: 'Solo builder',
+    metrics: ['Real-time data via tunnel', 'Auto-refresh', 'Mobile responsive'],
+    cta: { label: 'View Live', url: 'https://btc-dashboard-amber.vercel.app' },
+  },
   {
     id: 1,
     title: 'Topspin360',
