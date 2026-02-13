@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight,
+  ArrowUp,
   Download,
   Github,
   Linkedin,
@@ -13,9 +14,8 @@ import {
   CalendarClock,
   Star,
 } from 'lucide-react';
-import { NAV_LINKS, HERO, EXPERIENCE, PROJECTS, EDUCATION, SCOUTING_REPORT, HIGHLIGHTS, TECH_STACK, BUILDING_NOW, SKILLS } from './data';
+import { NAV_LINKS, HERO, EXPERIENCE, PROJECTS, TECH_STACK } from './data';
 import LiveTicker from './LiveTicker';
-import RadarChart from './RadarChart';
 import ScrollProgress from './ScrollProgress';
 import Certifications from './Certifications';
 import clsx from 'clsx';
@@ -56,7 +56,9 @@ function SectionHeading({ children, className = '' }: { children: React.ReactNod
 }
 
 export default function App() {
+  const [loading, setLoading] = useState(true);
   const [scrolled, setScrolled] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
   const [projectFilter, setProjectFilter] = useState('All');
   const [athleteImageIndex, setAthleteImageIndex] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -68,7 +70,15 @@ export default function App() {
   const portraitImage = `${import.meta.env.BASE_URL}portrait.jpg`;
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
+    const timer = setTimeout(() => setLoading(false), 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+      setShowBackToTop(window.scrollY > 600);
+    };
     window.addEventListener('scroll', handleScroll);
 
     const imageTimer = setInterval(() => {
@@ -107,6 +117,34 @@ export default function App() {
   const nonFeaturedFiltered = filteredProjects.filter((p) => !p.featured);
 
   return (
+    <>
+      {/* Loading Screen */}
+      <AnimatePresence>
+        {loading && (
+          <motion.div
+            key="loader"
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5 }}
+            className="fixed inset-0 z-[100] bg-slate-950 flex items-center justify-center"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="text-center"
+            >
+              <div className="text-5xl font-black tracking-tighter gradient-text-hero mb-2">PC</div>
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: 80 }}
+                transition={{ duration: 1, delay: 0.3, ease: 'easeInOut' }}
+                className="h-0.5 bg-gradient-to-r from-blue-500 to-cyan-400 mx-auto rounded-full"
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     <div className="min-h-screen text-slate-300 selection:bg-blue-500/30 selection:text-white">
       <ScrollProgress />
 
@@ -298,36 +336,6 @@ export default function App() {
         </div>
       </section>
 
-      {/* Highlights Strip */}
-      <section className="py-10 border-y border-slate-800/50 relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-900/40 to-slate-950 pointer-events-none" />
-        <div className="container mx-auto px-6 relative z-10">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={staggerContainer}
-            className="grid gap-4 md:grid-cols-3"
-          >
-            {HIGHLIGHTS.map((item) => (
-              <motion.div
-                key={item.label}
-                variants={cardReveal}
-                className="glass-premium rounded-xl p-6 flex items-start gap-4 hover:scale-[1.02] transition-transform duration-300"
-              >
-                <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                  <item.icon className="text-amber-400" size={20} />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-white mb-1">{item.label}</p>
-                  <p className="text-xs text-slate-400 leading-relaxed">{item.detail}</p>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
       {/* Live Dashboard Preview */}
       <section className="py-24 relative overflow-hidden" id="dashboard">
         <div className="absolute inset-0 pointer-events-none">
@@ -391,126 +399,6 @@ export default function App() {
               <ExternalLink size={18} />
               View Live Dashboard
             </a>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* What I'm Building Now */}
-      <section className="py-20 border-y border-slate-800/50 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900/20 to-slate-950 pointer-events-none" />
-        <div className="container mx-auto px-6 relative z-10">
-          <SectionHeading>
-            What I'm <span className="gradient-text">Building Now</span>
-          </SectionHeading>
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={staggerContainer}
-            className="grid gap-5 md:grid-cols-2 lg:grid-cols-4"
-          >
-            {BUILDING_NOW.map((item) => (
-              <motion.div
-                key={item.name}
-                variants={cardReveal}
-                className="glass-premium rounded-xl p-6 hover:scale-[1.03] transition-all duration-300 group"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/20 group-hover:bg-blue-500/15 transition-colors">
-                    <item.icon className="text-blue-400" size={20} />
-                  </div>
-                  <span className={clsx(
-                    'text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-[0.15em]',
-                    item.statusColor === 'green' && 'bg-green-500/15 text-green-400 border border-green-500/25 status-live',
-                    item.statusColor === 'amber' && 'bg-amber-500/15 text-amber-400 border border-amber-500/25',
-                    item.statusColor === 'blue' && 'bg-blue-500/15 text-blue-400 border border-blue-500/25',
-                  )}>
-                    {item.status}
-                  </span>
-                </div>
-                <h3 className="text-white font-bold text-lg mb-1.5 group-hover:text-blue-400 transition-colors duration-300">{item.name}</h3>
-                <p className="text-slate-400 text-sm leading-relaxed">{item.detail}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Scouting Report (Radar Chart) */}
-      <section className="py-24 relative">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute w-[500px] h-[500px] right-1/4 top-1/2 -translate-y-1/2 rounded-full bg-blue-500/5 blur-[100px]" />
-        </div>
-        <div className="container mx-auto px-6 relative z-10">
-          <div className="flex flex-col md:flex-row items-center gap-16 md:gap-24">
-            <div className="flex-1 text-center md:text-left">
-              <SectionHeading className="md:ml-0 ml-4">
-                The <span className="gradient-text">Scouting Report</span>
-              </SectionHeading>
-              <p className="text-slate-400 text-lg mb-8 leading-relaxed max-w-lg">
-                Just like a pre-game analysis, here's a breakdown of my technical strengths. I balance{' '}
-                <span className="text-blue-400 font-semibold">engineering precision</span> with
-                <span className="text-cyan-400 font-semibold"> leadership</span> and
-                <span className="text-teal-400 font-semibold"> adaptability</span>.
-              </p>
-              <ul className="space-y-4 text-slate-300">
-                {[
-                  { color: 'bg-blue-500', label: 'Frontend:', detail: 'React, Tailwind, Modern UI/UX' },
-                  { color: 'bg-blue-500', label: 'Backend:', detail: '.NET, Python, REST APIs' },
-                  { color: 'bg-cyan-500', label: 'ML / AI:', detail: '23 strategies, regime detection, NLP' },
-                  { color: 'bg-amber-500', label: 'Trading Systems:', detail: '62K+ autonomous trades' },
-                  { color: 'bg-teal-500', label: 'Leadership:', detail: 'Agile, Consulting, Mentorship' },
-                ].map((item) => (
-                  <li key={item.label} className="flex items-center gap-3">
-                    <span className={`w-2 h-2 ${item.color} rounded-full flex-shrink-0`}></span>
-                    <span><strong className="text-white">{item.label}</strong> {item.detail}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="flex-1 flex justify-center">
-              <div className="relative radar-glow">
-                <RadarChart data={SCOUTING_REPORT} size={window.innerWidth < 768 ? 320 : 400} />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Skills */}
-      <section className="py-24">
-        <div className="container mx-auto px-6">
-          <SectionHeading>
-            Core <span className="gradient-text">Skills</span>
-          </SectionHeading>
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={staggerContainer}
-            className="grid gap-6 md:grid-cols-3"
-          >
-            {SKILLS.map((skill) => (
-              <motion.div
-                key={skill.title}
-                variants={cardReveal}
-                className="glass-premium rounded-2xl p-7 hover:scale-[1.02] transition-all duration-300 group"
-              >
-                <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 w-fit mb-5 group-hover:bg-blue-500/15 transition-colors">
-                  <skill.icon className="text-blue-400" size={24} />
-                </div>
-                <h3 className="text-xl font-bold text-white mb-2">{skill.title}</h3>
-                <p className="text-slate-400 text-sm mb-5 leading-relaxed">{skill.copy}</p>
-                <div className="flex flex-wrap gap-2">
-                  {skill.tags.map((tag) => (
-                    <span key={tag} className="tech-tag border-slate-700/50 text-slate-300">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </motion.div>
-            ))}
           </motion.div>
         </div>
       </section>
@@ -716,35 +604,6 @@ export default function App() {
         </div>
       </section>
 
-      {/* Campbell Solutions Callout */}
-      <section className="py-16">
-        <div className="container mx-auto px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="glass-premium rounded-2xl p-8 md:p-12 bg-gradient-to-r from-blue-950/30 via-slate-900/20 to-cyan-950/20 flex flex-col md:flex-row items-center justify-between gap-8"
-          >
-            <div>
-              <h3 className="text-2xl md:text-3xl font-bold text-white mb-3">Campbell Solutions</h3>
-              <p className="text-slate-400 max-w-xl leading-relaxed">
-                Need a trading system, AI integration, or full-stack development? I offer consulting and development services through Campbell Solutions.
-              </p>
-            </div>
-            <a
-              href="https://campbell-solutions.vercel.app"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-primary inline-flex items-center gap-2 px-8 py-3.5 text-white font-bold rounded-full whitespace-nowrap"
-            >
-              <ExternalLink size={18} />
-              Visit Campbell Solutions
-            </a>
-          </motion.div>
-        </div>
-      </section>
-
       {/* Experience Timeline */}
       <section className="py-24 relative" id="experience">
         <div className="container mx-auto px-6">
@@ -789,31 +648,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* Education */}
-      <section className="py-12">
-        <div className="container mx-auto px-6">
-          <div className="max-w-3xl mx-auto pl-8 md:pl-24">
-            <h3 className="text-sm font-bold text-slate-500 uppercase tracking-[0.2em] mb-8">Education</h3>
-            <div className="space-y-8">
-              {EDUCATION.map((edu, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 15 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1 }}
-                >
-                  <h4 className="text-white font-bold text-lg">{edu.school}</h4>
-                  <p className="text-slate-400 mt-1">{edu.degree}</p>
-                  <p className="text-sm text-blue-400/70 font-mono mt-1">{edu.period}</p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Certifications */}
+      {/* Education & Credentials (merged) */}
       <Certifications />
 
       {/* Duality - On & Off The Court */}
@@ -943,6 +778,23 @@ export default function App() {
         <p className="font-medium">Built with React, Tailwind, and caffeine by Peyton Campbell.</p>
         <p className="mt-2 text-slate-600">© {new Date().getFullYear()} Peyton Campbell</p>
       </footer>
+
+      {/* Back to Top */}
+      <AnimatePresence>
+        {showBackToTop && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="fixed bottom-8 right-8 z-50 p-3 rounded-full bg-slate-900/90 border border-slate-700/50 text-slate-400 hover:text-white hover:border-blue-500/40 hover:bg-blue-500/10 backdrop-blur-sm transition-all duration-300 shadow-lg"
+            aria-label="Back to top"
+          >
+            <ArrowUp size={20} />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
+    </>
   );
 }

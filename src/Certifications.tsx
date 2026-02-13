@@ -53,7 +53,7 @@ export default function Certifications() {
           variants={fadeInUp}
           className="text-4xl md:text-5xl font-bold mb-14 text-white section-heading-bar"
         >
-          Credentials & <span className="gradient-text">Recognition</span>
+          Education & <span className="gradient-text">Credentials</span>
         </motion.h2>
 
         <motion.div
