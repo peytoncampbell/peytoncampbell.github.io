@@ -1,21 +1,21 @@
 const services = [
   {
-    icon: "→",
+    icon: "⚡",
     title: "AI Workflow Automation",
     desc: "Automate repetitive business processes with intelligent systems that learn, adapt, and execute — so your team can focus on what matters.",
   },
   {
-    icon: "λ",
+    icon: "🤖",
     title: "Custom AI Agents",
     desc: "Purpose-built AI assistants tailored to your business. From customer support to internal ops, we build agents that get the job done.",
   },
   {
-    icon: "Δ",
+    icon: "📊",
     title: "Data & Analytics",
     desc: "Prediction models, real-time dashboards, and actionable insights. Turn your data into decisions.",
   },
   {
-    icon: "∞",
+    icon: "🧠",
     title: "Tech Consulting",
     desc: "Strategy, architecture, and implementation. We help you navigate the AI landscape and build the right thing the right way.",
   },
@@ -37,9 +37,7 @@ export default function Services() {
               key={s.title}
               className="group rounded-xl border border-card-border bg-card p-6 transition-colors hover:border-accent/40"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10 font-mono text-2xl text-accent">
-                {s.icon}
-              </div>
+              <span className="text-3xl">{s.icon}</span>
               <h3 className="mt-4 text-lg font-semibold">{s.title}</h3>
               <p className="mt-2 text-sm leading-relaxed text-muted">
                 {s.desc}

@@ -1,10 +1,3 @@
-const stats = [
-  { number: "50,000+", label: "trades executed" },
-  { number: "15+", label: "active strategies" },
-  { number: "24/7", label: "autonomous systems" },
-  { number: "3.0+", label: "P/DD on top strategies" },
-];
-
 export default function Hero() {
   return (
     <section className="hero-grid hero-glow relative flex min-h-screen items-center justify-center px-6 pt-20">
@@ -33,16 +26,6 @@ export default function Hero() {
           >
             See Our Work
           </a>
-        </div>
-        <div className="animate-fade-in-up delay-500 mt-12 flex flex-wrap items-center justify-center gap-8">
-          {stats.map((s) => (
-            <div key={s.label} className="text-center">
-              <span className="font-mono text-sm font-semibold text-accent">
-                {s.number}
-              </span>
-              <span className="ml-1.5 text-xs text-muted/60">{s.label}</span>
-            </div>
-          ))}
         </div>
       </div>
     </section>

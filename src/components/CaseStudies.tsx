@@ -1,21 +1,18 @@
 const cases = [
   {
     title: "AI-Powered Job Application System",
-    desc: "Fully autonomous pipeline that navigates ATS platforms, tailors resumes with AI, and submits applications at scale with human-level accuracy.",
-    results: "Navigates Workday, Greenhouse, Lever, Avature, Taleo, and iCIMS autonomously.",
+    desc: "Fully autonomous pipeline that navigates ATS platforms — Workday, Greenhouse, Lever, Avature, Taleo, iCIMS — tailors resumes with AI, and submits applications at scale with human-level accuracy.",
     metrics: ["6 ATS platforms", "AI resume tailoring", "Fully autonomous"],
   },
   {
     title: "BTC Trading Bot",
-    desc: "Running 24/7 with real money. Top strategies achieve 3.0+ profit-to-drawdown ratios across RandomForest and XGBoost models with 15+ concurrent strategies.",
-    results: null,
-    metrics: ["50,000+ trades", "15+ ML strategies", "P/DD 3.0+ on top models", "24/7 autonomous"],
+    desc: "ML-powered trading engine running RandomForest and XGBoost models across 15+ strategies. Ingests real-time multi-source market data and executes trades autonomously 24/7.",
+    metrics: ["28,000+ trades", "15+ strategies", "ML-powered"],
   },
   {
     title: "AI Personal Assistant",
-    desc: "Multi-platform agent with persistent memory, cron scheduling, proactive monitoring, and full browser automation for complex tasks.",
-    results: null,
-    metrics: ["Telegram + Discord + Signal", "Persistent memory", "Cron scheduling", "Browser automation"],
+    desc: "Multi-platform agent deployed across Telegram, Discord, and Signal with persistent memory, cron scheduling, proactive monitoring, and full browser automation for complex tasks.",
+    metrics: ["3 platforms", "Persistent memory", "Browser automation"],
   },
 ];
 
@@ -39,11 +36,6 @@ export default function CaseStudies() {
               <p className="mt-3 flex-1 text-sm leading-relaxed text-muted">
                 {c.desc}
               </p>
-              {c.results && (
-                <p className="mt-3 text-xs leading-relaxed text-accent/80 italic">
-                  {c.results}
-                </p>
-              )}
               <div className="mt-6 flex flex-wrap gap-2">
                 {c.metrics.map((m) => (
                   <span
