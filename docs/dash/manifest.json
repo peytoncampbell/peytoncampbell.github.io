@@ -1,12 +1,12 @@
 {
   "name": "BTC Dashboard",
   "short_name": "BTC",
-  "start_url": "/dashboard/",
+  "start_url": "/dash/",
   "display": "standalone",
   "background_color": "#0d1117",
   "theme_color": "#0d1117",
   "icons": [
-    { "src": "/dashboard/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/dashboard/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "/dash/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/dash/icon-512.png", "sizes": "512x512", "type": "image/png" }
   ]
 }
