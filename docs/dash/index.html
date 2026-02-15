@@ -168,16 +168,12 @@ async function loadStats(){
     });
     const wr=trades?wins/trades:0;
     const active=statsData.filter(s=>s.total_trades>0).length;
-    if(mode==='live'&&trades===0){
-      $('cards').innerHTML=`<div class="card" style="grid-column:1/-1;text-align:center;padding:24px"><div class="label">LIVE TRADING</div><div class="value" style="font-size:1rem;color:var(--muted)">⏸ Not active yet — no Polymarket orders placed</div></div>`;
-    }else{
-      $('cards').innerHTML=`
-        <div class="card"><div class="label">Total P&L</div><div class="value ${cls(pnl)}">$${fmt(pnl)}</div></div>
-        <div class="card"><div class="label">Win Rate</div><div class="value">${pct(wr)}</div></div>
-        <div class="card"><div class="label">Total Trades</div><div class="value">${trades.toLocaleString()}</div></div>
-        <div class="card"><div class="label">Active Strats</div><div class="value">${active}/${statsData.length}</div></div>
-        <div class="card"><div class="label">Best / Worst</div><div class="value"><span class="pos">$${fmt(maxPnl)}</span> / <span class="neg">$${fmt(minPnl)}</span></div></div>`;
-    }
+    $('cards').innerHTML=`
+      <div class="card"><div class="label">Total P&L</div><div class="value ${cls(pnl)}">$${fmt(pnl)}</div></div>
+      <div class="card"><div class="label">Win Rate</div><div class="value">${pct(wr)}</div></div>
+      <div class="card"><div class="label">Total Trades</div><div class="value">${trades.toLocaleString()}</div></div>
+      <div class="card"><div class="label">Active Strats</div><div class="value">${active}/${statsData.length}</div></div>
+      <div class="card"><div class="label">Best / Worst</div><div class="value"><span class="pos">$${fmt(maxPnl)}</span> / <span class="neg">$${fmt(minPnl)}</span></div></div>`;
     renderStratTable();
   }catch(e){$('cards').innerHTML='<span class="loading">Failed to load stats</span>'}
 }
