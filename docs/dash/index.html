@@ -118,7 +118,7 @@ td{white-space:nowrap}
 
 <script>
 const API='https://dashboard.peytoncampbell.ca',KEY='65bc4d4ad01756a528c74480067c330da9461584b3b7347e';
-let mode='paper',chart=null,sortCol='pnl',sortAsc=false,statsData=[];
+let mode='paper',chart=null,sortCol='total_pnl',sortAsc=false,statsData=[];
 
 const F=url=>fetch(API+url,{headers:{'X-API-Key':KEY}}).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()});
 const $=id=>document.getElementById(id);
@@ -162,12 +162,12 @@ async function loadStats(){
     statsData=d.stats||[];
     let pnl=0,wins=0,trades=0,maxPnl=null,minPnl=null;
     statsData.forEach(s=>{
-      pnl+=s.pnl||0;wins+=s.wins||0;trades+=s.trades||0;
-      if(maxPnl===null||s.pnl>maxPnl)maxPnl=s.pnl;
-      if(minPnl===null||s.pnl<minPnl)minPnl=s.pnl;
+      pnl+=s.total_pnl||0;wins+=s.wins||0;trades+=s.total_trades||0;
+      if(maxPnl===null||(s.total_pnl||0)>maxPnl)maxPnl=s.total_pnl;
+      if(minPnl===null||(s.total_pnl||0)<minPnl)minPnl=s.total_pnl;
     });
     const wr=trades?wins/trades:0;
-    const active=statsData.filter(s=>s.trades>0).length;
+    const active=statsData.filter(s=>s.total_trades>0).length;
     $('cards').innerHTML=`
       <div class="card"><div class="label">Total P&L</div><div class="value ${cls(pnl)}">$${fmt(pnl)}</div></div>
       <div class="card"><div class="label">Win Rate</div><div class="value">${pct(wr)}</div></div>
@@ -179,13 +179,13 @@ async function loadStats(){
 }
 
 function renderStratTable(){
-  const s=[...statsData].sort((a,b)=>{let v=0;if(sortCol==='strategy')v=(a.strategy||'').localeCompare(b.strategy||'');else v=(a[sortCol]||0)-(b[sortCol]||0);return sortAsc?v:-v});
+  const s=[...statsData].sort((a,b)=>{let v=0;if(sortCol==='strategy_name')v=(a.strategy_name||'').localeCompare(b.strategy_name||'');else v=((a[sortCol]||0)-(b[sortCol]||0));return sortAsc?v:-v});
   const arrow=c=>sortCol===c?(sortAsc?' ↑':' ↓'):'';
-  const cols=[['strategy','Strategy'],['trades','Trades'],['win_rate','Win%'],['pnl','P&L'],['max_drawdown','MaxDD'],['profit_to_dd','P/DD'],['sortino','Sortino']];
+  const cols=[['strategy_name','Strategy'],['total_trades','Trades'],['win_rate','Win%'],['total_pnl','P&L'],['max_drawdown','MaxDD'],['pdd_ratio','P/DD'],['sortino','Sortino']];
   $('stratTable').innerHTML=`<table><thead><tr>${cols.map(([k,l])=>`<th data-c="${k}">${l}${arrow(k)}</th>`).join('')}</tr></thead><tbody>${s.map(r=>`<tr>
-    <td>${r.strategy||'—'}</td><td>${r.trades||0}</td><td>${pct(r.win_rate)}</td>
-    <td class="${cls(r.pnl)}">$${fmt(r.pnl)}</td><td class="neg">$${fmt(r.max_drawdown)}</td>
-    <td class="${cls(r.profit_to_dd)}">${fmt(r.profit_to_dd)}</td><td>${fmt(r.sortino)}</td>
+    <td>${r.strategy_name||'—'}</td><td>${r.total_trades||0}</td><td>${pct(r.win_rate)}</td>
+    <td class="${cls(r.total_pnl)}">$${fmt(r.total_pnl)}</td><td class="neg">$${fmt(r.max_drawdown)}</td>
+    <td class="${cls(r.pdd_ratio)}">${fmt(r.pdd_ratio)}</td><td>${fmt(r.sortino)}</td>
   </tr>`).join('')}</tbody></table>`;
   $('stratTable').querySelectorAll('th').forEach(th=>th.onclick=()=>{const c=th.dataset.c;if(sortCol===c)sortAsc=!sortAsc;else{sortCol=c;sortAsc=false}renderStratTable()});
 }
@@ -215,12 +215,12 @@ async function loadSignals(){
     if(!sigs.length){$('signalFeed').innerHTML='<span class="loading">No signals yet</span>';return}
     $('signalFeed').innerHTML=sigs.map(s=>`<div class="sig">
       <span class="name">${s.strategy_name||'—'}</span>
-      <span class="dir ${s.direction}">${s.direction}</span>
+      <span class="dir ${s.side}">${s.side}</span>
       <span class="conf">${(s.confidence*100).toFixed(0)}%</span>
       <div class="meta">
         <span class="ts">${ts(s.timestamp)}</span>
-        <span>${s.status||''}</span>
-        <span>$${fmt(s.price)}</span>
+        <span>${s.strategy_status||''}</span>
+        <span>$${fmt(s.buy_price)}</span>
       </div>
     </div>`).join('');
   }catch(e){$('signalFeed').innerHTML='<span class="loading">Failed to load signals</span>'}
