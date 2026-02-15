@@ -128,10 +128,28 @@ const cols=[
 
 function mergeStats(strategies,stats,mode){
   const smap=Object.fromEntries((stats||[]).map(s=>[s.strategy_name||s.name,s]));
-  let list=(mode==='live'?strategies.filter(s=>s.status==='ACTIVE'):strategies).map(s=>{
-    const st=smap[s.name]||{};
-    return{name:s.name,status:s.status,pnl:st.total_pnl||st.pnl||0,wr:st.win_rate||0,pdd:st.profit_to_drawdown||st.p_dd||0,trades:st.total_trades||st.trades||0};
-  });
+  const stratMap=Object.fromEntries((strategies||[]).map(s=>[s.name,s]));
+  let list;
+  if(mode==='live'){
+    list=strategies.filter(s=>s.status==='ACTIVE').map(s=>{
+      const st=smap[s.name]||{};
+      return{name:s.name,status:s.status,pnl:st.total_pnl||0,wr:(st.win_rate||0)*100,pdd:st.pdd_ratio||0,trades:st.total_trades||0};
+    });
+  } else {
+    // Paper: show ALL strategies that have stats, even if not in config
+    const seen=new Set();
+    list=[];
+    for(const s of (stats||[])){
+      const n=s.strategy_name||s.name;
+      seen.add(n);
+      const info=stratMap[n];
+      list.push({name:n,status:info?info.status:'LEGACY',pnl:s.total_pnl||0,wr:(s.win_rate||0)*100,pdd:s.pdd_ratio||0,trades:s.total_trades||0});
+    }
+    // Add configured strategies with no stats
+    for(const s of strategies){
+      if(!seen.has(s.name)) list.push({name:s.name,status:s.status,pnl:0,wr:0,pdd:0,trades:0});
+    }
+  }
   return list;
 }
 
