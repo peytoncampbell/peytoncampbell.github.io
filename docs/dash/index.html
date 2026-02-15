@@ -75,11 +75,8 @@ td{color:#c9d1d9}
 
 <div class="tab-content" id="tab-live">
   <div class="cards" id="live-cards"></div>
-  <div class="chart-container"><canvas id="liveChart"></canvas></div>
-  <h3 style="margin-bottom:8px;color:#8b949e;font-size:.9rem">Active Strategy Performance</h3>
-  <div class="table-wrap"><table id="live-table"><thead><tr></tr></thead><tbody></tbody></table></div>
-  <h3 style="margin-bottom:8px;color:#8b949e;font-size:.9rem">Recent Signals (Active Only)</h3>
-  <div class="table-wrap"><table id="live-signals"><thead><tr><th>Time</th><th>Strategy</th><th>Dir</th><th>Price</th><th>Conf</th><th>Outcome</th></tr></thead><tbody></tbody></table></div>
+  <h3 style="margin-bottom:8px;color:#8b949e;font-size:.9rem">Polymarket Positions</h3>
+  <div class="table-wrap"><table id="live-positions"><thead><tr><th>Market</th><th>Side</th><th>Size</th><th>Avg Price</th><th>Invested</th><th>Current</th><th>P&L</th><th>Status</th></tr></thead><tbody></tbody></table></div>
 </div>
 
 <script>
@@ -203,9 +200,9 @@ function updateChart(chart,data){
 }
 
 async function refresh(){
-  const[health,strategies,pStats,lStats,signals,pEquity,lEquity]=await Promise.all([
-    api('/api/health'),api('/api/strategies'),api('/api/stats?mode=paper'),api('/api/stats?mode=live'),
-    api('/api/signals?limit=50'),api('/api/equity?mode=paper&points=300'),api('/api/equity?mode=live&points=300')
+  const[health,strategies,pStats,positions,signals,pEquity]=await Promise.all([
+    api('/api/health'),api('/api/strategies'),api('/api/stats?mode=paper'),
+    api('/api/positions'),api('/api/signals?limit=50'),api('/api/equity?mode=paper&points=300')
   ]);
   // Health
   if(health){
@@ -224,26 +221,30 @@ async function refresh(){
   // Strategies
   strategiesData=(strategies&&strategies.strategies)||strategies||[];
   paperStats=(pStats&&(pStats.stats||pStats.strategies))||pStats||[];
-  liveStats=(lStats&&(lStats.stats||lStats.strategies))||lStats||[];
   const sigs=(signals&&signals.signals)||signals||[];
-  // Cards
+  // Paper tab
   renderCards('paper-cards',paperStats,strategiesData,'paper');
-  renderCards('live-cards',liveStats,strategiesData,'live');
-  // Tables
   const pRows=mergeStats(strategiesData,paperStats,'paper');
-  const lRows=mergeStats(strategiesData,liveStats,'live');
   renderTable('paper-table',pRows,'paper');
-  renderTable('live-table',lRows,'live');
-  // Signals
   renderSignals('paper-signals',sigs,false);
-  renderSignals('live-signals',sigs,true);
-  // Charts
   const pe=(pEquity&&pEquity.equity)||pEquity||[];
-  const le=(lEquity&&lEquity.equity)||lEquity||[];
   if(!paperChart)paperChart=makeChart(document.getElementById('paperChart'),pe,'Paper Equity');
   else updateChart(paperChart,pe);
-  if(!liveChart)liveChart=makeChart(document.getElementById('liveChart'),le,'Live Equity');
-  else updateChart(liveChart,le);
+  // Live tab — Polymarket positions
+  if(positions){
+    const s=positions.summary||{};
+    const el=document.getElementById('live-cards');
+    el.innerHTML=`
+      <div class="card"><div class="card-label">Wallet Balance</div><div class="card-value">${s.balance!=null?fmtUsd(s.balance):'—'}</div></div>
+      <div class="card"><div class="card-label">Total P&L</div><div class="card-value ${pnlClass(s.total_pnl)}">${fmtUsd(s.total_pnl)}</div></div>
+      <div class="card"><div class="card-label">Invested</div><div class="card-value">${fmtUsd(s.total_invested)}</div></div>
+      <div class="card"><div class="card-label">Positions</div><div class="card-value">${(positions.positions||[]).length} (${s.wins}W/${s.losses}L)</div></div>`;
+    const tbody=document.getElementById('live-positions').querySelector('tbody');
+    tbody.innerHTML=(positions.positions||[]).map(p=>{
+      const status=p.redeemable?'<span style="color:#f0883e">Redeemable</span>':(p.current_value>0?'<span style="color:#58a6ff">Open</span>':'<span style="color:#484f58">Settled</span>');
+      return`<tr><td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.title}</td><td>${p.outcome}</td><td>${fmt(p.size,1)}</td><td>${fmtUsd(p.avg_price)}</td><td>${fmtUsd(p.initial_value)}</td><td>${fmtUsd(p.current_value)}</td><td class="${pnlClass(p.pnl)}">${fmtUsd(p.pnl)}</td><td>${status}</td></tr>`;
+    }).join('');
+  }
   document.getElementById('refreshInfo').textContent='Last refresh: '+new Date().toLocaleTimeString()+' · Auto-refresh 30s';
 }
 refresh();setInterval(refresh,30000);
