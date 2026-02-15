@@ -37,6 +37,17 @@ td{color:#c9d1d9}
 .badge-shadow{background:#484f5833;color:#8b949e;border:1px solid #8b949e44}
 .signal-row td{font-size:.8rem}
 .refresh-info{font-size:.7rem;color:#484f58;text-align:right;margin-bottom:8px}
+.feed-item{display:flex;align-items:center;gap:10px;background:#161b22;border:1px solid #21262d;border-radius:10px;padding:10px 14px}
+.feed-icon{width:28px;height:28px;border-radius:50%;flex-shrink:0}
+.feed-body{flex:1;min-width:0}
+.feed-title{font-size:.82rem;color:#c9d1d9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.feed-detail{font-size:.75rem;color:#8b949e;margin-top:2px}
+.feed-amount{font-size:.9rem;font-weight:600;text-align:right;white-space:nowrap}
+.feed-tag{font-size:.65rem;padding:2px 8px;border-radius:10px;text-align:right;white-space:nowrap}
+.tag-claimed{background:#1a3a2a;color:#3fb950}
+.tag-lost{background:#3d1f1f;color:#f85149}
+.tag-bought{background:#1c2a3a;color:#58a6ff}
+.tag-open{background:#2d2a1a;color:#d29922}
 .table-wrap{overflow-x:auto;border-radius:10px;margin-bottom:20px}
 @media(max-width:600px){
   body{padding:8px}
@@ -75,8 +86,8 @@ td{color:#c9d1d9}
 
 <div class="tab-content" id="tab-live">
   <div class="cards" id="live-cards"></div>
-  <h3 style="margin-bottom:8px;color:#8b949e;font-size:.9rem">Polymarket Positions</h3>
-  <div class="table-wrap"><table id="live-positions"><thead><tr><th>Market</th><th>Side</th><th>Size</th><th>Avg Price</th><th>Invested</th><th>Current</th><th>P&L</th><th>Status</th></tr></thead><tbody></tbody></table></div>
+  <h3 style="margin-bottom:8px;color:#8b949e;font-size:.9rem">Activity</h3>
+  <div id="live-feed" style="display:flex;flex-direction:column;gap:6px"></div>
 </div>
 
 <script>
@@ -230,19 +241,36 @@ async function refresh(){
   const pe=(pEquity&&pEquity.equity)||pEquity||[];
   if(!paperChart)paperChart=makeChart(document.getElementById('paperChart'),pe,'Paper Equity');
   else updateChart(paperChart,pe);
-  // Live tab — Polymarket positions
+  // Live tab — Polymarket activity feed
   if(positions){
     const s=positions.summary||{};
     const el=document.getElementById('live-cards');
     el.innerHTML=`
       <div class="card"><div class="card-label">Wallet Balance</div><div class="card-value">${s.balance!=null?fmtUsd(s.balance):'—'}</div></div>
       <div class="card"><div class="card-label">Total P&L</div><div class="card-value ${pnlClass(s.total_pnl)}">${fmtUsd(s.total_pnl)}</div></div>
-      <div class="card"><div class="card-label">Invested</div><div class="card-value">${fmtUsd(s.total_invested)}</div></div>
-      <div class="card"><div class="card-label">Positions</div><div class="card-value">${(positions.positions||[]).length} (${s.wins}W/${s.losses}L)</div></div>`;
-    const tbody=document.getElementById('live-positions').querySelector('tbody');
-    tbody.innerHTML=(positions.positions||[]).map(p=>{
-      const status=p.redeemable?'<span style="color:#f0883e">Redeemable</span>':(p.current_value>0?'<span style="color:#58a6ff">Open</span>':'<span style="color:#484f58">Settled</span>');
-      return`<tr><td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.title}</td><td>${p.outcome}</td><td>${fmt(p.size,1)}</td><td>${fmtUsd(p.avg_price)}</td><td>${fmtUsd(p.initial_value)}</td><td>${fmtUsd(p.current_value)}</td><td class="${pnlClass(p.pnl)}">${fmtUsd(p.pnl)}</td><td>${status}</td></tr>`;
+      <div class="card"><div class="card-label">Total Redeemed</div><div class="card-value green">${fmtUsd(s.total_redeemed)}</div></div>
+      <div class="card"><div class="card-label">Positions</div><div class="card-value">${s.positions}</div></div>`;
+    const feed=document.getElementById('live-feed');
+    const now=Date.now()/1000;
+    feed.innerHTML=(positions.activity||[]).map(a=>{
+      const icon=a.icon?`<img class="feed-icon" src="${a.icon}" alt="">`:'';
+      let detail='',amount='',tag='';
+      if(a.type==='REDEEM'){
+        detail='Claimed';
+        amount=`<div class="feed-amount green">+${fmtUsd(a.usdc)}</div>`;
+        tag='<div class="feed-tag tag-claimed">Claimed</div>';
+      }else if(a.type==='TRADE'&&a.side==='BUY'){
+        const ago=Math.round((now-a.timestamp)/60);
+        const agoStr=ago<60?ago+' min ago':Math.round(ago/60)+'h ago';
+        detail=`Bought ${fmt(a.size,0)} ${a.outcome} at ${Math.round(a.price*100)}¢`;
+        amount=`<div class="feed-amount" style="color:#8b949e">-${fmtUsd(a.usdc)}</div>`;
+        tag=`<div class="feed-tag tag-bought">${agoStr}</div>`;
+      }else{
+        detail=`${a.type} ${a.outcome||''} ${fmt(a.size,1)}`;
+        amount=`<div class="feed-amount">${fmtUsd(a.usdc)}</div>`;
+        tag=`<div class="feed-tag tag-open">${a.type}</div>`;
+      }
+      return`<div class="feed-item">${icon}<div class="feed-body"><div class="feed-title">${a.title}</div><div class="feed-detail">${detail}</div></div>${amount}${tag}</div>`;
     }).join('');
   }
   document.getElementById('refreshInfo').textContent='Last refresh: '+new Date().toLocaleTimeString()+' · Auto-refresh 30s';
