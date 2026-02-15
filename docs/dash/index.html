@@ -197,15 +197,16 @@ async function refresh(){
       if(!ts){dot.className='health-dot dot-gray';return}
       dot.className='health-dot '+((now-new Date(ts).getTime())<120000?'dot-green':'dot-red');
     };
-    check('h-signal',health.signal_engine||health.last_signal);
-    check('h-paper',health.paper_trader||health.last_paper_trade);
-    check('h-live',health.live_trader||health.last_live_trade);
+    const hbTs=(o)=>o&&(o.last_heartbeat||o.ts||o);
+    check('h-signal',hbTs(health.signal_engine)||health.last_signal);
+    check('h-paper',hbTs(health.paper_trader)||health.last_paper_trade);
+    check('h-live',hbTs(health.live_trader)||health.last_live_trade);
     document.getElementById('h-api').className='health-dot dot-green';
   }
   // Strategies
   strategiesData=(strategies&&strategies.strategies)||strategies||[];
-  paperStats=(pStats&&pStats.strategies)||pStats||[];
-  liveStats=(lStats&&lStats.strategies)||lStats||[];
+  paperStats=(pStats&&(pStats.stats||pStats.strategies))||pStats||[];
+  liveStats=(lStats&&(lStats.stats||lStats.strategies))||lStats||[];
   const sigs=(signals&&signals.signals)||signals||[];
   // Cards
   renderCards('paper-cards',paperStats,strategiesData,'paper');
