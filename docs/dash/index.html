@@ -2,51 +2,86 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BTC Trading Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d1117">
+<title>BTC Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0d1117;--card:#161b22;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--green:#3fb950;--red:#f85149;--blue:#58a6ff;--yellow:#d29922}
-body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;line-height:1.5;padding:16px;max-width:1400px;margin:0 auto}
-h1{font-size:1.4rem;font-weight:600}
-.header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px}
-.header small{color:var(--muted);font-size:.8rem}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;line-height:1.5;padding:12px;max-width:1400px;margin:0 auto;-webkit-text-size-adjust:100%}
+h1{font-size:1.3rem;font-weight:600}
+.header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.header small{color:var(--muted);font-size:.75rem}
+
 /* Health bar */
-.health{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 16px;margin-bottom:16px;flex-wrap:wrap;font-size:.85rem}
+.health{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin-bottom:12px;flex-wrap:wrap;font-size:.8rem}
 .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 .dot.ok{background:var(--green)}.dot.err{background:var(--red)}
+
 /* Tabs */
-.tabs{display:flex;gap:4px;margin-bottom:16px}
-.tabs button{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:6px 18px;border-radius:6px;cursor:pointer;font-size:.85rem}
+.tabs{display:flex;gap:4px;margin-bottom:12px}
+.tabs button{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:8px 20px;border-radius:6px;cursor:pointer;font-size:.85rem;flex:1;max-width:120px;-webkit-tap-highlight-color:transparent}
 .tabs button.active{color:var(--text);border-color:var(--blue);background:#1c2333}
+
 /* Cards */
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px}
-.card .label{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
-.card .value{font-size:1.4rem;font-weight:600;margin-top:2px}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:12px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 12px}
+.card .label{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.card .value{font-size:1.2rem;font-weight:600;margin-top:2px;overflow:hidden;text-overflow:ellipsis}
+.card:last-child:nth-child(odd){grid-column:1/-1}
 .pos{color:var(--green)}.neg{color:var(--red)}
+
 /* Chart */
-.chart-wrap{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px}
-.chart-wrap h2{font-size:1rem;margin-bottom:8px}
+.chart-wrap{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:12px;position:relative}
+.chart-wrap h2{font-size:.95rem;margin-bottom:6px}
+.chart-container{position:relative;width:100%;height:220px}
+
 /* Table */
-.tbl-wrap{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px;overflow-x:auto}
-.tbl-wrap h2{font-size:1rem;margin-bottom:8px}
-table{width:100%;border-collapse:collapse;font-size:.83rem}
-th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)}
-th{color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap}
+.tbl-wrap{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:12px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tbl-wrap h2{font-size:.95rem;margin-bottom:6px}
+table{width:100%;border-collapse:collapse;font-size:.78rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--border)}
+th{color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap;position:sticky;top:0;background:var(--card)}
 th:hover{color:var(--text)}
 td{white-space:nowrap}
+
 /* Signals */
-.signals{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px}
-.signals h2{font-size:1rem;margin-bottom:8px}
-.sig{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);font-size:.82rem;flex-wrap:wrap}
+.signals{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px}
+.signals h2{font-size:.95rem;margin-bottom:6px}
+.sig-list{max-height:400px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.sig{display:grid;grid-template-columns:1fr auto auto;gap:4px 8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:.78rem;align-items:center}
 .sig:last-child{border-bottom:none}
-.sig .ts{color:var(--muted);min-width:130px}
-.sig .dir{font-weight:600;min-width:50px}
-.dir.LONG{color:var(--green)}.dir.SHORT{color:var(--red)}
-.sig .conf{color:var(--yellow)}
-.loading{color:var(--muted);font-style:italic;padding:20px 0}
+.sig .ts{color:var(--muted);font-size:.72rem}
+.sig .name{grid-column:1;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sig .dir{font-weight:700;text-align:right}
+.sig .meta{grid-column:1/-1;display:flex;gap:8px;font-size:.72rem;color:var(--muted)}
+.dir.UP{color:var(--green)}.dir.DOWN{color:var(--red)}
+.sig .conf{color:var(--yellow);font-weight:600}
+.loading{color:var(--muted);font-style:italic;padding:16px 0;text-align:center}
+
+/* Scroll hint for table */
+.scroll-hint{font-size:.7rem;color:var(--muted);margin-bottom:4px;display:none}
+
+/* Desktop overrides */
+@media(min-width:640px){
+  body{padding:16px}
+  .cards{grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+  .card .value{font-size:1.4rem}
+  .chart-container{height:300px}
+  .sig{grid-template-columns:130px 1fr auto auto auto;gap:0 10px}
+  .sig .meta{display:contents}
+  .sig .ts{grid-column:auto}
+  .sig .name{grid-column:auto}
+  table{font-size:.83rem}
+  th,td{padding:8px 10px}
+}
+@media(max-width:639px){
+  .scroll-hint{display:block}
+  .tbl-wrap{margin-left:-12px;margin-right:-12px;border-radius:0;border-left:none;border-right:none;padding:12px 8px}
+}
 </style>
 </head>
 <body>
@@ -56,113 +91,140 @@ td{white-space:nowrap}
   <small id="refreshTime"></small>
 </div>
 
-<div class="health" id="health"><span class="loading">Loading health...</span></div>
+<div class="health" id="health"><span class="loading">Loading...</span></div>
 
 <div class="tabs">
-  <button class="active" onclick="setMode('paper')">Paper</button>
-  <button onclick="setMode('live')">Live</button>
+  <button class="active" onclick="setMode('paper')">📄 Paper</button>
+  <button onclick="setMode('live')">🔴 Live</button>
 </div>
 
 <div class="cards" id="cards"><span class="loading">Loading stats...</span></div>
 
 <div class="chart-wrap">
   <h2>Equity Curve</h2>
-  <canvas id="equityChart" height="260"></canvas>
+  <div class="chart-container"><canvas id="equityChart"></canvas></div>
 </div>
 
 <div class="tbl-wrap">
   <h2>Strategies</h2>
+  <span class="scroll-hint">← Scroll sideways →</span>
   <div id="stratTable"><span class="loading">Loading...</span></div>
 </div>
 
 <div class="signals">
   <h2>Recent Signals</h2>
-  <div id="signalFeed"><span class="loading">Loading...</span></div>
+  <div class="sig-list" id="signalFeed"><span class="loading">Loading...</span></div>
 </div>
 
 <script>
 const API='https://dashboard.peytoncampbell.ca',KEY='65bc4d4ad01756a528c74480067c330da9461584b3b7347e';
 let mode='paper',chart=null,sortCol='pnl',sortAsc=false,statsData=[];
 
-const F=url=>fetch(API+url,{headers:{'X-API-Key':KEY}}).then(r=>r.json());
+const F=url=>fetch(API+url,{headers:{'X-API-Key':KEY}}).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()});
 const $=id=>document.getElementById(id);
 const fmt=v=>v==null?'—':Number(v).toFixed(2);
 const pct=v=>v==null?'—':(Number(v)*100).toFixed(1)+'%';
 const cls=v=>v>0?'pos':v<0?'neg':'';
-const ts=s=>{if(!s)return'—';const d=new Date(s);return d.toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})};
+const ts=(s,short)=>{if(!s)return'—';const d=new Date(s);
+  return short?d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false})
+  :d.toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false})};
+const isMobile=()=>window.innerWidth<640;
 
 function setMode(m){
   mode=m;
-  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('active',b.textContent.toLowerCase()===m));
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('active',b.textContent.toLowerCase().includes(m)));
   refresh();
 }
 
 async function refresh(){
-  $('refreshTime').textContent='Updated: '+new Date().toLocaleTimeString();
-  try{await Promise.all([loadHealth(),loadStats(),loadEquity(),loadStrategies(),loadSignals()])}catch(e){console.error(e)}
+  $('refreshTime').textContent='Updated '+new Date().toLocaleTimeString();
+  try{await Promise.all([loadHealth(),loadStats(),loadEquity(),loadSignals()])}catch(e){console.error('Refresh error:',e)}
 }
 
 async function loadHealth(){
-  const d=await F('/api/health');
-  const ok=d.status==='ok'||d.status==='healthy';
-  const se=d.signal_engine||{};
-  $('health').innerHTML=`
-    <span class="dot ${ok?'ok':'err'}"></span>
-    <strong>${ok?'Healthy':'Unhealthy'}</strong>
-    <span>Last signal: ${ts(se.last_heartbeat)}</span>
-    <span>Signals emitted: ${se.signals_emitted??'—'}</span>
-    <span>Window: ${se.window??'—'} / Min: ${se.minute??'—'}</span>`;
+  try{
+    const d=await F('/api/health');
+    const ok=d.status==='ok'||d.status==='healthy';
+    const se=d.signal_engine||{};
+    const pt=d.paper_trader||{};
+    $('health').innerHTML=`
+      <span class="dot ${ok?'ok':'err'}"></span>
+      <strong>${ok?'Healthy':'Down'}</strong>
+      <span>Signal: ${ts(se.last_heartbeat,true)}</span>
+      <span>Paper: ${d.paper_trades_total??'—'} trades</span>
+      <span>Min ${se.minute??'—'}/5</span>`;
+  }catch(e){$('health').innerHTML='<span class="dot err"></span><strong>API Error</strong>'}
 }
 
 async function loadStats(){
-  const d=await F('/api/stats?mode='+mode);
-  statsData=d.stats||[];
-  let bal=0,pnl=0,wins=0,trades=0;
-  statsData.forEach(s=>{pnl+=s.pnl||0;wins+=s.wins||0;trades+=s.trades||0});
-  const wr=trades?wins/trades:0;
-  $('cards').innerHTML=`
-    <div class="card"><div class="label">Balance</div><div class="value">$${fmt(bal||pnl)}</div></div>
-    <div class="card"><div class="label">Total P&L</div><div class="value ${cls(pnl)}">$${fmt(pnl)}</div></div>
-    <div class="card"><div class="label">Win Rate</div><div class="value">${pct(wr)}</div></div>
-    <div class="card"><div class="label">Total Trades</div><div class="value">${trades}</div></div>
-    <div class="card"><div class="label">Strategies</div><div class="value">${statsData.length}</div></div>`;
-  renderStratTable();
+  try{
+    const d=await F('/api/stats?mode='+mode);
+    statsData=d.stats||[];
+    let pnl=0,wins=0,trades=0,maxPnl=null,minPnl=null;
+    statsData.forEach(s=>{
+      pnl+=s.pnl||0;wins+=s.wins||0;trades+=s.trades||0;
+      if(maxPnl===null||s.pnl>maxPnl)maxPnl=s.pnl;
+      if(minPnl===null||s.pnl<minPnl)minPnl=s.pnl;
+    });
+    const wr=trades?wins/trades:0;
+    const active=statsData.filter(s=>s.trades>0).length;
+    $('cards').innerHTML=`
+      <div class="card"><div class="label">Total P&L</div><div class="value ${cls(pnl)}">$${fmt(pnl)}</div></div>
+      <div class="card"><div class="label">Win Rate</div><div class="value">${pct(wr)}</div></div>
+      <div class="card"><div class="label">Total Trades</div><div class="value">${trades.toLocaleString()}</div></div>
+      <div class="card"><div class="label">Active Strats</div><div class="value">${active}/${statsData.length}</div></div>
+      <div class="card"><div class="label">Best / Worst</div><div class="value"><span class="pos">$${fmt(maxPnl)}</span> / <span class="neg">$${fmt(minPnl)}</span></div></div>`;
+    renderStratTable();
+  }catch(e){$('cards').innerHTML='<span class="loading">Failed to load stats</span>'}
 }
 
 function renderStratTable(){
   const s=[...statsData].sort((a,b)=>{let v=0;if(sortCol==='strategy')v=(a.strategy||'').localeCompare(b.strategy||'');else v=(a[sortCol]||0)-(b[sortCol]||0);return sortAsc?v:-v});
   const arrow=c=>sortCol===c?(sortAsc?' ↑':' ↓'):'';
-  const cols=[['strategy','Strategy'],['trades','Trades'],['win_rate','Win%'],['pnl','P&L'],['max_drawdown','MaxDD'],['sortino','Sortino']];
+  const cols=[['strategy','Strategy'],['trades','Trades'],['win_rate','Win%'],['pnl','P&L'],['max_drawdown','MaxDD'],['profit_to_dd','P/DD'],['sortino','Sortino']];
   $('stratTable').innerHTML=`<table><thead><tr>${cols.map(([k,l])=>`<th data-c="${k}">${l}${arrow(k)}</th>`).join('')}</tr></thead><tbody>${s.map(r=>`<tr>
-    <td>${r.strategy||'—'}</td><td>${r.trades}</td><td>${pct(r.win_rate)}</td>
-    <td class="${cls(r.pnl)}">$${fmt(r.pnl)}</td><td class="neg">$${fmt(r.max_drawdown)}</td><td>${fmt(r.sortino)}</td>
+    <td>${r.strategy||'—'}</td><td>${r.trades||0}</td><td>${pct(r.win_rate)}</td>
+    <td class="${cls(r.pnl)}">$${fmt(r.pnl)}</td><td class="neg">$${fmt(r.max_drawdown)}</td>
+    <td class="${cls(r.profit_to_dd)}">${fmt(r.profit_to_dd)}</td><td>${fmt(r.sortino)}</td>
   </tr>`).join('')}</tbody></table>`;
   $('stratTable').querySelectorAll('th').forEach(th=>th.onclick=()=>{const c=th.dataset.c;if(sortCol===c)sortAsc=!sortAsc;else{sortCol=c;sortAsc=false}renderStratTable()});
 }
 
 async function loadEquity(){
-  const d=await F('/api/equity?mode='+mode+'&points=300');
-  const eq=d.equity||[];
-  const labels=eq.map(p=>new Date(p.t).toLocaleDateString('en-US',{month:'short',day:'numeric'}));
-  const data=eq.map(p=>p.b);
-  if(chart)chart.destroy();
-  chart=new Chart($('equityChart'),{type:'line',data:{labels,datasets:[{label:'Balance',data,borderColor:'#58a6ff',backgroundColor:'rgba(88,166,255,.1)',fill:true,tension:.3,pointRadius:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#8b949e',maxTicksLimit:8},grid:{color:'#21262d'}},y:{ticks:{color:'#8b949e'},grid:{color:'#21262d'}}}}});
+  try{
+    const pts=isMobile()?150:300;
+    const d=await F('/api/equity?mode='+mode+'&points='+pts);
+    const eq=d.equity||[];
+    if(!eq.length){if(chart){chart.destroy();chart=null}return}
+    const labels=eq.map(p=>{const d=new Date(p.t);return isMobile()?d.toLocaleDateString('en-US',{month:'short',day:'numeric'}):d.toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:false})});
+    const data=eq.map(p=>p.b);
+    if(chart)chart.destroy();
+    chart=new Chart($('equityChart'),{type:'line',data:{labels,datasets:[{label:'Balance ($)',data,borderColor:'#58a6ff',backgroundColor:'rgba(88,166,255,.08)',fill:true,tension:.3,pointRadius:0,borderWidth:2}]},options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{intersect:false,mode:'index'},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>'$'+ctx.parsed.y.toFixed(2)}}},
+      scales:{x:{ticks:{color:'#8b949e',maxTicksLimit:isMobile()?5:10,maxRotation:0,font:{size:isMobile()?10:11}},grid:{color:'#21262d'}},y:{ticks:{color:'#8b949e',font:{size:isMobile()?10:11},callback:v=>'$'+v},grid:{color:'#21262d'}}}
+    }});
+  }catch(e){console.error('Equity error:',e)}
 }
 
 async function loadSignals(){
-  const d=await F('/api/signals?limit=50');
-  const sigs=d.signals||[];
-  if(!sigs.length){$('signalFeed').innerHTML='<span class="loading">No signals yet</span>';return}
-  $('signalFeed').innerHTML=sigs.map(s=>`<div class="sig">
-    <span class="ts">${ts(s.timestamp)}</span>
-    <span class="dir ${s.direction}">${s.direction}</span>
-    <span>${s.strategy_name||'—'}</span>
-    <span class="conf">${(s.confidence*100).toFixed(0)}%</span>
-    <span>$${fmt(s.price)}</span>
-  </div>`).join('');
+  try{
+    const d=await F('/api/signals?limit=30');
+    const sigs=d.signals||[];
+    if(!sigs.length){$('signalFeed').innerHTML='<span class="loading">No signals yet</span>';return}
+    $('signalFeed').innerHTML=sigs.map(s=>`<div class="sig">
+      <span class="name">${s.strategy_name||'—'}</span>
+      <span class="dir ${s.direction}">${s.direction}</span>
+      <span class="conf">${(s.confidence*100).toFixed(0)}%</span>
+      <div class="meta">
+        <span class="ts">${ts(s.timestamp)}</span>
+        <span>${s.status||''}</span>
+        <span>$${fmt(s.price)}</span>
+      </div>
+    </div>`).join('');
+  }catch(e){$('signalFeed').innerHTML='<span class="loading">Failed to load signals</span>'}
 }
-
-async function loadStrategies(){/* merged into stats view */}
 
 refresh();
 setInterval(refresh,30000);
