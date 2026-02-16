@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -67,19 +67,19 @@ th:hover{color:var(--text)}
 </head>
 <body>
 <div class="hdr">
-  <h1>Γé┐ BTC Trading Bot</h1>
+  <h1>₿ BTC Trading Bot</h1>
   <div class="hdr-right">
     <div class="health"><span class="dot dot-x" id="h-sig"></span>Signals</div>
     <div class="health"><span class="dot dot-x" id="h-pap"></span>Paper</div>
     <div class="health"><span class="dot dot-x" id="h-liv"></span>Live</div>
     <div class="health"><span class="dot dot-x" id="h-api"></span>API</div>
-    <span class="refresh" id="ref">ΓÇö</span>
+    <span class="refresh" id="ref">—</span>
   </div>
 </div>
 
 <div class="tabs">
-  <div class="tab on" onclick="sw('paper')">≡ƒôè Paper Trading</div>
-  <div class="tab" onclick="sw('live')">≡ƒö┤ Live Trading</div>
+  <div class="tab on" onclick="sw('paper')">📊 Paper Trading</div>
+  <div class="tab" onclick="sw('live')">🔴 Live Trading</div>
 </div>
 
 <div class="pane on" id="p-paper">
@@ -110,8 +110,8 @@ th:hover{color:var(--text)}
       <div class="pnl-tab" onclick="setPnlPeriod('all')">ALL</div>
     </div>
     <div class="pnl-display">
-      <div class="pnl-amount" id="pnl-amount">ΓÇö</div>
-      <div class="pnl-percent" id="pnl-percent">ΓÇö</div>
+      <div class="pnl-amount" id="pnl-amount">—</div>
+      <div class="pnl-percent" id="pnl-percent">—</div>
     </div>
   </div>
   
@@ -128,9 +128,9 @@ const API='https://api.peytoncampbell.ca',KEY='65bc4d4ad01756a528c74480067c330da
 let pChart,pnlChart,strats=[],ss={col:'pnl',asc:false},currentPnlPeriod='1d';
 async function q(p){try{const r=await fetch(API+p,H);if(!r.ok)throw r;return r.json()}catch{return null}}
 function sw(t){document.querySelectorAll('.tab').forEach((e,i)=>e.classList.toggle('on',i===(t==='paper'?0:1)));document.querySelectorAll('.pane').forEach((e,i)=>e.classList.toggle('on',i===(t==='paper'?0:1)))}
-const f2=(v,d=2)=>v==null?'ΓÇö':Number(v).toFixed(d);
-const f$=v=>v==null?'ΓÇö':'$'+f2(v);
-const fP=v=>v==null?'ΓÇö':f2(v,1)+'%';
+const f2=(v,d=2)=>v==null?'—':Number(v).toFixed(d);
+const f$=v=>v==null?'—':'$'+f2(v);
+const fP=v=>v==null?'—':f2(v,1)+'%';
 const pc=v=>v>=0?'g':'r';
 
 // Strategy table columns
@@ -154,7 +154,7 @@ function merge(strategies,stats){
 
 function renderStrats(rows){
   const t=document.getElementById('strat-tbl'),th=t.querySelector('thead tr');
-  th.innerHTML=cols.map(c=>{let a='';if(ss.col===c.k)a=`<span style="margin-left:3px;font-size:9px">${ss.asc?'Γû▓':'Γû╝'}</span>`;return`<th data-k="${c.k}">${c.l}${a}</th>`}).join('');
+  th.innerHTML=cols.map(c=>{let a='';if(ss.col===c.k)a=`<span style="margin-left:3px;font-size:9px">${ss.asc?'▲':'▼'}</span>`;return`<th data-k="${c.k}">${c.l}${a}</th>`}).join('');
   th.querySelectorAll('th').forEach(e=>e.onclick=()=>{const k=e.dataset.k;if(ss.col===k)ss.asc=!ss.asc;else{ss.col=k;ss.asc=false}renderStrats(rows)});
   const sorted=[...rows];if(ss.col){const c=cols.find(x=>x.k===ss.col);sorted.sort((a,b)=>{let av=a[ss.col],bv=b[ss.col];if(c?.n){av=+av||0;bv=+bv||0}else{av=String(av).toLowerCase();bv=String(bv).toLowerCase()}return ss.asc?(av>bv?1:-1):(av<bv?1:-1)})}
   t.querySelector('tbody').innerHTML=sorted.map(r=>`<tr>${cols.map(c=>`<td>${c.f(r[c.k])}</td>`).join('')}</tr>`).join('');
@@ -163,8 +163,8 @@ function renderStrats(rows){
 function renderSigs(sigs){
   document.getElementById('sig-tbl').querySelector('tbody').innerHTML=(sigs||[]).slice(0,20).map(s=>{
     const oc=s.outcome==='WIN'?'g':s.outcome==='LOSS'?'r':'';
-    const t=s.timestamp?new Date(s.timestamp).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}):'ΓÇö';
-    return`<tr><td>${t}</td><td>${s.strategy_name||'ΓÇö'}</td><td>${s.direction||'ΓÇö'}</td><td>${f$(s.buy_price)}</td><td class="${oc}">${s.outcome||'ΓÅ│'}</td></tr>`;
+    const t=s.timestamp?new Date(s.timestamp).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}):'—';
+    return`<tr><td>${t}</td><td>${s.strategy_name||'—'}</td><td>${s.direction||'—'}</td><td>${f$(s.buy_price)}</td><td class="${oc}">${s.outcome||'⏳'}</td></tr>`;
   }).join('');
 }
 
@@ -248,18 +248,18 @@ async function refresh(){
     const s=pos.summary||{};
     // Get daily P&L for header
     const dailyPnl=await q('/api/pnl?period=1d');
-    const dailyChangeDisplay=dailyPnl?`<span class="${pc(dailyPnl.pnl)}">${dailyPnl.pnl>=0?'+':''}${f$(dailyPnl.pnl)} (${dailyPnl.pnl_pct>=0?'+':''}${fP(dailyPnl.pnl_pct)})</span>`:'ΓÇö';
+    const dailyChangeDisplay=dailyPnl?`<span class="${pc(dailyPnl.pnl)}">${dailyPnl.pnl>=0?'+':''}${f$(dailyPnl.pnl)} (${dailyPnl.pnl_pct>=0?'+':''}${fP(dailyPnl.pnl_pct)})</span>`:'—';
     const openPos=(s.balance!=null&&s.cash_balance!=null)?s.balance-s.cash_balance:null;
     document.getElementById('lc').innerHTML=`
-      <div class="card"><div class="card-l">Portfolio</div><div class="card-v">${s.balance!=null?f$(s.balance):'ΓÇö'}</div></div>
-      <div class="card"><div class="card-l">Cash</div><div class="card-v">${s.cash_balance!=null?f$(s.cash_balance):'ΓÇö'}</div></div>
-      <div class="card"><div class="card-l">Open Positions</div><div class="card-v">${openPos!=null?f$(openPos):'ΓÇö'}</div></div>
+      <div class="card"><div class="card-l">Portfolio</div><div class="card-v">${s.balance!=null?f$(s.balance):'—'}</div></div>
+      <div class="card"><div class="card-l">Cash</div><div class="card-v">${s.cash_balance!=null?f$(s.cash_balance):'—'}</div></div>
+      <div class="card"><div class="card-l">Open Positions</div><div class="card-v">${openPos!=null?f$(openPos):'—'}</div></div>
       <div class="card"><div class="card-l">Daily Change</div><div class="card-v">${dailyChangeDisplay}</div></div>`;
     const now=Date.now()/1000;
     document.getElementById('feed').innerHTML=(pos.activity||[]).map(a=>{
       const ic=a.icon?`<img class="fi-icon" src="${a.icon}">`:'';
       if(a.type==='REDEEM')return`<div class="fi">${ic}<div class="fi-body"><div class="fi-title">${a.title}</div><div class="fi-sub">Claimed</div></div><div class="fi-amt g">+${f$(a.usdc)}</div><div class="fi-tag t-claim">Claimed</div></div>`;
-      if(a.type==='TRADE'&&a.side==='BUY'){const m=Math.round((now-a.timestamp)/60);const ago=m<60?m+'m':Math.round(m/60)+'h';return`<div class="fi">${ic}<div class="fi-body"><div class="fi-title">${a.title}</div><div class="fi-sub">Bought ${Math.round(a.size)} ${a.outcome} at ${Math.round(a.price*100)}┬ó</div></div><div class="fi-amt" style="color:var(--text2)">-${f$(a.usdc)}</div><div class="fi-tag t-buy">${ago} ago</div></div>`}
+      if(a.type==='TRADE'&&a.side==='BUY'){const m=Math.round((now-a.timestamp)/60);const ago=m<60?m+'m':Math.round(m/60)+'h';return`<div class="fi">${ic}<div class="fi-body"><div class="fi-title">${a.title}</div><div class="fi-sub">Bought ${Math.round(a.size)} ${a.outcome} at ${Math.round(a.price*100)}¢</div></div><div class="fi-amt" style="color:var(--text2)">-${f$(a.usdc)}</div><div class="fi-tag t-buy">${ago} ago</div></div>`}
       return`<div class="fi">${ic}<div class="fi-body"><div class="fi-title">${a.title}</div><div class="fi-sub">${a.type} ${a.outcome||''}</div></div><div class="fi-amt">${f$(a.usdc)}</div><div class="fi-tag t-other">${a.type}</div></div>`;
     }).join('');
   }
@@ -267,7 +267,7 @@ async function refresh(){
   if(document.querySelector('#p-live.on')){
     await refreshPnl();
   }
-  document.getElementById('ref').textContent=new Date().toLocaleTimeString()+' ┬╖ 30s';
+  document.getElementById('ref').textContent=new Date().toLocaleTimeString()+' · 30s';
 }
 refresh();setInterval(refresh,30000);
 </script>
