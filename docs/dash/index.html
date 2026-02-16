@@ -249,10 +249,12 @@ async function refresh(){
     // Get daily P&L for header
     const dailyPnl=await q('/api/pnl?period=1d');
     const dailyChangeDisplay=dailyPnl?`<span class="${pc(dailyPnl.pnl)}">${dailyPnl.pnl>=0?'+':''}${f$(dailyPnl.pnl)} (${dailyPnl.pnl_pct>=0?'+':''}${fP(dailyPnl.pnl_pct)})</span>`:'—';
+    const openPos=(s.balance!=null&&s.cash_balance!=null)?s.balance-s.cash_balance:null;
     document.getElementById('lc').innerHTML=`
       <div class="card"><div class="card-l">Portfolio</div><div class="card-v">${s.balance!=null?f$(s.balance):'—'}</div></div>
-      <div class="card"><div class="card-l">Available to trade</div><div class="card-v">${s.cash_balance!=null?f$(s.cash_balance):'—'}</div></div>
-      <div class="card"><div class="card-l">Daily change</div><div class="card-v">${dailyChangeDisplay}</div></div>`;
+      <div class="card"><div class="card-l">Cash</div><div class="card-v">${s.cash_balance!=null?f$(s.cash_balance):'—'}</div></div>
+      <div class="card"><div class="card-l">Open Positions</div><div class="card-v">${openPos!=null?f$(openPos):'—'}</div></div>
+      <div class="card"><div class="card-l">Daily Change</div><div class="card-v">${dailyChangeDisplay}</div></div>`;
     const now=Date.now()/1000;
     document.getElementById('feed').innerHTML=(pos.activity||[]).map(a=>{
       const ic=a.icon?`<img class="fi-icon" src="${a.icon}">`:'';
