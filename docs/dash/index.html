@@ -184,9 +184,7 @@ async function refresh(){
     document.getElementById('lc').innerHTML=`
       <div class="card"><div class="card-l">Portfolio</div><div class="card-v">${s.balance!=null?f$(s.balance):'—'}</div></div>
       <div class="card"><div class="card-l">Cash</div><div class="card-v">${s.cash_balance!=null?f$(s.cash_balance):'—'}</div></div>
-      <div class="card"><div class="card-l">Total P&L</div><div class="card-v ${pc(s.total_pnl)}">${f$(s.total_pnl)}</div></div>
-      <div class="card"><div class="card-l">Redeemed</div><div class="card-v g">${f$(s.total_redeemed)}</div></div>
-      <div class="card"><div class="card-l">Positions</div><div class="card-v">${s.positions}</div></div>`;
+      <div class="card"><div class="card-l">Total P&L</div><div class="card-v ${pc(s.total_pnl)}">${f$(s.total_pnl)}</div></div>`;
     const now=Date.now()/1000;
     document.getElementById('feed').innerHTML=(pos.activity||[]).map(a=>{
       const ic=a.icon?`<img class="fi-icon" src="${a.icon}">`:'';
