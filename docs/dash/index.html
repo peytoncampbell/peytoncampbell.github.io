@@ -124,7 +124,7 @@ th:hover{color:var(--text)}
 </div>
 
 <script>
-const API='http://localhost:18801',KEY='65bc4d4ad01756a528c74480067c330da9461584b3b7347e',H={headers:{'X-API-Key':KEY}};
+const API='https://api.peytoncampbell.ca',KEY='65bc4d4ad01756a528c74480067c330da9461584b3b7347e',H={headers:{'X-API-Key':KEY}};
 let pChart,pnlChart,strats=[],ss={col:'pnl',asc:false},currentPnlPeriod='1d';
 async function q(p){try{const r=await fetch(API+p,H);if(!r.ok)throw r;return r.json()}catch{return null}}
 function sw(t){document.querySelectorAll('.tab').forEach((e,i)=>e.classList.toggle('on',i===(t==='paper'?0:1)));document.querySelectorAll('.pane').forEach((e,i)=>e.classList.toggle('on',i===(t==='paper'?0:1)))}
