@@ -40,6 +40,14 @@ th{background:var(--bg);color:var(--text2);cursor:pointer;user-select:none;posit
 th:hover{color:var(--text)}
 .badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:600}
 .b-a{background:#23812e22;color:var(--green)}.b-s{background:#484f5822;color:var(--text3)}.b-l{background:#58a6ff22;color:var(--blue)}
+/* P&L Section */
+.pnl-section{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:12px}
+.pnl-tabs{display:flex;gap:0;margin-bottom:12px;border-bottom:1px solid var(--border2)}
+.pnl-tab{padding:6px 16px;cursor:pointer;font-weight:600;font-size:11px;color:var(--text2);border-bottom:2px solid transparent;transition:all .15s;text-transform:uppercase;letter-spacing:.5px}
+.pnl-tab:hover{color:var(--text)}.pnl-tab.on{color:var(--blue);border-bottom-color:var(--blue)}
+.pnl-display{display:flex;align-items:center;gap:12px}
+.pnl-amount{font-size:1.75rem;font-weight:700;color:var(--white)}
+.pnl-percent{font-size:1rem;font-weight:600;padding:3px 8px;border-radius:6px}
 /* Feed */
 .feed{display:flex;flex-direction:column;gap:4px;max-height:500px;overflow-y:auto}
 .fi{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
@@ -92,13 +100,32 @@ th:hover{color:var(--text)}
 
 <div class="pane" id="p-live">
   <div class="cards" id="lc"></div>
-  <div class="section-label">Activity</div>
+  
+  <div class="section-label">P&L Performance</div>
+  <div class="pnl-section">
+    <div class="pnl-tabs">
+      <div class="pnl-tab on" onclick="setPnlPeriod('1d')">1D</div>
+      <div class="pnl-tab" onclick="setPnlPeriod('1w')">1W</div>
+      <div class="pnl-tab" onclick="setPnlPeriod('1m')">1M</div>
+      <div class="pnl-tab" onclick="setPnlPeriod('all')">ALL</div>
+    </div>
+    <div class="pnl-display">
+      <div class="pnl-amount" id="pnl-amount">—</div>
+      <div class="pnl-percent" id="pnl-percent">—</div>
+    </div>
+  </div>
+  
+  <div class="chart-box" style="height:280px;margin-bottom:16px;">
+    <canvas id="pnlChart"></canvas>
+  </div>
+  
+  <div class="section-label">Recent Activity</div>
   <div class="feed" id="feed"></div>
 </div>
 
 <script>
-const API='https://dashboard.peytoncampbell.ca',KEY='65bc4d4ad01756a528c74480067c330da9461584b3b7347e',H={headers:{'X-API-Key':KEY}};
-let pChart,strats=[],ss={col:'pnl',asc:false};
+const API='http://localhost:18801',KEY='65bc4d4ad01756a528c74480067c330da9461584b3b7347e',H={headers:{'X-API-Key':KEY}};
+let pChart,pnlChart,strats=[],ss={col:'pnl',asc:false},currentPnlPeriod='1d';
 async function q(p){try{const r=await fetch(API+p,H);if(!r.ok)throw r;return r.json()}catch{return null}}
 function sw(t){document.querySelectorAll('.tab').forEach((e,i)=>e.classList.toggle('on',i===(t==='paper'?0:1)));document.querySelectorAll('.pane').forEach((e,i)=>e.classList.toggle('on',i===(t==='paper'?0:1)))}
 const f2=(v,d=2)=>v==null?'—':Number(v).toFixed(d);
@@ -146,6 +173,44 @@ function mkChart(ctx,data){
   return new Chart(ctx,{type:'line',data:{datasets:[{data:pts,borderColor:'#58a6ff',backgroundColor:'rgba(88,166,255,.06)',fill:true,pointRadius:0,tension:.3,borderWidth:1.5}]},options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{intersect:false,mode:'index'},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+c.parsed.y.toFixed(2)}}},scales:{x:{type:'time',grid:{color:'#161b22'},ticks:{color:'var(--text3)',maxTicksLimit:6,font:{size:10}}},y:{grid:{color:'#161b22'},ticks:{color:'var(--text3)',font:{size:10},callback:v=>'$'+v}}}}});
 }
 
+function mkPnlChart(ctx,data){
+  const pts=(data||[]).map(d=>({x:new Date(d.timestamp),y:d.cumulative_pnl}));
+  const color = pts.length && pts[pts.length-1].y >= 0 ? '#3fb950' : '#f85149';
+  return new Chart(ctx,{type:'line',data:{datasets:[{data:pts,borderColor:color,backgroundColor:color+'15',fill:true,pointRadius:1,tension:.2,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:300},interaction:{intersect:false,mode:'index'},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+c.parsed.y.toFixed(2)}}},scales:{x:{type:'time',grid:{color:'#161b22'},ticks:{color:'var(--text3)',maxTicksLimit:8,font:{size:10}}},y:{grid:{color:'#161b22'},ticks:{color:'var(--text3)',font:{size:10},callback:v=>'$'+v.toFixed(2)}}}}});
+}
+
+async function setPnlPeriod(period){
+  currentPnlPeriod=period;
+  document.querySelectorAll('.pnl-tab').forEach(t=>t.classList.remove('on'));
+  document.querySelector(`[onclick="setPnlPeriod('${period}')"]`).classList.add('on');
+  await refreshPnl();
+}
+
+async function refreshPnl(){
+  const pnl=await q(`/api/pnl?period=${currentPnlPeriod}`);
+  if(pnl){
+    const amt=document.getElementById('pnl-amount');
+    const pct=document.getElementById('pnl-percent');
+    amt.textContent=f$(pnl.pnl);
+    amt.className=`pnl-amount ${pc(pnl.pnl)}`;
+    if(pnl.pnl_pct!=null){
+      pct.textContent=`(${pnl.pnl_pct>=0?'+':''}${fP(pnl.pnl_pct)})`;
+      pct.className=`pnl-percent ${pc(pnl.pnl_pct)}`;
+      pct.style.backgroundColor=pnl.pnl_pct>=0?'rgba(63,185,80,0.15)':'rgba(248,81,73,0.15)';
+    }
+    if(!pnlChart){
+      pnlChart=mkPnlChart(document.getElementById('pnlChart'),pnl.equity_curve);
+    }else{
+      const pts=(pnl.equity_curve||[]).map(d=>({x:new Date(d.timestamp),y:d.cumulative_pnl}));
+      const color=pts.length&&pts[pts.length-1].y>=0?'#3fb950':'#f85149';
+      pnlChart.data.datasets[0].data=pts;
+      pnlChart.data.datasets[0].borderColor=color;
+      pnlChart.data.datasets[0].backgroundColor=color+'15';
+      pnlChart.update('none');
+    }
+  }
+}
+
 async function refresh(){
   const[health,strategies,pStats,pos,sigs,eq]=await Promise.all([
     q('/api/health'),q('/api/strategies'),q('/api/stats?mode=paper'),
@@ -181,10 +246,13 @@ async function refresh(){
   // Live tab
   if(pos){
     const s=pos.summary||{};
+    // Get daily P&L for header
+    const dailyPnl=await q('/api/pnl?period=1d');
+    const dailyChangeDisplay=dailyPnl?`<span class="${pc(dailyPnl.pnl)}">${dailyPnl.pnl>=0?'+':''}${f$(dailyPnl.pnl)} (${dailyPnl.pnl_pct>=0?'+':''}${fP(dailyPnl.pnl_pct)})</span>`:'—';
     document.getElementById('lc').innerHTML=`
       <div class="card"><div class="card-l">Portfolio</div><div class="card-v">${s.balance!=null?f$(s.balance):'—'}</div></div>
-      <div class="card"><div class="card-l">Cash</div><div class="card-v">${s.cash_balance!=null?f$(s.cash_balance):'—'}</div></div>
-      <div class="card"><div class="card-l">Total P&L</div><div class="card-v ${pc(s.total_pnl)}">${f$(s.total_pnl)}</div></div>`;
+      <div class="card"><div class="card-l">Available to trade</div><div class="card-v">${s.cash_balance!=null?f$(s.cash_balance):'—'}</div></div>
+      <div class="card"><div class="card-l">Daily change</div><div class="card-v">${dailyChangeDisplay}</div></div>`;
     const now=Date.now()/1000;
     document.getElementById('feed').innerHTML=(pos.activity||[]).map(a=>{
       const ic=a.icon?`<img class="fi-icon" src="${a.icon}">`:'';
@@ -192,6 +260,10 @@ async function refresh(){
       if(a.type==='TRADE'&&a.side==='BUY'){const m=Math.round((now-a.timestamp)/60);const ago=m<60?m+'m':Math.round(m/60)+'h';return`<div class="fi">${ic}<div class="fi-body"><div class="fi-title">${a.title}</div><div class="fi-sub">Bought ${Math.round(a.size)} ${a.outcome} at ${Math.round(a.price*100)}¢</div></div><div class="fi-amt" style="color:var(--text2)">-${f$(a.usdc)}</div><div class="fi-tag t-buy">${ago} ago</div></div>`}
       return`<div class="fi">${ic}<div class="fi-body"><div class="fi-title">${a.title}</div><div class="fi-sub">${a.type} ${a.outcome||''}</div></div><div class="fi-amt">${f$(a.usdc)}</div><div class="fi-tag t-other">${a.type}</div></div>`;
     }).join('');
+  }
+  // Update P&L section for live tab
+  if(document.querySelector('#p-live.on')){
+    await refreshPnl();
   }
   document.getElementById('ref').textContent=new Date().toLocaleTimeString()+' · 30s';
 }
