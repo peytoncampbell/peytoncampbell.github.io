@@ -401,13 +401,13 @@ export default function App() {
               </div>
               <div className="flex-1 mx-4">
                 <div className="bg-slate-900/80 rounded-lg px-4 py-1.5 text-xs text-slate-500 font-mono border border-slate-800/50 max-w-md mx-auto text-center">
-                  🔒 btc-dashboard-amber.vercel.app
+                  🔒 peytoncampbell.ca/dash/
                 </div>
               </div>
             </div>
             <div className="border border-t-0 border-slate-700/50 rounded-b-2xl overflow-hidden bg-slate-950">
               <iframe
-                src="https://btc-dashboard-amber.vercel.app"
+                src="https://peytoncampbell.ca/dash/"
                 title="BTC Trading Dashboard"
                 className="w-full h-[500px] md:h-[650px] border-0"
                 loading="lazy"
@@ -422,7 +422,7 @@ export default function App() {
             className="mt-8 flex justify-center"
           >
             <a
-              href="https://btc-dashboard-amber.vercel.app"
+              href="https://peytoncampbell.ca/dash/"
               target="_blank"
               rel="noopener noreferrer"
               className="btn-primary inline-flex items-center gap-3 px-8 py-3.5 text-white font-bold rounded-full text-base"
