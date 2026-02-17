@@ -140,6 +140,8 @@ const cols=[
   {k:'pnl',l:'P&L',f:v=>`<span class="${pc(v)}">${f$(v)}</span>`,n:1},
   {k:'wr',l:'WR%',f:v=>fP(v),n:1},
   {k:'pdd',l:'P/DD',f:v=>f2(v),n:1},
+  {k:'sharpe',l:'Sharpe',f:v=>`<span class="${v>0?'g':'r'}">${f2(v)}</span>`,n:1},
+  {k:'sortino',l:'Sortino',f:v=>`<span class="${v>0?'g':'r'}">${f2(v)}</span>`,n:1},
   {k:'trades',l:'#',f:v=>v,n:1}
 ];
 
@@ -147,8 +149,8 @@ function merge(strategies,stats){
   const sm=Object.fromEntries((stats||[]).map(s=>[s.strategy_name||s.name,s]));
   const im=Object.fromEntries((strategies||[]).map(s=>[s.name,s]));
   const seen=new Set(),list=[];
-  for(const s of(stats||[])){const n=s.strategy_name||s.name;seen.add(n);const i=im[n];list.push({name:n,status:i?i.status:'LEGACY',pnl:s.total_pnl||0,wr:(s.win_rate||0)*100,pdd:s.pdd_ratio||0,trades:s.total_trades||0})}
-  for(const s of strategies)if(!seen.has(s.name))list.push({name:s.name,status:s.status,pnl:0,wr:0,pdd:0,trades:0});
+  for(const s of(stats||[])){const n=s.strategy_name||s.name;seen.add(n);const i=im[n];list.push({name:n,status:i?i.status:'LEGACY',pnl:s.total_pnl||0,wr:(s.win_rate||0)*100,pdd:s.pdd_ratio||0,sharpe:s.sharpe||0,sortino:s.sortino||0,trades:s.total_trades||0})}
+  for(const s of strategies)if(!seen.has(s.name))list.push({name:s.name,status:s.status,pnl:0,wr:0,pdd:0,sharpe:0,sortino:0,trades:0});
   return list;
 }
 
