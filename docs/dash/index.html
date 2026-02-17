@@ -91,8 +91,16 @@ th:hover{color:var(--text)}
   <div class="section-label">V2 EV Gate Metrics</div>
   <div class="cards" id="v2ev"></div>
   <div class="section-label" style="margin-top:12px">Strategy Leaderboard</div>
+  <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px">
+    <select id="v2-sort" onchange="refreshV2Leaderboard()" style="background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px 8px;font-size:12px">
+      <option value="total_pnl">Sort: Total PnL</option><option value="avg_pnl">Avg PnL</option>
+      <option value="edge_lb">Edge LB</option><option value="p10_win_rate">P10 Win%</option>
+      <option value="take_rate">Take Rate</option><option value="calibration_gap">Calib Gap</option>
+    </select>
+    <label style="font-size:12px;color:var(--text2);cursor:pointer"><input type="checkbox" id="v2-small" onchange="refreshV2Leaderboard()"> Show small samples</label>
+  </div>
   <div class="tbl-wrap"><table id="v2-lb"><thead><tr>
-    <th>Strategy</th><th>Trades</th><th>Win Rate</th><th>PnL</th><th>Avg PnL</th><th>Profit Factor</th><th>Max DD</th><th>Pred Edge</th><th>Real-Pred</th>
+    <th>Strategy</th><th>Trades</th><th>Win%</th><th title="Bayesian 10th percentile win rate (Beta posterior, pessimistic estimate)">P10 Win%</th><th>PnL</th><th>Avg PnL</th><th>Take Rate</th><th title="Lower bound edge = P10 win rate - avg buy price - friction (0.03)">Edge LB</th><th>Calib Gap</th><th>Badges</th>
   </tr></thead><tbody></tbody></table></div>
   <div id="v2-detail" style="display:none;margin-bottom:12px"></div>
 </div>
@@ -307,20 +315,30 @@ async function refresh(){
   document.getElementById('ref').textContent=new Date().toLocaleTimeString()+' · 60s';
 }
 // V2 Strategy Leaderboard
+function v2Badge(s){
+  if(s.disable_recommendation)return'<span class="badge" style="background:#f8514922;color:var(--red)">⛔ Disable</span>';
+  if(s.kill_candidate)return'<span class="badge" style="background:#f8514922;color:var(--red)">💀 Kill</span>';
+  if(s.watchlist)return'<span class="badge" style="background:#3fb95022;color:var(--green)">⭐ Watch</span>';
+  if(s.small_sample)return'<span class="badge" style="background:#484f5822;color:var(--text3)">📊 Small</span>';
+  return'—';
+}
 async function refreshV2Leaderboard(){
-  const d=await q('/api/paper_v2_strategies?min_trades=3');
+  const sort=document.getElementById('v2-sort')?.value||'total_pnl';
+  const mt=document.getElementById('v2-small')?.checked?3:20;
+  const d=await q(`/api/paper_v2_strategies?min_trades=${mt}&sort=${sort}`);
   if(!d||!d.strategies)return;
   const tb=document.querySelector('#v2-lb tbody');
   tb.innerHTML=d.strategies.map(s=>{
-    const wr=fP(s.win_rate*100),pf=s.profit_factor>=999?'∞':f2(s.profit_factor);
     return`<tr style="cursor:pointer" onclick="showV2Detail('${s.strategy_name}')">
       <td style="color:var(--blue);font-weight:600">${s.strategy_name}</td>
-      <td>${s.trades_resolved}</td><td>${wr}</td>
+      <td>${s.trades_resolved}</td><td>${fP(s.win_rate*100)}</td>
+      <td>${fP(s.p10_win_rate*100)}</td>
       <td class="${pc(s.total_pnl)}">${f$(s.total_pnl)}</td>
       <td class="${pc(s.avg_pnl)}">${f$(s.avg_pnl)}</td>
-      <td>${pf}</td><td class="r">${f$(s.max_drawdown)}</td>
-      <td>${f2(s.avg_predicted_edge,4)}</td>
-      <td class="${pc(s.realized_minus_predicted)}">${f2(s.realized_minus_predicted,4)}</td></tr>`;
+      <td>${fP(s.take_rate*100)}</td>
+      <td class="${pc(s.edge_lb)}">${f2(s.edge_lb,4)}</td>
+      <td class="${pc(s.calibration_gap)}">${f2(s.calibration_gap,4)}</td>
+      <td>${v2Badge(s)}</td></tr>`;
   }).join('');
 }
 async function showV2Detail(name){
@@ -328,8 +346,14 @@ async function showV2Detail(name){
   if(el.dataset.open===name){el.style.display='none';el.dataset.open='';return;}
   const d=await q('/api/paper_v2_strategy?name='+encodeURIComponent(name));
   if(!d)return;
+  const sm=d.summary||{};
   let h=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:8px">
     <div style="font-weight:700;color:var(--white);margin-bottom:8px;font-size:14px">${name} — Detail</div>
+    <div style="display:flex;gap:16px;margin-bottom:8px;font-size:12px;color:var(--text2)">
+      <span>Trades: ${sm.total||0}</span><span>PnL: <b class="${pc(sm.total_pnl)}">${f$(sm.total_pnl)}</b></span>
+      <span>P10 Win%: <b>${sm.p10_win_rate!=null?fP(sm.p10_win_rate*100):'—'}</b></span>
+      <span>Edge LB: <b class="${pc(sm.edge_lb)}">${sm.edge_lb!=null?f2(sm.edge_lb,4):'—'}</b></span>
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">`;
   // Price bucket
   if(d.by_price_bucket&&d.by_price_bucket.length){
