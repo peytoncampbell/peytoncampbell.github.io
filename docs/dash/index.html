@@ -66,6 +66,9 @@ th:hover{color:var(--text)}
 </style>
 </head>
 <body>
+<div id="stage-banner" style="background:linear-gradient(90deg,#d29922,#f0883e);color:#0d1117;text-align:center;padding:8px 16px;border-radius:8px;margin-bottom:10px;font-weight:700;font-size:13px;display:none">
+  ⚠️ STAGE 0 — PAPER ONLY — No live orders permitted
+</div>
 <div class="hdr">
   <h1>₿ BTC Trading Bot</h1>
   <div class="hdr-right">
@@ -79,7 +82,14 @@ th:hover{color:var(--text)}
 
 <div class="tabs">
   <div class="tab on" onclick="sw('paper')">📊 Paper Trading</div>
+  <div class="tab" onclick="sw('v2')">🧪 Paper V2</div>
   <div class="tab" onclick="sw('live')">🔴 Live Trading</div>
+</div>
+
+<div class="pane" id="p-v2">
+  <div class="cards" id="v2c"></div>
+  <div class="section-label">V2 EV Gate Metrics</div>
+  <div class="cards" id="v2ev"></div>
 </div>
 
 <div class="pane on" id="p-paper">
@@ -127,7 +137,7 @@ th:hover{color:var(--text)}
 const API='https://api.peytoncampbell.ca',KEY='65bc4d4ad01756a528c74480067c330da9461584b3b7347e',H={headers:{'X-API-Key':KEY}};
 let pChart,pnlChart,strats=[],ss={col:'pnl',asc:false},currentPnlPeriod='1d';
 async function q(p){try{const r=await fetch(API+p,H);if(!r.ok)throw r;return r.json()}catch{return null}}
-function sw(t){document.querySelectorAll('.tab').forEach((e,i)=>e.classList.toggle('on',i===(t==='paper'?0:1)));document.querySelectorAll('.pane').forEach((e,i)=>e.classList.toggle('on',i===(t==='paper'?0:1)))}
+function sw(t){const tabs=['paper','v2','live'];document.querySelectorAll('.tab').forEach((e,i)=>e.classList.toggle('on',i===tabs.indexOf(t)));document.querySelectorAll('.pane').forEach((e,i)=>e.classList.toggle('on',i===tabs.indexOf(t)))}
 const f2=(v,d=2)=>v==null?'—':Number(v).toFixed(d);
 const f$=v=>v==null?'—':'$'+f2(v);
 const fP=v=>v==null?'—':f2(v,1)+'%';
@@ -269,9 +279,28 @@ async function refresh(){
   if(document.querySelector('#p-live.on')){
     await refreshPnl();
   }
-  document.getElementById('ref').textContent=new Date().toLocaleTimeString()+' · 30s';
+  // Stage banner
+  const stage=await q('/api/stage');
+  if(stage&&stage.trading_stage==='STAGE_0'){document.getElementById('stage-banner').style.display='block'}else{document.getElementById('stage-banner').style.display='none'}
+
+  // Paper V2 stats
+  const v2=await q('/api/paper_v2_stats');
+  if(v2&&!v2.error){
+    document.getElementById('v2c').innerHTML=`
+      <div class="card"><div class="card-l">V2 Total P&L</div><div class="card-v ${pc(v2.total_pnl)}">${f$(v2.total_pnl)}</div></div>
+      <div class="card"><div class="card-l">Win Rate</div><div class="card-v">${fP(v2.win_rate*100)}</div></div>
+      <div class="card"><div class="card-l">Trades Taken</div><div class="card-v">${v2.trades_taken}</div></div>
+      <div class="card"><div class="card-l">Max Drawdown</div><div class="card-v r">${f$(v2.max_drawdown)}</div></div>`;
+    document.getElementById('v2ev').innerHTML=`
+      <div class="card"><div class="card-l">Take Rate</div><div class="card-v">${fP(v2.take_rate*100)}</div></div>
+      <div class="card"><div class="card-l">Trades Skipped</div><div class="card-v">${v2.trades_skipped}</div></div>
+      <div class="card"><div class="card-l">Avg Predicted EV</div><div class="card-v">${f2(v2.avg_predicted_ev,4)}</div></div>
+      <div class="card"><div class="card-l">Calibration Error</div><div class="card-v">${f2(v2.calibration_error,4)}</div></div>`;
+  }
+
+  document.getElementById('ref').textContent=new Date().toLocaleTimeString()+' · 60s';
 }
-refresh();setInterval(refresh,30000);
+refresh();setInterval(refresh,60000);
 </script>
 </body>
 </html>
