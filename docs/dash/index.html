@@ -90,6 +90,11 @@ th:hover{color:var(--text)}
   <div class="cards" id="v2c"></div>
   <div class="section-label">V2 EV Gate Metrics</div>
   <div class="cards" id="v2ev"></div>
+  <div class="section-label" style="margin-top:12px">Strategy Leaderboard</div>
+  <div class="tbl-wrap"><table id="v2-lb"><thead><tr>
+    <th>Strategy</th><th>Trades</th><th>Win Rate</th><th>PnL</th><th>Avg PnL</th><th>Profit Factor</th><th>Max DD</th><th>Pred Edge</th><th>Real-Pred</th>
+  </tr></thead><tbody></tbody></table></div>
+  <div id="v2-detail" style="display:none;margin-bottom:12px"></div>
 </div>
 
 <div class="pane on" id="p-paper">
@@ -297,9 +302,68 @@ async function refresh(){
       <div class="card"><div class="card-l">Avg Predicted EV</div><div class="card-v">${f2(v2.avg_predicted_ev,4)}</div></div>
       <div class="card"><div class="card-l">Calibration Error</div><div class="card-v">${f2(v2.calibration_error,4)}</div></div>`;
   }
+  await refreshV2Leaderboard();
 
   document.getElementById('ref').textContent=new Date().toLocaleTimeString()+' · 60s';
 }
+// V2 Strategy Leaderboard
+async function refreshV2Leaderboard(){
+  const d=await q('/api/paper_v2_strategies?min_trades=3');
+  if(!d||!d.strategies)return;
+  const tb=document.querySelector('#v2-lb tbody');
+  tb.innerHTML=d.strategies.map(s=>{
+    const wr=fP(s.win_rate*100),pf=s.profit_factor>=999?'∞':f2(s.profit_factor);
+    return`<tr style="cursor:pointer" onclick="showV2Detail('${s.strategy_name}')">
+      <td style="color:var(--blue);font-weight:600">${s.strategy_name}</td>
+      <td>${s.trades_resolved}</td><td>${wr}</td>
+      <td class="${pc(s.total_pnl)}">${f$(s.total_pnl)}</td>
+      <td class="${pc(s.avg_pnl)}">${f$(s.avg_pnl)}</td>
+      <td>${pf}</td><td class="r">${f$(s.max_drawdown)}</td>
+      <td>${f2(s.avg_predicted_edge,4)}</td>
+      <td class="${pc(s.realized_minus_predicted)}">${f2(s.realized_minus_predicted,4)}</td></tr>`;
+  }).join('');
+}
+async function showV2Detail(name){
+  const el=document.getElementById('v2-detail');
+  if(el.dataset.open===name){el.style.display='none';el.dataset.open='';return;}
+  const d=await q('/api/paper_v2_strategy?name='+encodeURIComponent(name));
+  if(!d)return;
+  let h=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:8px">
+    <div style="font-weight:700;color:var(--white);margin-bottom:8px;font-size:14px">${name} — Detail</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">`;
+  // Price bucket
+  if(d.by_price_bucket&&d.by_price_bucket.length){
+    h+=`<div><div class="section-label">By Price Bucket</div><div class="tbl-wrap" style="max-height:200px"><table><thead><tr><th>Bucket</th><th>#</th><th>Wins</th><th>PnL</th></tr></thead><tbody>`;
+    d.by_price_bucket.forEach(r=>{h+=`<tr><td>${r.price_bucket||'—'}</td><td>${r.trades}</td><td>${r.wins}</td><td class="${pc(r.pnl)}">${f$(r.pnl)}</td></tr>`});
+    h+=`</tbody></table></div></div>`;
+  }
+  // TOD bucket
+  if(d.by_tod_bucket&&d.by_tod_bucket.length){
+    h+=`<div><div class="section-label">By Time of Day</div><div class="tbl-wrap" style="max-height:200px"><table><thead><tr><th>TOD</th><th>#</th><th>Wins</th><th>PnL</th></tr></thead><tbody>`;
+    d.by_tod_bucket.forEach(r=>{h+=`<tr><td>${r.tod_bucket||'—'}</td><td>${r.trades}</td><td>${r.wins}</td><td class="${pc(r.pnl)}">${f$(r.pnl)}</td></tr>`});
+    h+=`</tbody></table></div></div>`;
+  }
+  h+=`</div>`;
+  // EV decisions
+  if(d.ev_decisions&&d.ev_decisions.length){
+    h+=`<div class="section-label" style="margin-top:8px">EV Decisions</div><div style="display:flex;gap:8px;flex-wrap:wrap">`;
+    d.ev_decisions.forEach(r=>{const c=r.decision==='TAKE'?'b-a':'b-s';h+=`<span class="badge ${c}" style="font-size:11px;padding:3px 10px">${r.decision}: ${r.cnt}</span>`});
+    h+=`</div>`;
+  }
+  // Recent trades
+  if(d.recent_trades&&d.recent_trades.length){
+    h+=`<div class="section-label" style="margin-top:8px">Recent Trades (last 10)</div><div class="tbl-wrap" style="max-height:240px"><table><thead><tr><th>Time</th><th>Side</th><th>Price</th><th>Result</th><th>PnL</th><th>EV Est</th></tr></thead><tbody>`;
+    d.recent_trades.slice(0,10).forEach(r=>{
+      const t=r.timestamp?new Date(r.timestamp).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+      const oc=r.outcome==='WIN'?'g':r.outcome==='LOSS'?'r':'';
+      h+=`<tr><td>${t}</td><td>${r.side||'—'}</td><td>${f$(r.buy_price)}</td><td class="${oc}">${r.outcome||'PENDING'}</td><td class="${pc(r.pnl)}">${r.pnl!=null?f$(r.pnl):'—'}</td><td>${r.ev_est!=null?f2(r.ev_est,4):'—'}</td></tr>`;
+    });
+    h+=`</tbody></table></div>`;
+  }
+  h+=`</div>`;
+  el.innerHTML=h;el.style.display='block';el.dataset.open=name;
+}
+
 refresh();setInterval(refresh,60000);
 </script>
 </body>
