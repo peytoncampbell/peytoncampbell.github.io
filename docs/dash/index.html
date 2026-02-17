@@ -150,7 +150,7 @@ th:hover{color:var(--text)}
 const API='https://api.peytoncampbell.ca',KEY='65bc4d4ad01756a528c74480067c330da9461584b3b7347e',H={headers:{'X-API-Key':KEY}};
 let pChart,pnlChart,strats=[],ss={col:'pnl',asc:false},currentPnlPeriod='1d';
 async function q(p){try{const r=await fetch(API+p,H);if(!r.ok)throw r;return r.json()}catch{return null}}
-function sw(t){const tabs=['paper','v2','live'];document.querySelectorAll('.tab').forEach((e,i)=>e.classList.toggle('on',i===tabs.indexOf(t)));document.querySelectorAll('.pane').forEach((e,i)=>e.classList.toggle('on',i===tabs.indexOf(t)))}
+function sw(t){const tabs=['paper','v2','live'];const paneIds=['p-paper','p-v2','p-live'];document.querySelectorAll('.tab').forEach((e,i)=>e.classList.toggle('on',i===tabs.indexOf(t)));paneIds.forEach(id=>document.getElementById(id).classList.toggle('on',id==='p-'+t))}
 const f2=(v,d=2)=>v==null?'—':Number(v).toFixed(d);
 const f$=v=>v==null?'—':'$'+f2(v);
 const fP=v=>v==null?'—':f2(v,1)+'%';
