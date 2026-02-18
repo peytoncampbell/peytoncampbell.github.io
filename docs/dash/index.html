@@ -84,6 +84,7 @@ th:hover{color:var(--text)}
   <div class="tab on" onclick="sw('paper')">📊 Paper Trading</div>
   <div class="tab" onclick="sw('v2')">🧪 Paper V2</div>
   <div class="tab" onclick="sw('live')">🔴 Live Trading</div>
+  <div class="tab" onclick="sw('arb')">🎯 Arb Bot</div>
 </div>
 
 <div class="pane" id="p-v2">
@@ -146,11 +147,34 @@ th:hover{color:var(--text)}
   <div class="feed" id="feed"></div>
 </div>
 
+<div class="pane" id="p-arb">
+  <div id="arb-status" style="display:flex;align-items:center;gap:12px;margin-bottom:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
+    <span style="font-weight:700;color:var(--white)">Arb Bot</span>
+    <span class="badge" id="arb-mode-badge">—</span>
+    <span id="arb-running-dot" class="dot dot-x" style="margin-left:4px"></span>
+    <span style="color:var(--text2);font-size:11px" id="arb-last-scan">—</span>
+    <span style="margin-left:auto;font-size:11px;color:var(--text3)" id="arb-config-summary">—</span>
+  </div>
+  <div class="cards" id="arb-cards"></div>
+  <div class="row">
+    <div>
+      <div class="section-label">Live Scanner Feed</div>
+      <div class="feed" id="arb-feed" style="max-height:400px"></div>
+    </div>
+    <div>
+      <div class="section-label">Trade History</div>
+      <div class="tbl-wrap" style="max-height:400px"><table id="arb-tbl"><thead><tr>
+        <th>Time</th><th>Window</th><th>YES</th><th>NO</th><th>Pair</th><th>Edge%</th><th>Shares</th><th>Cost</th><th>Result</th><th>P&L</th>
+      </tr></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+</div>
+
 <script>
 const API='https://api.peytoncampbell.ca',KEY='65bc4d4ad01756a528c74480067c330da9461584b3b7347e',H={headers:{'X-API-Key':KEY}};
 let pChart,pnlChart,strats=[],ss={col:'pnl',asc:false},currentPnlPeriod='1d';
 async function q(p){try{const r=await fetch(API+p,H);if(!r.ok)throw r;return r.json()}catch{return null}}
-function sw(t){const tabs=['paper','v2','live'];const paneIds=['p-paper','p-v2','p-live'];document.querySelectorAll('.tab').forEach((e,i)=>e.classList.toggle('on',i===tabs.indexOf(t)));paneIds.forEach(id=>document.getElementById(id).classList.toggle('on',id==='p-'+t))}
+function sw(t){const tabs=['paper','v2','live','arb'];const paneIds=['p-paper','p-v2','p-live','p-arb'];document.querySelectorAll('.tab').forEach((e,i)=>e.classList.toggle('on',i===tabs.indexOf(t)));paneIds.forEach(id=>document.getElementById(id).classList.toggle('on',id==='p-'+t))}
 const f2=(v,d=2)=>v==null?'—':Number(v).toFixed(d);
 const f$=v=>v==null?'—':'$'+f2(v);
 const fP=v=>v==null?'—':f2(v,1)+'%';
@@ -388,7 +412,60 @@ async function showV2Detail(name){
   el.innerHTML=h;el.style.display='block';el.dataset.open=name;
 }
 
-refresh();setInterval(refresh,60000);
+async function refreshArb(){
+  const[status,stats,scan,trades]=await Promise.all([
+    q('/api/arb/status'),q('/api/arb/stats'),q('/api/arb/scan'),q('/api/arb/trades?limit=50')
+  ]);
+  if(status){
+    const m=status.mode;
+    const badge=document.getElementById('arb-mode-badge');
+    badge.textContent=m.toUpperCase();
+    badge.style.background=m==='live'?'#f8514922':m==='dry-run'?'#d2992222':'#484f5822';
+    badge.style.color=m==='live'?'var(--red)':m==='dry-run'?'var(--orange)':'var(--text3)';
+    document.getElementById('arb-running-dot').className='dot '+(status.running?'dot-g':'dot-r');
+    document.getElementById('arb-last-scan').textContent=status.last_scan?'Last: '+new Date(status.last_scan).toLocaleTimeString():'No scans yet';
+    const c=status.config||{};
+    document.getElementById('arb-config-summary').textContent=`max_pair: ${c.max_pair_cost||'—'} · min_edge: ${c.min_edge||'—'}`;
+  }
+  if(stats){
+    document.getElementById('arb-cards').innerHTML=`
+      <div class="card"><div class="card-l">Total P&L</div><div class="card-v ${pc(stats.total_pnl)}">${f$(stats.total_pnl)}</div></div>
+      <div class="card"><div class="card-l">Today P&L</div><div class="card-v ${pc(stats.today_pnl)}">${f$(stats.today_pnl)}</div></div>
+      <div class="card"><div class="card-l">Total Trades</div><div class="card-v">${stats.total_trades}</div></div>
+      <div class="card"><div class="card-l">Avg Edge</div><div class="card-v">${fP(stats.avg_edge*100)}</div></div>`;
+  }
+  if(scan&&scan.scans){
+    document.getElementById('arb-feed').innerHTML=scan.scans.slice().reverse().map(s=>{
+      const pc_color=s.pair_cost<1?'var(--green)':'var(--red)';
+      const edge_color=s.edge_pct>0?'var(--green)':'var(--red)';
+      const ab=s.action==='BUY'?'t-claim':s.action==='OPPORTUNITY'?'t-other':'t-buy';
+      const al=s.action==='BUY'?'background:#1a3a2a;color:var(--green)':s.action==='OPPORTUNITY'?'background:#2d2a1a;color:var(--orange)':'background:#484f5822;color:var(--text3)';
+      return`<div class="fi">
+        <div class="fi-body"><div class="fi-title">Window ${s.window} · YES <b>${f2(s.yes_price,4)}</b> · NO <b>${f2(s.no_price,4)}</b></div>
+        <div class="fi-sub">${s.timestamp}</div></div>
+        <span style="font-size:12px;font-weight:600;color:${pc_color}">${f2(s.pair_cost,4)}</span>
+        <span style="font-size:11px;margin-left:6px;color:${edge_color}">${fP(s.edge_pct*100)}</span>
+        <span class="fi-tag" style="${al}">${s.action}</span>
+      </div>`;
+    }).join('');
+  }
+  if(trades&&trades.trades){
+    document.querySelector('#arb-tbl tbody').innerHTML=trades.trades.map(t=>{
+      const rc=t.result==='WIN'?'g':t.result==='FAILED'?'r':t.result==='PARTIAL_FILL'?'style="color:var(--orange)"':'style="color:var(--text3)"';
+      const rcClass=t.result==='WIN'?'class="g"':t.result==='FAILED'?'class="r"':'';
+      const ts=t.timestamp?new Date(t.timestamp).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+      const ws=t.window_start?new Date(t.window_start).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}):'—';
+      return`<tr><td>${ts}</td><td>${ws}</td><td>${f2(t.yes_price,4)}</td><td>${f2(t.no_price,4)}</td>
+        <td style="color:${t.pair_cost<1?'var(--green)':'var(--red)'}">${f2(t.pair_cost,4)}</td>
+        <td style="color:${t.edge_pct>0?'var(--green)':'var(--red)'}">${fP(t.edge_pct*100)}</td>
+        <td>${t.shares}</td><td>${f$(t.total_cost)}</td>
+        <td ${rcClass}>${t.result}${t.dry_run?' 📝':''}</td>
+        <td class="${pc(t.pnl)}">${f$(t.pnl)}</td></tr>`;
+    }).join('');
+  }
+}
+
+refresh();setInterval(refresh,60000);setInterval(refreshArb,30000);refreshArb();
 </script>
 </body>
 </html>
