@@ -80,6 +80,7 @@ th:hover{color:var(--text)}
 <div class="tabs">
   <div class="tab on" onclick="sw('paper')">📊 Paper Trading</div>
   <div class="tab" onclick="sw('live')">🔴 Live Trading</div>
+  <div class="tab" onclick="sw('livetrades')">⚡ Live Trades</div>
 </div>
 
 <div class="pane on" id="p-paper">
@@ -123,11 +124,26 @@ th:hover{color:var(--text)}
   <div class="feed" id="feed"></div>
 </div>
 
+<div class="pane" id="p-livetrades">
+  <div class="cards" id="ltc"></div>
+  <div class="section-label">Recent Live Trades</div>
+  <div class="tbl-wrap"><table id="live-trades-tbl"><thead><tr><th>Time</th><th>Strategy</th><th>Side</th><th>Price</th><th>Shares</th><th>Cost</th><th>Result</th><th>PnL</th></tr></thead><tbody></tbody></table></div>
+</div>
+
 <script>
 const API='https://api.peytoncampbell.ca',KEY='65bc4d4ad01756a528c74480067c330da9461584b3b7347e',H={headers:{'X-API-Key':KEY}};
 let pChart,pnlChart,strats=[],ss={col:'pnl',asc:false},currentPnlPeriod='1d';
 async function q(p){try{const r=await fetch(API+p,H);if(!r.ok)throw r;return r.json()}catch{return null}}
-function sw(t){document.querySelectorAll('.tab').forEach((e,i)=>e.classList.toggle('on',i===(t==='paper'?0:1)));document.querySelectorAll('.pane').forEach((e,i)=>e.classList.toggle('on',i===(t==='paper'?0:1)))}
+function sw(t){
+  const tabIndex = t==='paper'?0:(t==='live'?1:2);
+  document.querySelectorAll('.tab').forEach((e,i)=>e.classList.toggle('on',i===tabIndex));
+  document.querySelectorAll('.pane').forEach((e,i)=>e.classList.toggle('on',i===tabIndex));
+  
+  // Refresh live trades when switching to that tab
+  if(t==='livetrades'){
+    refreshLiveTrades();
+  }
+}
 const f2=(v,d=2)=>v==null?'—':Number(v).toFixed(d);
 const f$=v=>v==null?'—':'$'+f2(v);
 const fP=v=>v==null?'—':f2(v,1)+'%';
@@ -211,6 +227,37 @@ async function refreshPnl(){
   }
 }
 
+async function refreshLiveTrades(){
+  const liveTrades=await q('/api/live_trades');
+  if(liveTrades){
+    const s=liveTrades.summary||{};
+    // Update live trades cards
+    document.getElementById('ltc').innerHTML=`
+      <div class="card"><div class="card-l">Total PnL</div><div class="card-v ${pc(s.total_pnl)}">${f$(s.total_pnl)}</div></div>
+      <div class="card"><div class="card-l">Win Rate</div><div class="card-v">${fP(s.win_rate)}</div></div>
+      <div class="card"><div class="card-l">Today's PnL</div><div class="card-v ${pc(s.daily_pnl)}">${f$(s.daily_pnl)}</div></div>
+      <div class="card"><div class="card-l">Pending</div><div class="card-v">${s.pending_trades||0}</div></div>`;
+    
+    // Update live trades table
+    const tbody=document.getElementById('live-trades-tbl').querySelector('tbody');
+    tbody.innerHTML=(liveTrades.trades||[]).map(t=>{
+      const time=t.timestamp?new Date(t.timestamp).toLocaleString('en-US',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+      const resultClass=t.result==='WIN'?'g':(t.result==='LOSS'?'r':'');
+      const pnlClass=t.actual_pnl>0?'g':(t.actual_pnl<0?'r':'');
+      return`<tr>
+        <td>${time}</td>
+        <td>${t.strategy||'—'}</td>
+        <td>${t.side||'—'}</td>
+        <td>${f$(t.buy_price)}</td>
+        <td>${t.actual_shares||'—'}</td>
+        <td>${f$(t.actual_cost)}</td>
+        <td class="${resultClass}">${t.result||'⏳'}</td>
+        <td class="${pnlClass}">${t.actual_pnl!=null?f$(t.actual_pnl):'—'}</td>
+      </tr>`;
+    }).join('');
+  }
+}
+
 async function refresh(){
   const[health,strategies,pStats,pos,sigs,eq]=await Promise.all([
     q('/api/health'),q('/api/strategies'),q('/api/stats?mode=paper'),
@@ -267,6 +314,12 @@ async function refresh(){
   if(document.querySelector('#p-live.on')){
     await refreshPnl();
   }
+  
+  // Update live trades tab if active
+  if(document.querySelector('#p-livetrades.on')){
+    await refreshLiveTrades();
+  }
+  
   document.getElementById('ref').textContent=new Date().toLocaleTimeString()+' · 30s';
 }
 refresh();setInterval(refresh,30000);
