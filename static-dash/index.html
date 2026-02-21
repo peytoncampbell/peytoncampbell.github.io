@@ -81,6 +81,7 @@ th:hover{color:var(--text)}
   <div class="tab on" onclick="sw('paper')">📊 Paper Trading</div>
   <div class="tab" onclick="sw('live')">🔴 Live Trading</div>
   <div class="tab" onclick="sw('livetrades')">⚡ Live Trades</div>
+  <div class="tab" onclick="sw('whales')">🐋 Whale Tracker</div>
 </div>
 
 <div class="pane on" id="p-paper">
@@ -130,19 +131,25 @@ th:hover{color:var(--text)}
   <div class="tbl-wrap"><table id="live-trades-tbl"><thead><tr><th>Time</th><th>Strategy</th><th>Side</th><th>Price</th><th>Shares</th><th>Cost</th><th>Result</th><th>PnL</th></tr></thead><tbody></tbody></table></div>
 </div>
 
+<div class="pane" id="p-whales">
+  <div class="cards" id="wc"></div>
+  <div class="section-label">Whale Leaderboard</div>
+  <div class="tbl-wrap" style="max-height:420px"><table id="whale-tbl"><thead><tr><th>#</th><th>Name</th><th>Address</th><th>Weekly P&L</th><th>Volume</th><th>Copies</th><th>Our P&L</th><th>Status</th></tr></thead><tbody></tbody></table></div>
+  <div class="section-label" style="margin-top:12px">Recent Copy Trades</div>
+  <div class="feed" id="whale-feed"></div>
+</div>
+
 <script>
 const API='https://api.peytoncampbell.ca',KEY='65bc4d4ad01756a528c74480067c330da9461584b3b7347e',H={headers:{'X-API-Key':KEY}};
 let pChart,pnlChart,strats=[],ss={col:'pnl',asc:false},currentPnlPeriod='1d';
 async function q(p){try{const r=await fetch(API+p,H);if(!r.ok)throw r;return r.json()}catch{return null}}
 function sw(t){
-  const tabIndex = t==='paper'?0:(t==='live'?1:2);
+  const tabs=['paper','live','livetrades','whales'];
+  const tabIndex=tabs.indexOf(t);
   document.querySelectorAll('.tab').forEach((e,i)=>e.classList.toggle('on',i===tabIndex));
   document.querySelectorAll('.pane').forEach((e,i)=>e.classList.toggle('on',i===tabIndex));
-  
-  // Refresh live trades when switching to that tab
-  if(t==='livetrades'){
-    refreshLiveTrades();
-  }
+  if(t==='livetrades') refreshLiveTrades();
+  if(t==='whales') refreshWhales();
 }
 const f2=(v,d=2)=>v==null?'—':Number(v).toFixed(d);
 const f$=v=>v==null?'—':'$'+f2(v);
@@ -321,6 +328,30 @@ async function refresh(){
   }
   
   document.getElementById('ref').textContent=new Date().toLocaleTimeString()+' · 30s';
+}
+async function refreshWhales(){
+  const d=await q('/api/whales');
+  if(!d)return;
+  const s=d.summary||{};
+  document.getElementById('wc').innerHTML=`
+    <div class="card"><div class="card-l">Whales Tracked</div><div class="card-v">${s.total_whales||0}</div></div>
+    <div class="card"><div class="card-l">Paper Trades</div><div class="card-v">${s.paper_trades||0}</div></div>
+    <div class="card"><div class="card-l">Copy P&L</div><div class="card-v ${pc(s.total_copy_pnl)}">${f$(s.total_copy_pnl)}</div></div>
+    <div class="card"><div class="card-l">Best Whale</div><div class="card-v" style="font-size:1rem">${s.best_whale||'N/A'}</div></div>`;
+  const tbody=document.getElementById('whale-tbl').querySelector('tbody');
+  tbody.innerHTML=(d.whales||[]).map(w=>{
+    const addr=w.address?w.address.slice(0,6)+'…'+w.address.slice(-4):'—';
+    const pnlC=w.our_pnl>0?'g':(w.our_pnl<0?'r':'');
+    const st=w.tracked?'<span class="badge b-a">Tracked</span>':'<span class="badge b-s">—</span>';
+    return`<tr><td>${w.rank}</td><td>${w.name}</td><td style="font-family:monospace;font-size:11px">${addr}</td><td class="g">${w.weekly_pnl}</td><td>${w.volume}</td><td>${w.copies}</td><td class="${pnlC}">${f$(w.our_pnl)}</td><td>${st}</td></tr>`;
+  }).join('');
+  document.getElementById('whale-feed').innerHTML=(d.recent_trades||[]).map(t=>{
+    const time=t.timestamp?new Date(t.timestamp).toLocaleString('en-US',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+    const addr=t.whale_address?t.whale_address.slice(0,6)+'…'+t.whale_address.slice(-4):'';
+    const pnlStr=t.pnl!=null?f$(t.pnl):'pending';
+    const pnlC=t.pnl>0?'g':(t.pnl<0?'r':'');
+    return`<div class="fi"><div style="width:22px;height:22px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">🐋</div><div class="fi-body"><div class="fi-title">${t.market_title||'Unknown'}</div><div class="fi-sub">${t.side} · copied ${addr} · $${f2(t.our_size_usd)}</div></div><div class="fi-amt ${pnlC}">${pnlStr}</div><div class="fi-tag t-buy">${time}</div></div>`;
+  }).join('');
 }
 refresh();setInterval(refresh,30000);
 </script>
