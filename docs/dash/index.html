@@ -85,6 +85,7 @@ th:hover{color:var(--text)}
   <div class="tab" onclick="sw('v2')">🧪 Paper V2</div>
   <div class="tab" onclick="sw('live')">🔴 Live Trading</div>
   <div class="tab" onclick="sw('arb')">🎯 Arb Bot</div>
+  <div class="tab" onclick="sw('whale')">🐋 Whale Copy</div>
 </div>
 
 <div class="pane" id="p-v2">
@@ -170,11 +171,23 @@ th:hover{color:var(--text)}
   </div>
 </div>
 
+<div class="pane" id="p-whale">
+  <div class="cards" id="whale-cards"></div>
+  <div class="section-label">Whale Leaderboard</div>
+  <div class="tbl-wrap"><table id="whale-lb"><thead><tr>
+    <th>Name</th><th>Win Rate</th><th>PnL</th><th>Our Copies</th><th>Our PnL</th><th>Our Win Rate</th>
+  </tr></thead><tbody></tbody></table></div>
+  <div class="section-label" style="margin-top:12px">Recent Copy Trades</div>
+  <div class="tbl-wrap"><table id="whale-trades"><thead><tr>
+    <th>Time</th><th>Market</th><th>Side</th><th>Whale Price</th><th>Our Price</th><th>Size</th><th>Status</th><th>P&L</th>
+  </tr></thead><tbody></tbody></table></div>
+</div>
+
 <script>
 const API='https://api.peytoncampbell.ca',KEY='65bc4d4ad01756a528c74480067c330da9461584b3b7347e',H={headers:{'X-API-Key':KEY}};
 let pChart,pnlChart,strats=[],ss={col:'pnl',asc:false},currentPnlPeriod='1d';
 async function q(p){try{const r=await fetch(API+p,H);if(!r.ok)throw r;return r.json()}catch{return null}}
-function sw(t){const tabs=['paper','v2','live','arb'];const paneIds=['p-paper','p-v2','p-live','p-arb'];document.querySelectorAll('.tab').forEach((e,i)=>e.classList.toggle('on',i===tabs.indexOf(t)));paneIds.forEach(id=>document.getElementById(id).classList.toggle('on',id==='p-'+t))}
+function sw(t){const tabs=['paper','v2','live','arb','whale'];const paneIds=['p-paper','p-v2','p-live','p-arb','p-whale'];document.querySelectorAll('.tab').forEach((e,i)=>e.classList.toggle('on',i===tabs.indexOf(t)));paneIds.forEach(id=>document.getElementById(id).classList.toggle('on',id==='p-'+t))}
 const f2=(v,d=2)=>v==null?'—':Number(v).toFixed(d);
 const f$=v=>v==null?'—':'$'+f2(v);
 const fP=v=>v==null?'—':f2(v,1)+'%';
@@ -465,7 +478,31 @@ async function refreshArb(){
   }
 }
 
-refresh();setInterval(refresh,60000);setInterval(refreshArb,30000);refreshArb();
+async function loadWhale(){
+  const d=await q('/api/whales');
+  if(!d)return;
+  const s=d.summary||{};
+  document.getElementById('whale-cards').innerHTML=`
+    <div class="card"><div class="card-l">Whales Tracked</div><div class="card-v">${s.tracked||s.total_whales||0}</div></div>
+    <div class="card"><div class="card-l">Active Copiers</div><div class="card-v">${s.active_copiers||0}</div></div>
+    <div class="card"><div class="card-l">Total Copy P&L</div><div class="card-v ${pc(s.total_copy_pnl)}">${f$(s.total_copy_pnl)}</div></div>
+    <div class="card"><div class="card-l">Best Whale</div><div class="card-v" style="font-size:0.9rem">${s.best_whale||'—'}</div></div>`;
+  document.querySelector('#whale-lb tbody').innerHTML=(d.whales||[]).map(w=>`<tr>
+    <td style="color:var(--blue);font-weight:600">${w.name||w.address?.slice(0,8)||'—'}</td>
+    <td>${fP(w.win_rate*100)}</td>
+    <td class="${pc(w.pnl)}">${f$(w.pnl)}</td>
+    <td>${w.our_copies||0}</td>
+    <td class="${pc(w.our_pnl)}">${f$(w.our_pnl)}</td>
+    <td>${fP((w.our_win_rate||0)*100)}</td></tr>`).join('');
+  document.querySelector('#whale-trades tbody').innerHTML=(d.recent_copies||[]).map(t=>{
+    const ts=t.timestamp?new Date(t.timestamp).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+    const sc=t.status==='WIN'?'g':t.status==='LOSS'?'r':'';
+    return`<tr><td>${ts}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">${t.market_title||'—'}</td>
+      <td>${t.side||'—'}</td><td>${f2(t.whale_price,2)}¢</td><td>${f2(t.our_price,2)}¢</td>
+      <td>${f$(t.our_size_usd)}</td><td class="${sc}">${t.status||'PENDING'}</td>
+      <td class="${pc(t.pnl)}">${t.pnl!=null?f$(t.pnl):'—'}</td></tr>`}).join('');
+}
+refresh();setInterval(refresh,60000);setInterval(refreshArb,30000);refreshArb();loadWhale();setInterval(loadWhale,60000);
 </script>
 </body>
 </html>
