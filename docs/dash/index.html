@@ -205,12 +205,13 @@ th:hover{color:var(--text)}
     <div>
       <div class="section-label" style="margin-bottom:8px">🐋 Tracked Whales</div>
       <div class="whale-sort-bar">
-        <button class="whale-sort-btn active" onclick="sortWhaleCards('pnl')">By PnL</button>
+        <button class="whale-sort-btn active" onclick="sortWhaleCards('roi')">By ROI</button>
+        <button class="whale-sort-btn" onclick="sortWhaleCards('pnl')">By PnL</button>
         <button class="whale-sort-btn" onclick="sortWhaleCards('wr')">By Win Rate</button>
         <button class="whale-sort-btn" onclick="sortWhaleCards('copies')">By Copies</button>
       </div>
       <div class="whale-lb-wrap" style="max-height:500px;overflow-y:auto"><table id="whale-tracked-table"><thead><tr>
-        <th></th><th>Name</th><th>Rank</th><th>PnL</th><th>WR</th><th>Copies</th><th>Status</th>
+        <th></th><th>Name</th><th>ROI</th><th>PnL</th><th>WR</th><th>Copies</th><th>Status</th>
       </tr></thead><tbody></tbody></table></div>
       <div class="whale-grid" id="whale-tracked-grid" style="display:none"></div>
     </div>
@@ -404,7 +405,7 @@ async function refresh(){
   document.getElementById('ref').textContent=new Date().toLocaleTimeString()+' · 60s';
 }
 
-let whaleDataCache=null,whaleSortMode='pnl';
+let whaleDataCache=null,whaleSortMode='roi';
 const whaleColors=['#58a6ff','#bc8cff','#3fb950','#f0883e','#f85149','#8957e5','#d29922','#39d353','#da3633','#79c0ff'];
 function whaleInitials(name){if(!name)return'?';const clean=name.replace(/^0x/,'');return clean.slice(0,2).toUpperCase()}
 function whaleColor(name){let h=0;for(let i=0;i<(name||'').length;i++)h=name.charCodeAt(i)+((h<<5)-h);return whaleColors[Math.abs(h)%whaleColors.length]}
@@ -412,7 +413,7 @@ function wrRingStyle(wr){const deg=Math.round(wr*360);const c=wr>=.7?'var(--gree
 function whaleStatus(w){if(!w.copies||w.copies<1)return{cls:'neutral',text:'📊 New'};if(w.win_rate>=.7&&w.our_pnl>0)return{cls:'hot',text:'🟢 Hot'};if(w.win_rate<.4||w.our_pnl<0)return{cls:'cold',text:'🔴 Cold'};return{cls:'neutral',text:'⚪ Neutral'}}
 function sortWhaleCards(mode){
   whaleSortMode=mode;
-  document.querySelectorAll('.whale-sort-btn').forEach(b=>b.classList.toggle('active',b.textContent.toLowerCase().includes(mode==='pnl'?'pnl':mode==='wr'?'win':mode)));
+  document.querySelectorAll('.whale-sort-btn').forEach(b=>b.classList.toggle('active',b.textContent.toLowerCase().includes(mode==='roi'?'roi':mode==='pnl'?'pnl':mode==='wr'?'win':mode)));
   if(whaleDataCache)renderWhaleCards(whaleDataCache);
 }
 
@@ -420,7 +421,8 @@ function renderWhaleCards(tracked){
   const sorted=[...tracked].sort((a,b)=>{
     if(whaleSortMode==='wr')return(b.win_rate||0)-(a.win_rate||0);
     if(whaleSortMode==='copies')return(b.copies||0)-(a.copies||0);
-    return(b.our_pnl||0)-(a.our_pnl||0);
+    if(whaleSortMode==='pnl')return(b.our_pnl||0)-(a.our_pnl||0);
+    return(b.roi||0)-(a.roi||0);
   });
   const tbody=document.querySelector('#whale-tracked-table tbody');
   if(!tbody)return;
@@ -429,10 +431,12 @@ function renderWhaleCards(tracked){
     const st=whaleStatus(w);
     const wr=w.copies>0?w.win_rate:0;
     const wrColor=wr>=.6?'var(--green)':wr>=.4?'var(--orange)':'var(--red)';
+    const roi=w.roi||0;
+    const roiColor=roi>0?'var(--green)':roi<0?'var(--red)':'var(--text3)';
     return`<tr>
       <td><div class="whale-avatar" style="background:${whaleColor(name)};width:24px;height:24px;font-size:9px">${whaleInitials(name)}</div></td>
       <td style="color:var(--white);font-weight:600;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</td>
-      <td style="color:var(--text2)">#${w.rank}</td>
+      <td style="color:${roiColor};font-weight:800">${w.copies?((roi>=0?'+':'')+roi.toFixed(1)+'%'):'—'}</td>
       <td class="${pc(w.our_pnl)}" style="font-weight:700">${f$(w.our_pnl)}</td>
       <td style="color:${w.copies?wrColor:'var(--text3)'};font-weight:600">${w.copies?Math.round(wr*100)+'%':'—'}</td>
       <td style="color:var(--white)">${w.copies||0}</td>
@@ -472,7 +476,7 @@ async function loadWhale(){
   // Hero cards
   const totalPnl=s.total_copy_pnl||0;
   const activeWhales=tracked.filter(w=>w.copies>0);
-  const bestW=tracked.reduce((b,w)=>(!b||(w.our_pnl||0)>(b.our_pnl||0))?w:b,null);
+  const bestW=tracked.filter(w=>w.copies>0).reduce((b,w)=>(!b||(w.roi||0)>(b.roi||0))?w:b,null);
   const bestName=bestW?(bestW.name||(bestW.address?bestW.address.slice(0,6)+'…'+bestW.address.slice(-4):null)||'—'):'—';
   document.getElementById('whale-cards').innerHTML=`
     <div class="whale-hero-card">
@@ -493,7 +497,7 @@ async function loadWhale(){
     <div class="whale-hero-card">
       <div class="whc-label">🏆 Top Performer</div>
       <div class="whc-value" style="font-size:1.1rem">${bestName}</div>
-      <div class="whc-trend" style="color:var(--green)">${bestW?'+'+f$(bestW.our_pnl)+' · '+Math.round((bestW.win_rate||0)*100)+'% WR':'—'}</div>
+      <div class="whc-trend" style="color:var(--green)">${bestW?((bestW.roi||0)>=0?'+':'')+(bestW.roi||0).toFixed(1)+'% ROI · '+f$(bestW.our_pnl):'—'}</div>
     </div>`;
   // Summary bar
   const trades=d.recent_trades||[];
