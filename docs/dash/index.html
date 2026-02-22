@@ -470,18 +470,18 @@ async function loadWhale(){
   if(!d)return;
   const s=d.summary||{};
   const whales=d.whales||[];
-  const tracked=whales.filter(w=>w.tracked);
-  whaleDataCache=tracked;
+  const allWithTrades=whales.filter(w=>w.tracked||w.copies>0);
+  whaleDataCache=allWithTrades;
 
   // Hero cards
   const totalPnl=s.total_copy_pnl||0;
-  const activeWhales=tracked.filter(w=>w.copies>0);
-  const bestW=tracked.filter(w=>w.copies>0).reduce((b,w)=>(!b||(w.roi||0)>(b.roi||0))?w:b,null);
+  const activeWhales=allWithTrades.filter(w=>w.copies>0);
+  const bestW=allWithTrades.filter(w=>w.copies>0).reduce((b,w)=>(!b||(w.roi||0)>(b.roi||0))?w:b,null);
   const bestName=bestW?(bestW.name||(bestW.address?bestW.address.slice(0,6)+'…'+bestW.address.slice(-4):null)||'—'):'—';
   document.getElementById('whale-cards').innerHTML=`
     <div class="whale-hero-card">
       <div class="whc-label">🐋 Whales Tracked</div>
-      <div class="whc-value">${tracked.length}</div>
+      <div class="whc-value">${allWithTrades.length}</div>
       <div class="whc-trend" style="color:var(--text3)">${activeWhales.length} with trades</div>
     </div>
     <div class="whale-hero-card">
@@ -511,7 +511,7 @@ async function loadWhale(){
   pnlEl.className=pc(totalPnl);
 
   // Tracked whale cards
-  renderWhaleCards(tracked);
+  renderWhaleCards(allWithTrades);
 
   // Timeline
   renderWhaleTimeline(d.recent_trades,whales);
