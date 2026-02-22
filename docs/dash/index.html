@@ -166,13 +166,13 @@ th:hover{color:var(--text)}
 </div>
 
 <div class="tabs">
-  <div class="tab on" onclick="sw('paper')">📊 Paper Trading</div>
-  <div class="tab" onclick="sw('whale')">🐋 Whale Copy</div>
+  <div class="tab on" onclick="sw('whale')">🐋 Whale Copy</div>
+  <div class="tab" onclick="sw('paper')">📊 Paper Trading</div>
   <div class="tab" onclick="sw('live')">🔴 Live Trading</div>
 </div>
 
 <!-- Paper Trading (V2 EV-Gated) -->
-<div class="pane on" id="p-paper">
+<div class="pane" id="p-paper">
   <div class="cards" id="v2c"></div>
   <div class="section-label">EV Gate Metrics</div>
   <div class="cards" id="v2ev"></div>
@@ -192,7 +192,7 @@ th:hover{color:var(--text)}
 </div>
 
 <!-- Whale Copy Trading -->
-<div class="pane" id="p-whale">
+<div class="pane on" id="p-whale">
   <div class="whale-hero" id="whale-cards"></div>
 
   <!-- Whale Copy P&L Chart -->
@@ -252,7 +252,7 @@ th:hover{color:var(--text)}
 const API='https://api.peytoncampbell.ca',KEY='65bc4d4ad01756a528c74480067c330da9461584b3b7347e',H={headers:{'X-API-Key':KEY}};
 let pnlChart,currentPnlPeriod='1d';
 async function q(p){try{const r=await fetch(API+p,H);if(!r.ok)throw r;return r.json()}catch{return null}}
-function sw(t){const tabs=['paper','whale','live'];document.querySelectorAll('.tab').forEach((e,i)=>e.classList.toggle('on',i===tabs.indexOf(t)));tabs.forEach(id=>document.getElementById('p-'+id).classList.toggle('on',id===t))}
+function sw(t){const tabs=['whale','paper','live'];document.querySelectorAll('.tab').forEach((e,i)=>e.classList.toggle('on',i===tabs.indexOf(t)));tabs.forEach(id=>document.getElementById('p-'+id).classList.toggle('on',id===t))}
 const f2=(v,d=2)=>v==null?'—':Number(v).toFixed(d);
 const f$=v=>v==null?'—':'$'+f2(v);
 const fP=v=>v==null?'—':f2(v,1)+'%';
