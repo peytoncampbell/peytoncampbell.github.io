@@ -66,6 +66,9 @@ th:hover{color:var(--text)}
 </style>
 </head>
 <body>
+<div id="stage-banner" style="background:linear-gradient(90deg,#d29922,#f0883e);color:#0d1117;text-align:center;padding:8px 16px;border-radius:8px;margin-bottom:10px;font-weight:700;font-size:13px;display:none">
+  ⚠️ STAGE 0 — PAPER ONLY — No live orders permitted
+</div>
 <div class="hdr">
   <h1>₿ BTC Trading Bot</h1>
   <div class="hdr-right">
@@ -79,9 +82,29 @@ th:hover{color:var(--text)}
 
 <div class="tabs">
   <div class="tab on" onclick="sw('paper')">📊 Paper Trading</div>
+  <div class="tab" onclick="sw('v2')">🧪 Paper V2</div>
   <div class="tab" onclick="sw('live')">🔴 Live Trading</div>
-  <div class="tab" onclick="sw('livetrades')">⚡ Live Trades</div>
-  <div class="tab" onclick="sw('whales')">🐋 Whale Tracker</div>
+  <div class="tab" onclick="sw('arb')">🎯 Arb Bot</div>
+  <div class="tab" onclick="sw('whale')">🐋 Whale Copy</div>
+</div>
+
+<div class="pane" id="p-v2">
+  <div class="cards" id="v2c"></div>
+  <div class="section-label">V2 EV Gate Metrics</div>
+  <div class="cards" id="v2ev"></div>
+  <div class="section-label" style="margin-top:12px">Strategy Leaderboard</div>
+  <div style="display:flex;gap:12px;align-items:center;margin-bottom:8px">
+    <select id="v2-sort" onchange="refreshV2Leaderboard()" style="background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px 8px;font-size:12px">
+      <option value="total_pnl">Sort: Total PnL</option><option value="avg_pnl">Avg PnL</option>
+      <option value="edge_lb">Edge LB</option><option value="p10_win_rate">P10 Win%</option>
+      <option value="take_rate">Take Rate</option><option value="calibration_gap">Calib Gap</option>
+    </select>
+    <label style="font-size:12px;color:var(--text2);cursor:pointer"><input type="checkbox" id="v2-small" onchange="refreshV2Leaderboard()"> Show small samples</label>
+  </div>
+  <div class="tbl-wrap"><table id="v2-lb"><thead><tr>
+    <th>Strategy</th><th>Trades</th><th>Win%</th><th title="Bayesian 10th percentile win rate (Beta posterior, pessimistic estimate)">P10 Win%</th><th>PnL</th><th>Avg PnL</th><th>Take Rate</th><th title="Lower bound edge = P10 win rate - avg buy price - friction (0.03)">Edge LB</th><th>Calib Gap</th><th>Badges</th>
+  </tr></thead><tbody></tbody></table></div>
+  <div id="v2-detail" style="display:none;margin-bottom:12px"></div>
 </div>
 
 <div class="pane on" id="p-paper">
@@ -125,32 +148,46 @@ th:hover{color:var(--text)}
   <div class="feed" id="feed"></div>
 </div>
 
-<div class="pane" id="p-livetrades">
-  <div class="cards" id="ltc"></div>
-  <div class="section-label">Recent Live Trades</div>
-  <div class="tbl-wrap"><table id="live-trades-tbl"><thead><tr><th>Time</th><th>Strategy</th><th>Side</th><th>Price</th><th>Shares</th><th>Cost</th><th>Result</th><th>PnL</th></tr></thead><tbody></tbody></table></div>
+<div class="pane" id="p-arb">
+  <div id="arb-status" style="display:flex;align-items:center;gap:12px;margin-bottom:12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
+    <span style="font-weight:700;color:var(--white)">Arb Bot</span>
+    <span class="badge" id="arb-mode-badge">—</span>
+    <span id="arb-running-dot" class="dot dot-x" style="margin-left:4px"></span>
+    <span style="color:var(--text2);font-size:11px" id="arb-last-scan">—</span>
+    <span style="margin-left:auto;font-size:11px;color:var(--text3)" id="arb-config-summary">—</span>
+  </div>
+  <div class="cards" id="arb-cards"></div>
+  <div class="row">
+    <div>
+      <div class="section-label">Live Scanner Feed</div>
+      <div class="feed" id="arb-feed" style="max-height:400px"></div>
+    </div>
+    <div>
+      <div class="section-label">Trade History</div>
+      <div class="tbl-wrap" style="max-height:400px"><table id="arb-tbl"><thead><tr>
+        <th>Time</th><th>Window</th><th>YES</th><th>NO</th><th>Pair</th><th>Edge%</th><th>Shares</th><th>Cost</th><th>Result</th><th>P&L</th>
+      </tr></thead><tbody></tbody></table></div>
+    </div>
+  </div>
 </div>
 
-<div class="pane" id="p-whales">
-  <div class="cards" id="wc"></div>
+<div class="pane" id="p-whale">
+  <div class="cards" id="whale-cards"></div>
   <div class="section-label">Whale Leaderboard</div>
-  <div class="tbl-wrap" style="max-height:420px"><table id="whale-tbl"><thead><tr><th>#</th><th>Name</th><th>Address</th><th>Weekly P&L</th><th>Volume</th><th>Copies</th><th>Our P&L</th><th>Status</th></tr></thead><tbody></tbody></table></div>
+  <div class="tbl-wrap"><table id="whale-lb"><thead><tr>
+    <th>Rank</th><th>Name</th><th>Weekly PnL</th><th>Volume</th><th>Copies</th><th>Our PnL</th><th>Win Rate</th><th>Status</th>
+  </tr></thead><tbody></tbody></table></div>
   <div class="section-label" style="margin-top:12px">Recent Copy Trades</div>
-  <div class="feed" id="whale-feed"></div>
+  <div class="tbl-wrap"><table id="whale-trades"><thead><tr>
+    <th>Time</th><th>Market</th><th>Side</th><th>Whale ¢</th><th>Our ¢</th><th>Our $</th><th>Status</th><th>P&L</th>
+  </tr></thead><tbody></tbody></table></div>
 </div>
 
 <script>
 const API='https://api.peytoncampbell.ca',KEY='65bc4d4ad01756a528c74480067c330da9461584b3b7347e',H={headers:{'X-API-Key':KEY}};
 let pChart,pnlChart,strats=[],ss={col:'pnl',asc:false},currentPnlPeriod='1d';
 async function q(p){try{const r=await fetch(API+p,H);if(!r.ok)throw r;return r.json()}catch{return null}}
-function sw(t){
-  const tabs=['paper','live','livetrades','whales'];
-  const tabIndex=tabs.indexOf(t);
-  document.querySelectorAll('.tab').forEach((e,i)=>e.classList.toggle('on',i===tabIndex));
-  document.querySelectorAll('.pane').forEach((e,i)=>e.classList.toggle('on',i===tabIndex));
-  if(t==='livetrades') refreshLiveTrades();
-  if(t==='whales') refreshWhales();
-}
+function sw(t){const tabs=['paper','v2','live','arb','whale'];const paneIds=['p-paper','p-v2','p-live','p-arb','p-whale'];document.querySelectorAll('.tab').forEach((e,i)=>e.classList.toggle('on',i===tabs.indexOf(t)));paneIds.forEach(id=>document.getElementById(id).classList.toggle('on',id==='p-'+t))}
 const f2=(v,d=2)=>v==null?'—':Number(v).toFixed(d);
 const f$=v=>v==null?'—':'$'+f2(v);
 const fP=v=>v==null?'—':f2(v,1)+'%';
@@ -163,6 +200,8 @@ const cols=[
   {k:'pnl',l:'P&L',f:v=>`<span class="${pc(v)}">${f$(v)}</span>`,n:1},
   {k:'wr',l:'WR%',f:v=>fP(v),n:1},
   {k:'pdd',l:'P/DD',f:v=>f2(v),n:1},
+  {k:'sharpe',l:'Sharpe',f:v=>`<span class="${v>0?'g':'r'}">${f2(v)}</span>`,n:1},
+  {k:'sortino',l:'Sortino',f:v=>`<span class="${v>0?'g':'r'}">${f2(v)}</span>`,n:1},
   {k:'trades',l:'#',f:v=>v,n:1}
 ];
 
@@ -170,8 +209,8 @@ function merge(strategies,stats){
   const sm=Object.fromEntries((stats||[]).map(s=>[s.strategy_name||s.name,s]));
   const im=Object.fromEntries((strategies||[]).map(s=>[s.name,s]));
   const seen=new Set(),list=[];
-  for(const s of(stats||[])){const n=s.strategy_name||s.name;seen.add(n);const i=im[n];list.push({name:n,status:i?i.status:'LEGACY',pnl:s.total_pnl||0,wr:(s.win_rate||0)*100,pdd:s.pdd_ratio||0,trades:s.total_trades||0})}
-  for(const s of strategies)if(!seen.has(s.name))list.push({name:s.name,status:s.status,pnl:0,wr:0,pdd:0,trades:0});
+  for(const s of(stats||[])){const n=s.strategy_name||s.name;seen.add(n);const i=im[n];list.push({name:n,status:i?i.status:'LEGACY',pnl:s.total_pnl||0,wr:(s.win_rate||0)*100,pdd:s.pdd_ratio||0,sharpe:s.sharpe||0,sortino:s.sortino||0,trades:s.total_trades||0})}
+  for(const s of strategies)if(!seen.has(s.name))list.push({name:s.name,status:s.status,pnl:0,wr:0,pdd:0,sharpe:0,sortino:0,trades:0});
   return list;
 }
 
@@ -197,7 +236,7 @@ function mkChart(ctx,data){
 }
 
 function mkPnlChart(ctx,data){
-  const pts=(data||[]).map(d=>({x:new Date(d.timestamp),y:d.cumulative_pnl}));
+  const pts=(data||[]).map(d=>({x:new Date(d.timestamp),y:d.cumulative_pnl!=null?d.cumulative_pnl:d.pnl}));
   const color = pts.length && pts[pts.length-1].y >= 0 ? '#3fb950' : '#f85149';
   return new Chart(ctx,{type:'line',data:{datasets:[{data:pts,borderColor:color,backgroundColor:color+'15',fill:true,pointRadius:1,tension:.2,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:300},interaction:{intersect:false,mode:'index'},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+c.parsed.y.toFixed(2)}}},scales:{x:{type:'time',grid:{color:'#161b22'},ticks:{color:'var(--text3)',maxTicksLimit:8,font:{size:10}}},y:{grid:{color:'#161b22'},ticks:{color:'var(--text3)',font:{size:10},callback:v=>'$'+v.toFixed(2)}}}}});
 }
@@ -224,44 +263,13 @@ async function refreshPnl(){
     if(!pnlChart){
       pnlChart=mkPnlChart(document.getElementById('pnlChart'),pnl.equity_curve);
     }else{
-      const pts=(pnl.equity_curve||[]).map(d=>({x:new Date(d.timestamp),y:d.cumulative_pnl}));
+      const pts=(pnl.equity_curve||[]).map(d=>({x:new Date(d.timestamp),y:d.cumulative_pnl!=null?d.cumulative_pnl:d.pnl}));
       const color=pts.length&&pts[pts.length-1].y>=0?'#3fb950':'#f85149';
       pnlChart.data.datasets[0].data=pts;
       pnlChart.data.datasets[0].borderColor=color;
       pnlChart.data.datasets[0].backgroundColor=color+'15';
       pnlChart.update('none');
     }
-  }
-}
-
-async function refreshLiveTrades(){
-  const liveTrades=await q('/api/live_trades');
-  if(liveTrades){
-    const s=liveTrades.summary||{};
-    // Update live trades cards
-    document.getElementById('ltc').innerHTML=`
-      <div class="card"><div class="card-l">Total PnL</div><div class="card-v ${pc(s.total_pnl)}">${f$(s.total_pnl)}</div></div>
-      <div class="card"><div class="card-l">Win Rate</div><div class="card-v">${fP(s.win_rate)}</div></div>
-      <div class="card"><div class="card-l">Today's PnL</div><div class="card-v ${pc(s.daily_pnl)}">${f$(s.daily_pnl)}</div></div>
-      <div class="card"><div class="card-l">Pending</div><div class="card-v">${s.pending_trades||0}</div></div>`;
-    
-    // Update live trades table
-    const tbody=document.getElementById('live-trades-tbl').querySelector('tbody');
-    tbody.innerHTML=(liveTrades.trades||[]).map(t=>{
-      const time=t.timestamp?new Date(t.timestamp).toLocaleString('en-US',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
-      const resultClass=t.result==='WIN'?'g':(t.result==='LOSS'?'r':'');
-      const pnlClass=t.actual_pnl>0?'g':(t.actual_pnl<0?'r':'');
-      return`<tr>
-        <td>${time}</td>
-        <td>${t.strategy||'—'}</td>
-        <td>${t.side||'—'}</td>
-        <td>${f$(t.buy_price)}</td>
-        <td>${t.actual_shares||'—'}</td>
-        <td>${f$(t.actual_cost)}</td>
-        <td class="${resultClass}">${t.result||'⏳'}</td>
-        <td class="${pnlClass}">${t.actual_pnl!=null?f$(t.actual_pnl):'—'}</td>
-      </tr>`;
-    }).join('');
   }
 }
 
@@ -321,39 +329,189 @@ async function refresh(){
   if(document.querySelector('#p-live.on')){
     await refreshPnl();
   }
-  
-  // Update live trades tab if active
-  if(document.querySelector('#p-livetrades.on')){
-    await refreshLiveTrades();
+  // Stage banner
+  const stage=await q('/api/stage');
+  if(stage&&stage.trading_stage==='STAGE_0'){document.getElementById('stage-banner').style.display='block'}else{document.getElementById('stage-banner').style.display='none'}
+
+  // Paper V2 stats
+  const v2=await q('/api/paper_v2_stats');
+  if(v2&&!v2.error){
+    document.getElementById('v2c').innerHTML=`
+      <div class="card"><div class="card-l">V2 Total P&L</div><div class="card-v ${pc(v2.total_pnl)}">${f$(v2.total_pnl)}</div></div>
+      <div class="card"><div class="card-l">Win Rate</div><div class="card-v">${fP(v2.win_rate*100)}</div></div>
+      <div class="card"><div class="card-l">Trades Taken</div><div class="card-v">${v2.trades_taken}</div></div>
+      <div class="card"><div class="card-l">Max Drawdown</div><div class="card-v r">${f$(v2.max_drawdown)}</div></div>`;
+    document.getElementById('v2ev').innerHTML=`
+      <div class="card"><div class="card-l">Take Rate</div><div class="card-v">${fP(v2.take_rate*100)}</div></div>
+      <div class="card"><div class="card-l">Trades Skipped</div><div class="card-v">${v2.trades_skipped}</div></div>
+      <div class="card"><div class="card-l">Avg Predicted EV</div><div class="card-v">${f2(v2.avg_predicted_ev,4)}</div></div>
+      <div class="card"><div class="card-l">Calibration Error</div><div class="card-v">${f2(v2.calibration_error,4)}</div></div>`;
   }
-  
-  document.getElementById('ref').textContent=new Date().toLocaleTimeString()+' · 30s';
+  await refreshV2Leaderboard();
+
+  document.getElementById('ref').textContent=new Date().toLocaleTimeString()+' · 60s';
 }
-async function refreshWhales(){
+// V2 Strategy Leaderboard
+function v2Badge(s){
+  if(s.disable_recommendation)return'<span class="badge" style="background:#f8514922;color:var(--red)">⛔ Disable</span>';
+  if(s.kill_candidate)return'<span class="badge" style="background:#f8514922;color:var(--red)">💀 Kill</span>';
+  if(s.watchlist)return'<span class="badge" style="background:#3fb95022;color:var(--green)">⭐ Watch</span>';
+  if(s.small_sample)return'<span class="badge" style="background:#484f5822;color:var(--text3)">📊 Small</span>';
+  return'—';
+}
+async function refreshV2Leaderboard(){
+  const sort=document.getElementById('v2-sort')?.value||'total_pnl';
+  const mt=document.getElementById('v2-small')?.checked?3:20;
+  const d=await q(`/api/paper_v2_strategies?min_trades=${mt}&sort=${sort}`);
+  if(!d||!d.strategies)return;
+  const tb=document.querySelector('#v2-lb tbody');
+  tb.innerHTML=d.strategies.map(s=>{
+    return`<tr style="cursor:pointer" onclick="showV2Detail('${s.strategy_name}')">
+      <td style="color:var(--blue);font-weight:600">${s.strategy_name}</td>
+      <td>${s.trades_resolved}</td><td>${fP(s.win_rate*100)}</td>
+      <td>${fP(s.p10_win_rate*100)}</td>
+      <td class="${pc(s.total_pnl)}">${f$(s.total_pnl)}</td>
+      <td class="${pc(s.avg_pnl)}">${f$(s.avg_pnl)}</td>
+      <td>${fP(s.take_rate*100)}</td>
+      <td class="${pc(s.edge_lb)}">${f2(s.edge_lb,4)}</td>
+      <td class="${pc(s.calibration_gap)}">${f2(s.calibration_gap,4)}</td>
+      <td>${v2Badge(s)}</td></tr>`;
+  }).join('');
+}
+async function showV2Detail(name){
+  const el=document.getElementById('v2-detail');
+  if(el.dataset.open===name){el.style.display='none';el.dataset.open='';return;}
+  const d=await q('/api/paper_v2_strategy?name='+encodeURIComponent(name));
+  if(!d)return;
+  const sm=d.summary||{};
+  let h=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:8px">
+    <div style="font-weight:700;color:var(--white);margin-bottom:8px;font-size:14px">${name} — Detail</div>
+    <div style="display:flex;gap:16px;margin-bottom:8px;font-size:12px;color:var(--text2)">
+      <span>Trades: ${sm.total||0}</span><span>PnL: <b class="${pc(sm.total_pnl)}">${f$(sm.total_pnl)}</b></span>
+      <span>P10 Win%: <b>${sm.p10_win_rate!=null?fP(sm.p10_win_rate*100):'—'}</b></span>
+      <span>Edge LB: <b class="${pc(sm.edge_lb)}">${sm.edge_lb!=null?f2(sm.edge_lb,4):'—'}</b></span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">`;
+  // Price bucket
+  if(d.by_price_bucket&&d.by_price_bucket.length){
+    h+=`<div><div class="section-label">By Price Bucket</div><div class="tbl-wrap" style="max-height:200px"><table><thead><tr><th>Bucket</th><th>#</th><th>Wins</th><th>PnL</th></tr></thead><tbody>`;
+    d.by_price_bucket.forEach(r=>{h+=`<tr><td>${r.price_bucket||'—'}</td><td>${r.trades}</td><td>${r.wins}</td><td class="${pc(r.pnl)}">${f$(r.pnl)}</td></tr>`});
+    h+=`</tbody></table></div></div>`;
+  }
+  // TOD bucket
+  if(d.by_tod_bucket&&d.by_tod_bucket.length){
+    h+=`<div><div class="section-label">By Time of Day</div><div class="tbl-wrap" style="max-height:200px"><table><thead><tr><th>TOD</th><th>#</th><th>Wins</th><th>PnL</th></tr></thead><tbody>`;
+    d.by_tod_bucket.forEach(r=>{h+=`<tr><td>${r.tod_bucket||'—'}</td><td>${r.trades}</td><td>${r.wins}</td><td class="${pc(r.pnl)}">${f$(r.pnl)}</td></tr>`});
+    h+=`</tbody></table></div></div>`;
+  }
+  h+=`</div>`;
+  // EV decisions
+  if(d.ev_decisions&&d.ev_decisions.length){
+    h+=`<div class="section-label" style="margin-top:8px">EV Decisions</div><div style="display:flex;gap:8px;flex-wrap:wrap">`;
+    d.ev_decisions.forEach(r=>{const c=r.decision==='TAKE'?'b-a':'b-s';h+=`<span class="badge ${c}" style="font-size:11px;padding:3px 10px">${r.decision}: ${r.cnt}</span>`});
+    h+=`</div>`;
+  }
+  // Recent trades
+  if(d.recent_trades&&d.recent_trades.length){
+    h+=`<div class="section-label" style="margin-top:8px">Recent Trades (last 10)</div><div class="tbl-wrap" style="max-height:240px"><table><thead><tr><th>Time</th><th>Side</th><th>Price</th><th>Result</th><th>PnL</th><th>EV Est</th></tr></thead><tbody>`;
+    d.recent_trades.slice(0,10).forEach(r=>{
+      const t=r.timestamp?new Date(r.timestamp).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+      const oc=r.outcome==='WIN'?'g':r.outcome==='LOSS'?'r':'';
+      h+=`<tr><td>${t}</td><td>${r.side||'—'}</td><td>${f$(r.buy_price)}</td><td class="${oc}">${r.outcome||'PENDING'}</td><td class="${pc(r.pnl)}">${r.pnl!=null?f$(r.pnl):'—'}</td><td>${r.ev_est!=null?f2(r.ev_est,4):'—'}</td></tr>`;
+    });
+    h+=`</tbody></table></div>`;
+  }
+  h+=`</div>`;
+  el.innerHTML=h;el.style.display='block';el.dataset.open=name;
+}
+
+async function refreshArb(){
+  const[status,stats,scan,trades]=await Promise.all([
+    q('/api/arb/status'),q('/api/arb/stats'),q('/api/arb/scan'),q('/api/arb/trades?limit=50')
+  ]);
+  if(status){
+    const m=status.mode;
+    const badge=document.getElementById('arb-mode-badge');
+    badge.textContent=m.toUpperCase();
+    badge.style.background=m==='live'?'#f8514922':m==='dry-run'?'#d2992222':'#484f5822';
+    badge.style.color=m==='live'?'var(--red)':m==='dry-run'?'var(--orange)':'var(--text3)';
+    document.getElementById('arb-running-dot').className='dot '+(status.running?'dot-g':'dot-r');
+    document.getElementById('arb-last-scan').textContent=status.last_scan?'Last: '+new Date(status.last_scan).toLocaleTimeString():'No scans yet';
+    const c=status.config||{};
+    document.getElementById('arb-config-summary').textContent=`max_pair: ${c.max_pair_cost||'—'} · min_edge: ${c.min_edge||'—'}`;
+  }
+  if(stats){
+    document.getElementById('arb-cards').innerHTML=`
+      <div class="card"><div class="card-l">Total P&L</div><div class="card-v ${pc(stats.total_pnl)}">${f$(stats.total_pnl)}</div></div>
+      <div class="card"><div class="card-l">Today P&L</div><div class="card-v ${pc(stats.today_pnl)}">${f$(stats.today_pnl)}</div></div>
+      <div class="card"><div class="card-l">Total Trades</div><div class="card-v">${stats.total_trades}</div></div>
+      <div class="card"><div class="card-l">Avg Edge</div><div class="card-v">${fP(stats.avg_edge*100)}</div></div>`;
+  }
+  if(scan&&scan.scans){
+    document.getElementById('arb-feed').innerHTML=scan.scans.slice().reverse().map(s=>{
+      const pc_color=s.pair_cost<1?'var(--green)':'var(--red)';
+      const edge_color=s.edge_pct>0?'var(--green)':'var(--red)';
+      const ab=s.action==='BUY'?'t-claim':s.action==='OPPORTUNITY'?'t-other':'t-buy';
+      const al=s.action==='BUY'?'background:#1a3a2a;color:var(--green)':s.action==='OPPORTUNITY'?'background:#2d2a1a;color:var(--orange)':'background:#484f5822;color:var(--text3)';
+      return`<div class="fi">
+        <div class="fi-body"><div class="fi-title">Window ${s.window} · YES <b>${f2(s.yes_price,4)}</b> · NO <b>${f2(s.no_price,4)}</b></div>
+        <div class="fi-sub">${s.timestamp}</div></div>
+        <span style="font-size:12px;font-weight:600;color:${pc_color}">${f2(s.pair_cost,4)}</span>
+        <span style="font-size:11px;margin-left:6px;color:${edge_color}">${fP(s.edge_pct*100)}</span>
+        <span class="fi-tag" style="${al}">${s.action}</span>
+      </div>`;
+    }).join('');
+  }
+  if(trades&&trades.trades){
+    document.querySelector('#arb-tbl tbody').innerHTML=trades.trades.map(t=>{
+      const rc=t.result==='WIN'?'g':t.result==='FAILED'?'r':t.result==='PARTIAL_FILL'?'style="color:var(--orange)"':'style="color:var(--text3)"';
+      const rcClass=t.result==='WIN'?'class="g"':t.result==='FAILED'?'class="r"':'';
+      const ts=t.timestamp?new Date(t.timestamp).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+      const ws=t.window_start?new Date(t.window_start).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}):'—';
+      return`<tr><td>${ts}</td><td>${ws}</td><td>${f2(t.yes_price,4)}</td><td>${f2(t.no_price,4)}</td>
+        <td style="color:${t.pair_cost<1?'var(--green)':'var(--red)'}">${f2(t.pair_cost,4)}</td>
+        <td style="color:${t.edge_pct>0?'var(--green)':'var(--red)'}">${fP(t.edge_pct*100)}</td>
+        <td>${t.shares}</td><td>${f$(t.total_cost)}</td>
+        <td ${rcClass}>${t.result}${t.dry_run?' 📝':''}</td>
+        <td class="${pc(t.pnl)}">${f$(t.pnl)}</td></tr>`;
+    }).join('');
+  }
+}
+
+async function loadWhale(){
   const d=await q('/api/whales');
   if(!d)return;
   const s=d.summary||{};
-  document.getElementById('wc').innerHTML=`
+  document.getElementById('whale-cards').innerHTML=`
     <div class="card"><div class="card-l">Whales Tracked</div><div class="card-v">${s.total_whales||0}</div></div>
     <div class="card"><div class="card-l">Paper Trades</div><div class="card-v">${s.paper_trades||0}</div></div>
-    <div class="card"><div class="card-l">Copy P&L</div><div class="card-v ${pc(s.total_copy_pnl)}">${f$(s.total_copy_pnl)}</div></div>
-    <div class="card"><div class="card-l">Best Whale</div><div class="card-v" style="font-size:1rem">${s.best_whale||'N/A'}</div></div>`;
-  const tbody=document.getElementById('whale-tbl').querySelector('tbody');
-  tbody.innerHTML=(d.whales||[]).map(w=>{
-    const addr=w.address?w.address.slice(0,6)+'…'+w.address.slice(-4):'—';
-    const pnlC=w.our_pnl>0?'g':(w.our_pnl<0?'r':'');
-    const st=w.tracked?'<span class="badge b-a">Tracked</span>':'<span class="badge b-s">—</span>';
-    return`<tr><td>${w.rank}</td><td>${w.name}</td><td style="font-family:monospace;font-size:11px">${addr}</td><td class="g">${w.weekly_pnl}</td><td>${w.volume}</td><td>${w.copies}</td><td class="${pnlC}">${f$(w.our_pnl)}</td><td>${st}</td></tr>`;
-  }).join('');
-  document.getElementById('whale-feed').innerHTML=(d.recent_trades||[]).map(t=>{
-    const time=t.timestamp?new Date(t.timestamp).toLocaleString('en-US',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
-    const addr=t.whale_address?t.whale_address.slice(0,6)+'…'+t.whale_address.slice(-4):'';
-    const pnlStr=t.pnl!=null?f$(t.pnl):'pending';
-    const pnlC=t.pnl>0?'g':(t.pnl<0?'r':'');
-    return`<div class="fi"><div style="width:22px;height:22px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">🐋</div><div class="fi-body"><div class="fi-title">${t.market_title||'Unknown'}</div><div class="fi-sub">${t.side} · copied ${addr} · $${f2(t.our_size_usd)}</div></div><div class="fi-amt ${pnlC}">${pnlStr}</div><div class="fi-tag t-buy">${time}</div></div>`;
-  }).join('');
+    <div class="card"><div class="card-l">Total Copy P&L</div><div class="card-v ${pc(s.total_copy_pnl)}">${f$(s.total_copy_pnl)}</div></div>
+    <div class="card"><div class="card-l">Best Whale</div><div class="card-v" style="font-size:0.9rem">${s.best_whale||'—'}</div></div>`;
+  const whales=(d.whales||[]).sort((a,b)=>a.rank-b.rank);
+  document.querySelector('#whale-lb tbody').innerHTML=whales.map(w=>{
+    const name=w.name&&w.name.length>20?w.name.slice(0,18)+'…':w.name||w.address?.slice(0,10)||'—';
+    const tracked=w.tracked?'<span class="badge b-a">Tracked</span>':'<span class="badge b-s">—</span>';
+    return`<tr>
+    <td>#${w.rank}</td>
+    <td style="color:var(--blue);font-weight:600">${name}</td>
+    <td class="g">${w.weekly_pnl||'—'}</td>
+    <td>${w.volume||'—'}</td>
+    <td>${w.copies||0}</td>
+    <td class="${pc(w.our_pnl)}">${w.our_pnl?f$(w.our_pnl):'—'}</td>
+    <td>${w.win_rate?fP(w.win_rate*100):'—'}</td>
+    <td>${tracked}</td></tr>`}).join('');
+  document.querySelector('#whale-trades tbody').innerHTML=(d.recent_trades||[]).slice(0,20).map(t=>{
+    const ts=t.timestamp?new Date(t.timestamp).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+    const wn=whales.find(w=>w.address===t.whale_address);
+    const whaleName=wn?(wn.name.length>16?wn.name.slice(0,14)+'…':wn.name):t.whale_address?.slice(0,10)+'…';
+    const pnlDisplay=t.pnl!=null?`<span class="${pc(t.pnl)}">${f$(t.pnl)}</span>`:'⏳';
+    const statusBadge=t.status==='paper'?'<span class="badge b-l">Paper</span>':'<span class="badge b-a">Live</span>';
+    return`<tr><td>${ts}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis" title="${t.market_title||''}">${t.market_title&&t.market_title.length>40?t.market_title.slice(0,38)+'…':t.market_title||'—'}</td>
+      <td>${t.side||'—'}</td><td>${t.whale_price!=null?Math.round(t.whale_price*100)+'¢':'—'}</td><td>${t.our_price!=null?Math.round(t.our_price*100)+'¢':'—'}</td>
+      <td>${f$(t.our_size_usd)}</td><td>${statusBadge}</td>
+      <td>${pnlDisplay}</td></tr>`}).join('');
 }
-refresh();setInterval(refresh,30000);
+refresh();setInterval(refresh,60000);setInterval(refreshArb,30000);refreshArb();loadWhale();setInterval(loadWhale,60000);
 </script>
 </body>
 </html>
