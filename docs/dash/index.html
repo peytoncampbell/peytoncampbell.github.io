@@ -130,15 +130,44 @@ th:hover{color:var(--text)}
 /* Two Column Layout */
 .whale-columns{display:grid;grid-template-columns:3fr 2fr;gap:16px;margin-bottom:16px}
 
+/* Mobile card view for tracked whales table */
+.whale-mobile-cards{display:none}
+.whale-mobile-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px}
+.whale-mobile-card .wmc-info{flex:1;min-width:0}
+.whale-mobile-card .wmc-name{font-weight:700;color:var(--white);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.whale-mobile-card .wmc-stats{display:flex;flex-wrap:wrap;gap:6px 10px;font-size:10px;color:var(--text2);margin-top:3px}
+.whale-mobile-card .wmc-stats b{font-weight:700}
+
 @media(max-width:768px){
   .cards{grid-template-columns:repeat(2,1fr)}.row{grid-template-columns:1fr}.chart-box{height:180px}
   .whale-hero{grid-template-columns:repeat(2,1fr)}
   .whale-grid{grid-template-columns:1fr}
-  .whale-columns{grid-template-columns:1fr}
+  .whale-columns{grid-template-columns:1fr;gap:12px}
   .whc-value{font-size:1.2rem}
+  /* Summary bar vertical stack */
+  #whale-summary-bar{flex-direction:column;align-items:flex-start;gap:6px;padding:10px 12px}
+  #whale-summary-bar span[style*="border2"]{display:none}
+  /* Timeline meta wrap */
+  .wt-meta{flex-wrap:wrap;gap:6px 10px}
+  .wt-pnl{margin-left:0}
+  /* Tracked whales: hide table, show cards */
+  #whale-tracked-table-wrap{display:none}
+  .whale-mobile-cards{display:block}
+  /* All whales leaderboard scroll */
+  #whale-all-section .whale-lb-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  /* General spacing */
+  .whale-hero{gap:6px;margin-bottom:10px}
+  .whale-hero-card{padding:10px 12px}
+  .wt-item{padding:8px 10px 8px 12px}
+  .whale-timeline{gap:0;padding-left:16px}
 }
-@media(max-width:480px){body{padding:8px}.card-v{font-size:1rem}.tabs{overflow-x:auto}
-  .whale-hero{grid-template-columns:1fr 1fr}
+@media(max-width:480px){body{padding:6px}.card-v{font-size:1rem}.tabs{overflow-x:auto}
+  .whale-hero{grid-template-columns:1fr}
+  .whale-hero-card{padding:10px 14px}
+  .whc-value{font-size:1.3rem}
+  .cards{grid-template-columns:1fr}
+  .wt-head{flex-wrap:wrap;gap:4px}
+  .wt-market{white-space:normal;line-clamp:2;-webkit-line-clamp:2}
 }
 </style>
 </head>
@@ -210,9 +239,10 @@ th:hover{color:var(--text)}
         <button class="whale-sort-btn" onclick="sortWhaleCards('wr')">By Win Rate</button>
         <button class="whale-sort-btn" onclick="sortWhaleCards('copies')">By Copies</button>
       </div>
-      <div class="whale-lb-wrap" style="max-height:500px;overflow-y:auto"><table id="whale-tracked-table"><thead><tr>
+      <div class="whale-lb-wrap" id="whale-tracked-table-wrap" style="max-height:500px;overflow-y:auto"><table id="whale-tracked-table"><thead><tr>
         <th></th><th>Name</th><th>ROI</th><th>PnL</th><th>WR</th><th>Copies</th><th>Status</th>
       </tr></thead><tbody></tbody></table></div>
+      <div class="whale-mobile-cards" id="whale-mobile-cards"></div>
       <div class="whale-grid" id="whale-tracked-grid" style="display:none"></div>
     </div>
   </div>
@@ -426,6 +456,19 @@ function renderWhaleCards(tracked){
   });
   const tbody=document.querySelector('#whale-tracked-table tbody');
   if(!tbody)return;
+  // Mobile card view
+  const mobileEl=document.getElementById('whale-mobile-cards');
+  if(mobileEl)mobileEl.innerHTML=sorted.map(w=>{
+    const name=w.name||w.address?.slice(0,8)||'?';
+    const st=whaleStatus(w);
+    const wr=w.copies>0?w.win_rate:0;
+    const roi=w.roi||0;
+    const roiColor=roi>0?'var(--green)':roi<0?'var(--red)':'var(--text3)';
+    return`<div class="whale-mobile-card">
+      <div class="whale-avatar" style="background:${whaleColor(name)};width:28px;height:28px;font-size:10px">${whaleInitials(name)}</div>
+      <div class="wmc-info"><div class="wmc-name">${name} <span class="whale-badge ${st.cls}" style="font-size:8px;padding:1px 6px;vertical-align:middle">${st.text}</span></div>
+      <div class="wmc-stats"><span>ROI <b style="color:${roiColor}">${w.copies?((roi>=0?'+':'')+roi.toFixed(1)+'%'):'—'}</b></span><span>PnL <b class="${pc(w.our_pnl)}">${f$(w.our_pnl)}</b></span><span>WR <b>${w.copies?Math.round(wr*100)+'%':'—'}</b></span><span>Copies <b>${w.copies||0}</b></span></div></div></div>`}).join('');
+
   tbody.innerHTML=sorted.map(w=>{
     const name=w.name||w.address?.slice(0,8)||'?';
     const st=whaleStatus(w);
