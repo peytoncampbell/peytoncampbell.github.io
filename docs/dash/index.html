@@ -500,10 +500,9 @@ async function loadWhale(){
       <div class="whc-trend" style="color:var(--green)">${bestW?((bestW.roi||0)>=0?'+':'')+(bestW.roi||0).toFixed(1)+'% ROI · '+f$(bestW.our_pnl):'—'}</div>
     </div>`;
   // Summary bar
-  const trades=d.recent_trades||[];
-  const wins=trades.filter(t=>t.pnl!=null&&t.pnl>0).length;
-  const losses=trades.filter(t=>t.pnl!=null&&t.pnl<=0).length;
-  const pending=trades.filter(t=>t.pnl==null).length;
+  const wins=s.total_wins||0;
+  const losses=s.total_losses||0;
+  const pending=s.total_pending||0;
   document.getElementById('ws-wins').textContent=wins+'W';
   document.getElementById('ws-losses').textContent=losses+'L';
   document.getElementById('ws-pending').textContent=pending+' pending';
