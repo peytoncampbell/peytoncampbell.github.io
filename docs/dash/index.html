@@ -175,7 +175,7 @@ th:hover{color:var(--text)}
   <div class="cards" id="whale-cards"></div>
   <div class="section-label">Whale Leaderboard</div>
   <div class="tbl-wrap"><table id="whale-lb"><thead><tr>
-    <th>Rank</th><th>Name</th><th>Weekly PnL</th><th>Volume</th><th>Copies</th><th>Our PnL</th><th>Win Rate</th><th>Status</th>
+    <th>Rank</th><th>Name</th><th>Weekly PnL</th><th>Volume</th><th>Copies</th><th>Resolved</th><th>Our PnL</th><th>Win Rate</th><th>Status</th>
   </tr></thead><tbody></tbody></table></div>
   <div class="section-label" style="margin-top:12px">Recent Copy Trades</div>
   <div class="tbl-wrap"><table id="whale-trades"><thead><tr>
@@ -497,6 +497,7 @@ async function loadWhale(){
     <td class="g">${w.weekly_pnl||'—'}</td>
     <td>${w.volume||'—'}</td>
     <td>${w.copies||0}</td>
+    <td>${w.resolved||0}</td>
     <td class="${pc(w.our_pnl)}">${w.our_pnl?f$(w.our_pnl):'—'}</td>
     <td>${w.win_rate?fP(w.win_rate*100):'—'}</td>
     <td>${tracked}</td></tr>`}).join('');
