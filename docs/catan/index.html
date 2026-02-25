@@ -746,13 +746,10 @@ function generatePorts() {
     const edgeIndex = Math.round(i * step) % totalEdges;
     const edge = coastalEdges[edgeIndex];
     
-    // Port position = center of the nearest unused ocean tile
-    const outX = edge.midX + (edge.midX - CX) * 0.4;
-    const outY = edge.midY + (edge.midY - CY) * 0.4;
-    // Sort ocean tiles by distance to the pushed-out midpoint, pick closest unused
+    // Port position = center of the nearest unused ocean tile to the coastal edge midpoint
     const sorted = [...oceanTiles].map((ot, idx) => ({
       idx, cx: ot.cx, cy: ot.cy,
-      d: Math.hypot(ot.cx - outX, ot.cy - outY)
+      d: Math.hypot(ot.cx - edge.midX, ot.cy - edge.midY)
     })).sort((a, b) => a.d - b.d);
     let chosen = sorted[0];
     for (const candidate of sorted) {
@@ -872,6 +869,79 @@ function randomizeBoard() {
   }
 }
 
+function drawResourceOverlay() {
+  const tileCount = {};
+  const totalPips = {};
+  for (const r of RESOURCE_NAMES) { tileCount[r] = 0; totalPips[r] = 0; }
+  for (const t of tiles) {
+    if (t.resource !== 'desert' && RESOURCE_NAMES.includes(t.resource)) {
+      tileCount[t.resource]++;
+      totalPips[t.resource] += (DOTS[t.number] || 0);
+    }
+  }
+  const anyAssigned = RESOURCE_NAMES.some(r => tileCount[r] > 0);
+  if (!anyAssigned) return;
+
+  const dpr = window.devicePixelRatio || 1;
+  const boxW = 150 * dpr;
+  const lineH = 18 * dpr;
+  const padX = 10 * dpr;
+  const padY = 8 * dpr;
+  const boxH = (RESOURCE_NAMES.length + 1) * lineH + padY * 2;
+  const x0 = canvas.width - boxW - 12 * dpr;
+  const y0 = 12 * dpr;
+
+  // Background
+  ctx.save();
+  ctx.globalAlpha = 0.85;
+  ctx.fillStyle = '#0f172a';
+  ctx.beginPath();
+  ctx.roundRect(x0, y0, boxW, boxH, 8 * dpr);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Title
+  ctx.fillStyle = '#e2e8f0';
+  ctx.font = `bold ${10 * dpr}px Inter, sans-serif`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillText('Resource Distribution', x0 + padX, y0 + padY);
+
+  const maxPips = Math.max(...Object.values(totalPips), 1);
+  const labels = { brick:'🧱', ore:'⛰️', wood:'🌲', wheat:'🌾', sheep:'🐑' };
+  const colors = RESOURCE_COLORS;
+  const barMaxW = boxW - padX * 2 - 60 * dpr;
+
+  const sorted = [...RESOURCE_NAMES].sort((a, b) => totalPips[b] - totalPips[a]);
+  for (let i = 0; i < sorted.length; i++) {
+    const r = sorted[i];
+    const rowY = y0 + padY + (i + 1) * lineH;
+    const barW = Math.max(2, (totalPips[r] / maxPips) * barMaxW);
+
+    // Label
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = `500 ${8 * dpr}px Inter, sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.fillText(`${r}`, x0 + padX, rowY);
+
+    // Bar
+    ctx.fillStyle = colors[r];
+    ctx.beginPath();
+    ctx.roundRect(x0 + padX + 38 * dpr, rowY, barW, 12 * dpr, 3 * dpr);
+    ctx.fill();
+
+    // Count
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = `500 ${7 * dpr}px Inter, sans-serif`;
+    ctx.textAlign = 'right';
+    ctx.fillText(`${tileCount[r]}× ${totalPips[r]}♦`, x0 + boxW - padX, rowY + 1);
+  }
+  ctx.restore();
+}
+
 function drawBoard() {
   const dpr = window.devicePixelRatio || 1;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -900,6 +970,9 @@ function drawBoard() {
 
   // Draw land tiles
   for (const tile of tiles) drawHex(tile);
+
+  // Draw resource distribution overlay (top-right of canvas)
+  drawResourceOverlay();
 
   computeVertexValues();
   const scored = vertices.filter(v => v.isLand && v.score);
