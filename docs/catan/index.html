@@ -341,6 +341,7 @@ canvas {
   <button id="scanBtn">📷 Scan Board</button>
   <button id="clearBtn" class="secondary">Clear</button>
   <label>Show top: <select id="topN"><option value="5">5</option><option value="10" selected>10</option><option value="15">15</option><option value="20">20</option></select></label>
+  <button id="showAllBtn" class="secondary">📊 All Scores</button>
   <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none">
 </div>
 
@@ -370,7 +371,7 @@ canvas {
   <div class="info-content">
     <b>Scoring Formula:</b> Score = Weighted Pips + Diversity + Number Spread + Port Bonus − Robber Risk + Expansion
     <br><br>
-    <b>⚖️ Weighted Pips:</b> Each tile's pip count × resource scarcity weight. Ore & Wheat = 1.3x (cities + dev cards), Brick & Wood = 1.1x (early game), Sheep = 0.9x (most abundant).
+    <b>⚖️ Weighted Pips:</b> Each tile's pip count × <b>dynamic scarcity weight</b>. Weights blend strategic value (ore/wheat for cities) with board-specific rarity — resources with fewer tiles and lower pip totals get boosted. Check the Rarity Ledger below to see current weights.
     <br><br>
     <b>📊 Resource Probability:</b> Each number has a real probability (e.g. 6/8 = 13.9%, 2/12 = 2.8%). The breakdown shows your expected % chance of getting each resource per roll.
     <br><br>
@@ -421,8 +422,44 @@ const DOTS = {0:0, 2:1, 3:2, 4:3, 5:4, 6:5, 8:5, 9:4, 10:3, 11:2, 12:1};
 const PROB = {0:0, 2:1/36, 3:2/36, 4:3/36, 5:4/36, 6:5/36, 8:5/36, 9:4/36, 10:3/36, 11:2/36, 12:1/36};
 
 // === SCORING ALGORITHM ===
-// Resource scarcity weights (ore/wheat > brick/wood > sheep)
-const RESOURCE_WEIGHT = { ore: 1.3, wheat: 1.3, brick: 1.1, wood: 1.1, sheep: 0.9, desert: 0 };
+// Dynamic resource scarcity weights based on actual board composition
+// Fewer tiles + fewer pips = higher weight (scarcer = more valuable)
+const BASE_RESOURCE_WEIGHT = { ore: 1.3, wheat: 1.3, brick: 1.1, wood: 1.1, sheep: 0.9, desert: 0 };
+
+function computeDynamicWeights() {
+  const tileCount = {};
+  const totalPips = {};
+  const RESOURCES = ['ore', 'wheat', 'brick', 'wood', 'sheep'];
+  for (const r of RESOURCES) { tileCount[r] = 0; totalPips[r] = 0; }
+  
+  for (const t of tiles) {
+    if (t.resource !== 'desert' && RESOURCES.includes(t.resource)) {
+      tileCount[t.resource]++;
+      totalPips[t.resource] += (DOTS[t.number] || 0);
+    }
+  }
+  
+  const anyAssigned = RESOURCES.some(r => totalPips[r] > 0);
+  if (!anyAssigned) return BASE_RESOURCE_WEIGHT;
+  
+  // Average pips across all resources as baseline
+  const allPips = RESOURCES.map(r => totalPips[r]).filter(p => p > 0);
+  if (allPips.length === 0) return BASE_RESOURCE_WEIGHT;
+  const avgPips = allPips.reduce((a, b) => a + b, 0) / allPips.length;
+  
+  const weights = { desert: 0 };
+  for (const r of RESOURCES) {
+    const pips = totalPips[r] || 0.1;
+    // Scarcity multiplier: avgPips/thisPips, so rare resources get boosted
+    // Clamp between 0.6 and 2.0 to avoid extremes
+    const scarcityMult = Math.min(2.0, Math.max(0.6, avgPips / pips));
+    // Blend: 50% base weight (strategic value) + 50% scarcity (board-specific)
+    weights[r] = Math.round((BASE_RESOURCE_WEIGHT[r] * 0.5 + scarcityMult * 0.5) * 100) / 100;
+  }
+  return weights;
+}
+
+let RESOURCE_WEIGHT = { ...BASE_RESOURCE_WEIGHT };
 
 function scoreVertex(v) {
   if (!v.isLand || v.adjacentTiles.length === 0) return null;
@@ -822,6 +859,8 @@ function buildVertices() {
 }
 
 function computeVertexValues() {
+  // Recompute dynamic resource weights based on current board state
+  RESOURCE_WEIGHT = computeDynamicWeights();
   for (const v of vertices) {
     let totalDots = 0;
     const resources = new Set();
@@ -992,13 +1031,21 @@ function drawBoard() {
       color = '#ffdd00'; radius = 9; glowColor = 'rgba(255,221,0,0.4)';
     } else if (topSet.has(v)) {
       color = '#ff8800'; radius = 8; glowColor = 'rgba(255,136,0,0.35)';
+    } else if (showAllScores) {
+      // Show all scores mode: color by ratio, show numbers
+      if (ratio > 0.7) { color = '#66bb6a'; }
+      else if (ratio > 0.5) { color = '#42a5f5'; }
+      else if (ratio > 0.3) { color = '#ab47bc'; }
+      else { color = '#78909c'; }
+      radius = 9;
+      glowColor = color + '60';
     } else {
       color = `rgba(255,255,255,${0.12 + ratio * 0.3})`;
       radius = 4 + ratio * 3;
       glowColor = null;
     }
 
-    // Glow for top spots
+    // Glow for top spots (or all scores mode)
     if (glowColor) {
       ctx.save();
       ctx.shadowColor = glowColor;
@@ -1126,6 +1173,7 @@ function updateRarityLedger() {
       <span style="width:30px;text-align:center;font-variant-numeric:tabular-nums;">${count}×</span>
       <span style="width:40px;text-align:center;font-variant-numeric:tabular-nums;">${pips}♦</span>
       <span style="width:65px;text-align:center;font-size:0.75em;font-weight:700;color:${tagColor};background:${tagColor}18;padding:2px 6px;border-radius:4px;">${tag}</span>
+      <span style="width:40px;text-align:center;font-size:0.72em;color:#94a3b8;" title="Dynamic weight">${RESOURCE_WEIGHT[r].toFixed(2)}×</span>
     </div>`;
   }
   
@@ -1396,6 +1444,14 @@ document.getElementById('clearBtn').addEventListener('click', () => {
   drawBoard();
 });
 document.getElementById('topN').addEventListener('change', drawBoard);
+
+let showAllScores = false;
+document.getElementById('showAllBtn').addEventListener('click', () => {
+  showAllScores = !showAllScores;
+  document.getElementById('showAllBtn').classList.toggle('active', showAllScores);
+  document.getElementById('showAllBtn').textContent = showAllScores ? '📊 Top Only' : '📊 All Scores';
+  drawBoard();
+});
 
 // --- Photo Scan Feature ---
 const scanBtn = document.getElementById('scanBtn');
