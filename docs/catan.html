@@ -1186,7 +1186,8 @@ function drawPort(port) {
   // Port symbol background
   ctx.beginPath();
   ctx.arc(port.cx, port.cy, 14, 0, Math.PI * 2);
-  ctx.fillStyle = port.type === 'generic' ? '#1e40af' : '#059669';
+  const PORT_RESOURCE_COLORS = { brick: '#b5451d', ore: '#6b7d8a', wood: '#1a7a3a', wheat: '#daa520', sheep: '#7ec850' };
+  ctx.fillStyle = port.type === 'generic' ? '#1e40af' : (PORT_RESOURCE_COLORS[port.resource] || '#059669');
   ctx.fill();
   ctx.strokeStyle = 'rgba(255,255,255,0.8)';
   ctx.lineWidth = 1.5;
