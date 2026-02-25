@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import {
   ArrowRight,
   ArrowUp,
@@ -57,6 +57,28 @@ function SectionHeading({ children, className = '' }: { children: React.ReactNod
   );
 }
 
+// Group tech stack by category
+const TECH_BY_CATEGORY = TECH_STACK.reduce((acc, tech) => {
+  if (!acc[tech.category]) acc[tech.category] = [];
+  acc[tech.category].push(tech);
+  return acc;
+}, {} as Record<string, typeof TECH_STACK>);
+
+const CATEGORY_COLORS: Record<string, { bg: string; border: string; text: string; dot: string }> = {
+  Languages: { bg: 'bg-blue-500/10', border: 'border-blue-500/25', text: 'text-blue-300', dot: 'bg-blue-500' },
+  Frontend: { bg: 'bg-cyan-500/10', border: 'border-cyan-500/25', text: 'text-cyan-300', dot: 'bg-cyan-500' },
+  'ML/AI': { bg: 'bg-purple-500/10', border: 'border-purple-500/25', text: 'text-purple-300', dot: 'bg-purple-500' },
+  Trading: { bg: 'bg-amber-500/10', border: 'border-amber-500/25', text: 'text-amber-300', dot: 'bg-amber-500' },
+  Infrastructure: { bg: 'bg-green-500/10', border: 'border-green-500/25', text: 'text-green-300', dot: 'bg-green-500' },
+  Tools: { bg: 'bg-slate-500/10', border: 'border-slate-500/25', text: 'text-slate-300', dot: 'bg-slate-400' },
+};
+
+const PROJECT_ACCENTS: Record<string, string> = {
+  'ML/AI': '#a855f7',
+  Production: '#22d3ee',
+  Tools: '#64748b',
+};
+
 export default function App() {
   const [loading, setLoading] = useState(true);
   const [scrolled, setScrolled] = useState(false);
@@ -68,6 +90,14 @@ export default function App() {
   const [contactError, setContactError] = useState<string | null>(null);
   const [contactSuccess, setContactSuccess] = useState(false);
   const [contactLoading, setContactLoading] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: -1000, y: -1000 });
+
+  const dualityRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress: dualityProgress } = useScroll({
+    target: dualityRef,
+    offset: ['start end', 'end start'],
+  });
+  const dualityY = useTransform(dualityProgress, [0, 1], [60, -60]);
 
   const athleteImages = [`${import.meta.env.BASE_URL}basketball.jpg`, `${import.meta.env.BASE_URL}golf.jpg`];
   const portraitImage = `${import.meta.env.BASE_URL}portrait.jpg`;
@@ -94,6 +124,15 @@ export default function App() {
     };
   }, [athleteImages.length]);
 
+  // Cursor glow
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
   const handleContactChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setContactForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
@@ -110,7 +149,7 @@ export default function App() {
       return;
     }
     
-    const emailPattern = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailPattern.test(contactForm.email.trim())) {
       setContactError('Please enter a valid email.');
       setContactLoading(false);
@@ -176,6 +215,15 @@ export default function App() {
         )}
       </AnimatePresence>
 
+    {/* Noise overlay */}
+    <div className="noise-overlay" />
+
+    {/* Cursor glow */}
+    <div
+      className="cursor-glow hidden lg:block"
+      style={{ left: mousePos.x, top: mousePos.y }}
+    />
+
     <div className="min-h-screen text-slate-300 selection:bg-blue-500/30 selection:text-white">
       <ScrollProgress />
 
@@ -217,7 +265,7 @@ export default function App() {
 
           <div className="hidden md:flex items-center space-x-8">
             {NAV_LINKS.map((link) => (
-              <a key={link.label} href={link.href} className="text-sm font-medium text-slate-400 hover:text-white transition-colors duration-200">
+              <a key={link.label} href={link.href} className="nav-link text-sm font-medium text-slate-400 hover:text-white transition-colors duration-200">
                 {link.label}
               </a>
             ))}
@@ -274,7 +322,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* Hero Section */}
-      <section className="min-h-screen flex items-center pt-20 relative overflow-hidden" id="about">
+      <section className="min-h-screen flex items-center pt-24 pb-16 relative overflow-hidden" id="about">
         <div className="aurora-bg">
           <div className="aurora-orb-3" />
         </div>
@@ -283,28 +331,33 @@ export default function App() {
         </div>
 
         <div className="container mx-auto px-6 relative z-10">
-          <div className="grid gap-12 lg:grid-cols-[1.1fr,0.9fr] items-center">
+          <div className="grid gap-16 lg:grid-cols-[1.2fr,0.8fr] items-center">
             <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="max-w-3xl">
+              <motion.div variants={fadeInUp} className="mb-6">
+                <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.25em] text-blue-400/80 bg-blue-500/8 border border-blue-500/15 px-4 py-2 rounded-full">
+                  Full-Stack Engineer · ML Developer
+                </span>
+              </motion.div>
               <motion.h1
                 variants={fadeInUp}
-                className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-[1.1] gradient-text-hero"
+                className="text-6xl md:text-8xl font-extrabold tracking-tight mb-8 leading-[1.05] gradient-text-hero"
               >
                 {HERO.headline}
               </motion.h1>
-              <motion.p variants={fadeInUp} className="text-lg md:text-xl text-slate-400 mb-10 max-w-2xl leading-relaxed">
+              <motion.p variants={fadeInUp} className="text-lg md:text-xl text-slate-400 mb-12 max-w-2xl leading-relaxed">
                 {HERO.subheadline}
               </motion.p>
 
               <motion.div variants={fadeInUp} className="flex items-center gap-4 flex-wrap">
                 <a
                   href="#dashboard"
-                  className="btn-primary px-8 py-3.5 text-white font-bold rounded-xl flex items-center gap-2 text-base"
+                  className="btn-primary px-8 py-4 text-white font-bold rounded-xl flex items-center gap-2 text-base"
                 >
                   See Live Dashboard <ArrowRight size={18} />
                 </a>
                 <a
                   href={`${import.meta.env.BASE_URL}PeytonCampbellResume.pdf`}
-                  className="px-8 py-3.5 border border-slate-700 text-slate-300 font-bold rounded-xl transition-all hover:bg-white/5 hover:border-slate-600 flex items-center gap-2"
+                  className="px-8 py-4 border border-slate-700 text-slate-300 font-bold rounded-xl transition-all hover:bg-white/5 hover:border-slate-600 flex items-center gap-2"
                 >
                   Download CV <Download size={18} />
                 </a>
@@ -314,7 +367,7 @@ export default function App() {
                     href="https://github.com/peytoncampbell"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-3 bg-slate-900/80 border border-slate-800 rounded-xl hover:border-blue-500/40 hover:text-blue-400 hover:bg-blue-500/5 transition-all duration-300"
+                    className="p-3.5 bg-slate-900/80 border border-slate-800 rounded-xl hover:border-blue-500/40 hover:text-blue-400 hover:bg-blue-500/5 transition-all duration-300"
                   >
                     <Github size={20} />
                   </a>
@@ -323,17 +376,19 @@ export default function App() {
                     href="https://www.linkedin.com/in/peyton-campbell/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-3 bg-slate-900/80 border border-slate-800 rounded-xl hover:border-blue-500/40 hover:text-blue-400 hover:bg-blue-500/5 transition-all duration-300"
+                    className="p-3.5 bg-slate-900/80 border border-slate-800 rounded-xl hover:border-blue-500/40 hover:text-blue-400 hover:bg-blue-500/5 transition-all duration-300"
                   >
                     <Linkedin size={20} />
                   </a>
                 </div>
               </motion.div>
 
-              <motion.div variants={fadeInUp} className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <motion.div variants={fadeInUp} className="mt-14 grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {HERO.stats.map((stat, idx) => (
-                  <div key={stat.label} className="glass-premium rounded-xl p-4 flex items-center gap-3">
-                    <stat.icon className="text-cyan-400" size={20} />
+                  <div key={stat.label} className="stat-card glass-premium rounded-xl p-5 flex items-center gap-4 group cursor-default">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <stat.icon className="text-cyan-400" size={20} />
+                    </div>
                     <div>
                       <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-semibold">Signal {idx + 1}</p>
                       <p className="text-sm font-bold text-white">{stat.label}</p>
@@ -344,19 +399,19 @@ export default function App() {
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
               className="relative hidden lg:block"
             >
-              <div className="absolute -inset-8 rounded-[32px] bg-gradient-to-br from-blue-500/15 via-cyan-500/5 to-teal-500/10 blur-3xl animate-float" />
-              <div className="relative aspect-[4/5] max-w-[420px] ml-auto overflow-hidden rounded-[28px] border border-slate-700/40 shadow-2xl shadow-blue-950/40 bg-slate-900/30">
+              <div className="absolute -inset-12 rounded-[36px] bg-gradient-to-br from-blue-500/15 via-cyan-500/5 to-teal-500/10 blur-3xl animate-float" />
+              <div className="portrait-card relative aspect-[4/5] max-w-[400px] ml-auto overflow-hidden rounded-[28px] border border-slate-700/40 shadow-2xl shadow-blue-950/40 bg-slate-900/30 group">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-cyan-500/10 z-10 pointer-events-none mix-blend-overlay" />
-                <div className="absolute inset-0 bg-slate-950/20 z-10 pointer-events-none" />
+                <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-slate-950/80 to-transparent z-10 pointer-events-none" />
                 <img
                   src={portraitImage}
                   alt="Peyton Campbell"
-                  className="w-full h-full object-cover object-center"
+                  className="w-full h-full object-cover object-center group-hover:scale-[1.03] transition-transform duration-700"
                   style={{
                     filter: 'brightness(0.85) contrast(1.1) saturate(1.15)',
                   }}
@@ -368,7 +423,7 @@ export default function App() {
       </section>
 
       {/* Live Dashboard Preview */}
-      <section className="py-24 relative overflow-hidden" id="dashboard">
+      <section className="py-28 relative overflow-hidden" id="dashboard">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute w-[800px] h-[800px] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-blue-600/8 via-transparent to-cyan-500/5 blur-3xl" />
         </div>
@@ -381,7 +436,7 @@ export default function App() {
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeInUp}
-            className="text-slate-400 text-lg mb-10 max-w-2xl -mt-8"
+            className="text-slate-400 text-lg mb-12 max-w-2xl -mt-8"
           >
             The crown jewel — a real-time performance dashboard for my autonomous BTC trading bot. Live P&L, strategy breakdowns, regime detection, and 62K+ trade history.
           </motion.p>
@@ -390,18 +445,18 @@ export default function App() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="relative rounded-2xl overflow-hidden dashboard-glow"
+            className="relative rounded-2xl overflow-visible dashboard-glow dashboard-reflection"
           >
             {/* Browser chrome */}
-            <div className="browser-chrome border border-slate-700/50 rounded-t-2xl flex items-center px-4 py-3 gap-3">
+            <div className="browser-chrome border border-slate-700/50 rounded-t-2xl flex items-center px-5 py-3.5 gap-3">
               <div className="flex gap-2">
-                <div className="w-3 h-3 rounded-full bg-red-500/70 hover:bg-red-500 transition-colors" />
-                <div className="w-3 h-3 rounded-full bg-amber-500/70 hover:bg-amber-500 transition-colors" />
-                <div className="w-3 h-3 rounded-full bg-green-500/70 hover:bg-green-500 transition-colors" />
+                <div className="w-3 h-3 rounded-full bg-red-500/70 hover:bg-red-500 transition-colors cursor-pointer" />
+                <div className="w-3 h-3 rounded-full bg-amber-500/70 hover:bg-amber-500 transition-colors cursor-pointer" />
+                <div className="w-3 h-3 rounded-full bg-green-500/70 hover:bg-green-500 transition-colors cursor-pointer" />
               </div>
               <div className="flex-1 mx-4">
-                <div className="bg-slate-900/80 rounded-lg px-4 py-1.5 text-xs text-slate-500 font-mono border border-slate-800/50 max-w-md mx-auto text-center">
-                  🔒 peytoncampbell.ca/dash/
+                <div className="bg-slate-900/80 rounded-lg px-4 py-2 text-xs text-slate-500 font-mono border border-slate-800/50 max-w-md mx-auto text-center flex items-center justify-center gap-2">
+                  <span className="text-green-400/70">🔒</span> peytoncampbell.ca/dash/
                 </div>
               </div>
             </div>
@@ -419,7 +474,7 @@ export default function App() {
             whileInView="visible"
             viewport={{ once: true }}
             variants={fadeInUp}
-            className="mt-8 flex justify-center"
+            className="mt-10 flex justify-center"
           >
             <a
               href="https://peytoncampbell.ca/dash/"
@@ -434,8 +489,8 @@ export default function App() {
         </div>
       </section>
 
-      {/* Tech Stack */}
-      <section className="py-20 border-y border-slate-800/50 relative">
+      {/* Tech Stack — Grouped by Category */}
+      <section className="py-24 border-y border-slate-800/50 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-900/15 to-transparent pointer-events-none" />
         <div className="container mx-auto px-6 relative z-10">
           <SectionHeading>
@@ -446,39 +501,38 @@ export default function App() {
             whileInView="visible"
             viewport={{ once: true }}
             variants={staggerContainer}
-            className="flex flex-wrap gap-3 justify-center"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
           >
-            {TECH_STACK.map((tech) => (
-              <motion.span
-                key={tech.name}
-                variants={fadeInUp}
-                className={clsx(
-                  'px-4 py-2.5 rounded-full text-sm font-semibold border backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 cursor-default',
-                  tech.category === 'Languages' && 'bg-blue-500/10 border-blue-500/25 text-blue-300 hover:bg-blue-500/15',
-                  tech.category === 'Frontend' && 'bg-cyan-500/10 border-cyan-500/25 text-cyan-300 hover:bg-cyan-500/15',
-                  tech.category === 'ML/AI' && 'bg-purple-500/10 border-purple-500/25 text-purple-300 hover:bg-purple-500/15',
-                  tech.category === 'Trading' && 'bg-amber-500/10 border-amber-500/25 text-amber-300 hover:bg-amber-500/15',
-                  tech.category === 'Infrastructure' && 'bg-green-500/10 border-green-500/25 text-green-300 hover:bg-green-500/15',
-                  tech.category === 'Tools' && 'bg-slate-500/10 border-slate-500/25 text-slate-300 hover:bg-slate-500/15',
-                )}
-              >
-                {tech.name}
-              </motion.span>
-            ))}
+            {Object.entries(TECH_BY_CATEGORY).map(([category, techs]) => {
+              const colors = CATEGORY_COLORS[category] || CATEGORY_COLORS.Tools;
+              return (
+                <motion.div key={category} variants={fadeInUp} className="glass-premium rounded-2xl p-6">
+                  <div className="flex items-center gap-2.5 mb-4">
+                    <span className={`w-2.5 h-2.5 rounded-full ${colors.dot}`} />
+                    <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">{category}</h3>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {techs.map((tech) => (
+                      <span
+                        key={tech.name}
+                        className={clsx(
+                          'px-3.5 py-2 rounded-lg text-sm font-semibold border backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 cursor-default',
+                          colors.bg, colors.border, colors.text
+                        )}
+                      >
+                        {tech.name}
+                      </span>
+                    ))}
+                  </div>
+                </motion.div>
+              );
+            })}
           </motion.div>
-          <div className="flex justify-center gap-6 mt-8 text-xs text-slate-500 flex-wrap">
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-500" /> Languages</span>
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-cyan-500" /> Frontend</span>
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-purple-500" /> ML/AI</span>
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-500" /> Trading</span>
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-green-500" /> Infrastructure</span>
-            <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-slate-400" /> Tools</span>
-          </div>
         </div>
       </section>
 
       {/* Projects */}
-      <section className="py-24" id="projects">
+      <section className="py-28" id="projects">
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-end mb-14">
             <SectionHeading className="mb-0">
@@ -570,7 +624,11 @@ export default function App() {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
-                  className="glass-premium rounded-2xl overflow-hidden group hover:scale-[1.02] transition-all duration-300"
+                  className="project-card-border glass-premium rounded-2xl overflow-hidden group hover:scale-[1.02] transition-all duration-300"
+                  style={{
+                    '--card-accent': PROJECT_ACCENTS[project.category] || '#4F8EF7',
+                    '--card-accent-end': '#22D3EE',
+                  } as React.CSSProperties}
                 >
                   <div className="p-7 h-full flex flex-col">
                     <div className="flex justify-between items-start mb-5">
@@ -636,14 +694,14 @@ export default function App() {
       </section>
 
       {/* Experience Timeline */}
-      <section className="py-24 relative" id="experience">
+      <section className="py-28 relative" id="experience">
         <div className="container mx-auto px-6">
           <SectionHeading>
             <span className="gradient-text">Experience</span>
           </SectionHeading>
 
           <div className="relative max-w-3xl mx-auto">
-            <div className="absolute left-0 md:left-8 top-0 bottom-0 w-px bg-gradient-to-b from-blue-500/50 via-slate-800 to-transparent" />
+            <div className="timeline-line" />
 
             {EXPERIENCE.map((exp, idx) => (
               <motion.div
@@ -652,11 +710,11 @@ export default function App() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.15, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className="relative pl-8 md:pl-24 pb-16 last:pb-0"
+                className="relative pl-10 md:pl-24 pb-16 last:pb-0"
               >
-                <div className="absolute left-[-5px] md:left-[27px] top-2 w-3 h-3 bg-blue-500 rounded-full ring-4 ring-slate-950 shadow-lg shadow-blue-500/30" />
+                <div className="timeline-dot" />
 
-                <div className="glass-premium p-7 rounded-2xl hover:scale-[1.01] transition-transform duration-300">
+                <div className="experience-card glass-premium p-7 rounded-2xl hover:scale-[1.01] transition-transform duration-300">
                   <div className="flex flex-col md:flex-row md:items-center justify-between mb-3">
                     <h3 className="text-xl font-bold text-white">{exp.company}</h3>
                     <span className="text-sm font-mono text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full">{exp.period}</span>
@@ -679,7 +737,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* Education & Credentials (merged) */}
+      {/* Education & Credentials */}
       <Certifications />
 
       {/* GitHub Activity */}
@@ -689,8 +747,8 @@ export default function App() {
       <Blog />
 
       {/* Duality - On & Off The Court */}
-      <section className="flex flex-col md:flex-row min-h-[600px]" id="duality">
-        <div className="flex-1 relative flex flex-col justify-center p-12 md:p-20 border-b md:border-b-0 md:border-r border-slate-800/50 overflow-hidden group">
+      <section className="flex flex-col md:flex-row min-h-[650px] relative" id="duality" ref={dualityRef}>
+        <div className="flex-1 relative flex flex-col justify-center p-12 md:p-20 overflow-hidden group duality-divider">
           <AnimatePresence mode="wait">
             <motion.div
               key={athleteImageIndex}
@@ -703,37 +761,66 @@ export default function App() {
             />
           </AnimatePresence>
 
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-950/60 to-slate-950/80 group-hover:from-slate-950/70 group-hover:via-slate-950/50 group-hover:to-slate-950/70 transition-all duration-500 z-10" />
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-slate-950/65 to-slate-950/85 group-hover:from-slate-950/75 group-hover:via-slate-950/50 group-hover:to-slate-950/75 transition-all duration-700 z-10" />
+          <div className="absolute inset-0 mix-blend-color bg-blue-950/20 z-10 pointer-events-none" />
 
-          <div className="relative z-20">
-            <h3 className="text-3xl md:text-4xl font-black text-white mb-6 uppercase tracking-tighter">The Athlete</h3>
-            <p className="text-lg text-slate-200 leading-relaxed max-w-md font-medium">
+          <motion.div className="relative z-20" style={{ y: dualityY }}>
+            <motion.h3
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="text-4xl md:text-5xl font-black text-white mb-6 uppercase tracking-tighter"
+            >
+              The Athlete
+            </motion.h3>
+            <motion.p
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-lg text-slate-200 leading-relaxed max-w-md font-medium"
+            >
               Varsity Basketball and avid golfer.
               <br />
               <br />
               High-level competition instilled the value of consistency and resilience. I bring that same intensity and team-first
               mentality to every project I touch.
-            </p>
-          </div>
+            </motion.p>
+          </motion.div>
         </div>
 
         <div className="flex-1 p-12 md:p-20 flex flex-col justify-center relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-950/20 to-slate-950 pointer-events-none" />
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-blue-500/5 to-cyan-500/3 pointer-events-none" />
-          <div className="relative z-10">
-            <h3 className="text-3xl md:text-4xl font-black text-white mb-6 uppercase tracking-tighter">The Engineer</h3>
-            <p className="text-lg text-slate-300 leading-relaxed max-w-md">
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 bg-gradient-to-br from-blue-500/5 to-cyan-500/3 pointer-events-none" />
+          <motion.div className="relative z-10" style={{ y: dualityY }}>
+            <motion.h3
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="text-4xl md:text-5xl font-black text-white mb-6 uppercase tracking-tighter"
+            >
+              The Engineer
+            </motion.h3>
+            <motion.p
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-lg text-slate-300 leading-relaxed max-w-md"
+            >
               AI systems builder and trading bot architect.
               <br />
               <br />
               I am obsessed with autonomous systems. Whether building a 24/7 BTC trading bot with 23 ML strategies, deploying AI agents across multiple platforms, or architecting real-time dashboards — I build systems that run, learn, and scale without intervention.
-            </p>
-          </div>
+            </motion.p>
+          </motion.div>
         </div>
       </section>
 
       {/* Contact */}
-      <section className="py-28 contact-bg relative" id="contact">
+      <section className="py-32 contact-bg relative" id="contact">
         <div className="container mx-auto px-6 text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -752,40 +839,56 @@ export default function App() {
 
             <form onSubmit={handleContactSubmit} className="grid gap-5 text-left">
               <div className="grid sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs text-slate-500 block mb-2 uppercase tracking-wider font-semibold">Name</label>
+                <div className="floating-input-group">
                   <input
                     name="name"
                     value={contactForm.name}
                     onChange={handleContactChange}
-                    className="w-full rounded-xl bg-slate-900/80 border border-slate-700/50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 focus:outline-none px-4 py-3 text-white placeholder-slate-600 transition-all"
-                    placeholder="Your name"
+                    placeholder=" "
+                    autoComplete="name"
                   />
+                  <label>Name</label>
                 </div>
-                <div>
-                  <label className="text-xs text-slate-500 block mb-2 uppercase tracking-wider font-semibold">Email</label>
+                <div className="floating-input-group">
                   <input
                     name="email"
                     type="email"
                     value={contactForm.email}
                     onChange={handleContactChange}
-                    className="w-full rounded-xl bg-slate-900/80 border border-slate-700/50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 focus:outline-none px-4 py-3 text-white placeholder-slate-600 transition-all"
-                    placeholder="you@example.com"
+                    placeholder=" "
+                    autoComplete="email"
                   />
+                  <label>Email</label>
                 </div>
               </div>
-              <div>
-                <label className="text-xs text-slate-500 block mb-2 uppercase tracking-wider font-semibold">Message</label>
+              <div className="floating-input-group">
                 <textarea
                   name="message"
                   value={contactForm.message}
                   onChange={handleContactChange}
-                  className="w-full rounded-xl bg-slate-900/80 border border-slate-700/50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 focus:outline-none px-4 py-3 text-white h-32 placeholder-slate-600 transition-all resize-none"
-                  placeholder="Tell me about your project or question."
+                  className="h-32 resize-none"
+                  placeholder=" "
                 />
+                <label>Message</label>
               </div>
-              {contactError && <p className="text-sm text-amber-300">{contactError}</p>}
-              {contactSuccess && <p className="text-sm text-green-400">Thanks! I'll reply within 24 hours.</p>}
+              {contactError && (
+                <motion.p
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-sm text-amber-300 flex items-center gap-2"
+                >
+                  ⚠ {contactError}
+                </motion.p>
+              )}
+              {contactSuccess && (
+                <motion.p
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-sm text-green-400 flex items-center gap-2"
+                >
+                  ✓ Thanks! I'll reply within 24 hours.
+                </motion.p>
+              )}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-2">
                 <button
                   type="submit"
