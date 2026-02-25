@@ -40,8 +40,10 @@ canvas { border-radius: 12px; background: #0f3460; cursor: pointer; }
     <option value="10">10</option><option value="11">11</option><option value="12">12</option>
   </select></label>
   <button id="randomBtn">🎲 Random Board</button>
+  <button id="scanBtn">📷 Scan Board</button>
   <button id="clearBtn" class="secondary">Clear</button>
   <label>Show top: <select id="topN"><option value="5">5</option><option value="10" selected>10</option><option value="15">15</option><option value="20">20</option></select></label>
+  <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none">
 </div>
 <div style="position:relative; display:inline-block;">
   <canvas id="board" width="820" height="760"></canvas>
@@ -59,7 +61,8 @@ canvas { border-radius: 12px; background: #0f3460; cursor: pointer; }
   <b>How it works:</b> Each number token has a probability of being rolled (dots on the token). 
   A settlement vertex touches up to 3 tiles. The optimizer sums the probabilities of all adjacent tiles 
   for every vertex and ranks them. Resource diversity is shown but not weighted — you decide what matters. 
-  Click a tile to assign a number, or hit Random for a valid 6-player layout.
+  Click a tile to assign a number, hit Random for a valid 6-player layout, or <b>📷 Scan Board</b> to 
+  take a photo of your real Catan board and auto-populate everything with AI vision (requires OpenAI API key, stored locally).
 </div>
 
 <script>
@@ -490,6 +493,128 @@ document.getElementById('clearBtn').addEventListener('click', () => {
   drawBoard();
 });
 document.getElementById('topN').addEventListener('change', drawBoard);
+
+// --- Photo Scan Feature ---
+const scanBtn = document.getElementById('scanBtn');
+const photoInput = document.getElementById('photoInput');
+
+// API key modal
+function getApiKey() {
+  let key = localStorage.getItem('openai_api_key');
+  if (key) return key;
+  key = prompt('Enter your OpenAI API key to use board scanning.\nIt\'s stored locally in your browser only.\n\nGet one at platform.openai.com/api-keys');
+  if (key && key.startsWith('sk-')) {
+    localStorage.setItem('openai_api_key', key);
+    return key;
+  }
+  return null;
+}
+
+scanBtn.addEventListener('click', () => {
+  const key = getApiKey();
+  if (!key) return;
+  photoInput.click();
+});
+
+photoInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  const key = localStorage.getItem('openai_api_key');
+  if (!key) return;
+
+  // Show loading state
+  scanBtn.textContent = '⏳ Analyzing...';
+  scanBtn.disabled = true;
+
+  try {
+    // Convert to base64
+    const base64 = await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(',')[1]);
+      reader.readAsDataURL(file);
+    });
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        max_tokens: 1500,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'text', text: `Analyze this photo of a Catan board. The board has hex tiles arranged in rows of [3,4,5,6,5,4,3] (30 tiles total for 6-player, or [3,4,5,4,3] = 19 tiles for standard).
+
+For each tile, identify:
+1. The resource type: brick (red/brown hills), ore (grey mountains), wood (dark green forest), wheat (yellow fields), sheep (light green pastures), or desert (tan/sandy, no number)
+2. The number token on it (2-12, or 0 for desert)
+
+Return ONLY a JSON array of objects, one per tile, in row-by-row order (top row left-to-right, then next row, etc.):
+[{"resource":"wheat","number":5},{"resource":"ore","number":8},...] 
+
+If you can't identify a tile clearly, use your best guess. Desert tiles have number 0.` },
+            { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64}` } }
+          ]
+        }]
+      })
+    });
+
+    const data = await response.json();
+    
+    if (data.error) {
+      if (data.error.code === 'invalid_api_key') {
+        localStorage.removeItem('openai_api_key');
+        alert('Invalid API key. It has been cleared — try again.');
+      } else {
+        alert('API error: ' + data.error.message);
+      }
+      return;
+    }
+
+    const content = data.choices[0].message.content;
+    // Extract JSON from response (might be wrapped in ```json...```)
+    const jsonMatch = content.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) {
+      alert('Could not parse board from image. Try a clearer photo.');
+      return;
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    
+    // Determine if it's a 4-player (19 tiles) or 6-player (30 tiles) board
+    if (parsed.length === 19) {
+      // Rebuild board for standard layout
+      ROWS.length = 0;
+      ROWS.push(3, 4, 5, 4, 3);
+      buildBoard();
+    } else if (parsed.length >= 28 && parsed.length <= 30) {
+      ROWS.length = 0;
+      ROWS.push(3, 4, 5, 6, 5, 4, 3);
+      buildBoard();
+    }
+
+    // Apply to tiles
+    const count = Math.min(parsed.length, tiles.length);
+    for (let i = 0; i < count; i++) {
+      const p = parsed[i];
+      tiles[i].resource = p.resource || 'desert';
+      tiles[i].number = parseInt(p.number) || 0;
+      if (tiles[i].number === 0) tiles[i].resource = 'desert';
+    }
+
+    drawBoard();
+    alert(`✅ Board scanned! ${count} tiles detected.`);
+
+  } catch (err) {
+    console.error(err);
+    alert('Failed to analyze image: ' + err.message);
+  } finally {
+    scanBtn.textContent = '📷 Scan Board';
+    scanBtn.disabled = false;
+    photoInput.value = '';
+  }
+});
 
 // Init
 buildBoard();
