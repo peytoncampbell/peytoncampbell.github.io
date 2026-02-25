@@ -3,47 +3,334 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Catan 6P Settlement Optimizer</title>
+<title>Catan Settlement Optimizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes subtlePulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { background: #1a1a2e; color: #eee; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 16px 10px; }
-h1 { margin-bottom: 4px; font-size: 1.4em; color: #e6a817; text-align: center; }
-.subtitle { color: #888; margin-bottom: 12px; font-size: 0.85em; text-align: center; }
-.controls { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; justify-content: center; align-items: center; }
-button { background: #e6a817; color: #1a1a2e; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9em; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-button:hover { background: #f0c040; }
-button:active { transform: scale(0.96); }
-button.secondary { background: #333; color: #ccc; }
-button.secondary:hover { background: #444; }
-select { background: #333; color: #eee; border: 1px solid #555; padding: 8px 10px; border-radius: 8px; font-size: 0.9em; }
-.canvas-wrap { position: relative; display: inline-block; width: 100%; max-width: 820px; }
-canvas { border-radius: 12px; background: #0f3460; cursor: pointer; width: 100%; height: auto; display: block; }
-.legend { display: flex; gap: 12px; margin-top: 10px; flex-wrap: wrap; justify-content: center; font-size: 0.8em; }
-.legend-item { display: flex; align-items: center; gap: 4px; }
-.legend-dot { width: 12px; height: 12px; border-radius: 50%; }
-.info { max-width: 700px; width: 100%; margin-top: 14px; background: #16213e; padding: 12px 14px; border-radius: 8px; font-size: 0.82em; line-height: 1.5; color: #aaa; }
-.top-list { margin-top: 10px; background: #16213e; padding: 12px 14px; border-radius: 8px; font-size: 0.82em; max-width: 700px; width: 100%; }
-.top-list h3 { color: #e6a817; margin-bottom: 8px; font-size: 1em; }
-.top-list ol { padding-left: 18px; }
-.top-list li { margin-bottom: 4px; color: #ccc; line-height: 1.4; }
-.top-list li span.dots { color: #e6a817; font-weight: 700; }
-.top-list li span.res { color: #888; font-size: 0.9em; }
-#tooltip { position: absolute; background: rgba(0,0,0,0.85); color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 0.82em; pointer-events: none; display: none; z-index: 10; line-height: 1.4; }
+
+body {
+  background: #0a0e1a;
+  color: #e2e8f0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px 12px 40px;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* --- Header --- */
+.header {
+  text-align: center;
+  margin-bottom: 16px;
+  animation: fadeInUp 0.5s ease-out;
+}
+h1 {
+  font-size: 1.6em;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #e6a817, #f0d060);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.subtitle {
+  color: #64748b;
+  font-size: 0.85em;
+  font-weight: 400;
+  margin-top: 4px;
+}
+
+/* --- Glass Card Mixin --- */
+.glass {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+}
+
+/* --- Controls Bar --- */
+.controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 16px;
+  max-width: 920px;
+  width: 100%;
+  animation: fadeInUp 0.6s ease-out 0.1s both;
+}
+
+button {
+  background: linear-gradient(135deg, #e6a817, #d49b10);
+  color: #0a0e1a;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85em;
+  font-family: 'Inter', sans-serif;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(230, 168, 23, 0.2);
+}
+button:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 4px 16px rgba(230, 168, 23, 0.35);
+  background: linear-gradient(135deg, #f0c040, #e6a817);
+}
+button:active {
+  transform: scale(0.97);
+  box-shadow: 0 1px 4px rgba(230, 168, 23, 0.2);
+}
+button.secondary {
+  background: rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+  box-shadow: none;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+button.secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+button.active {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+select {
+  background: rgba(255, 255, 255, 0.06);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 0.85em;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 28px;
+}
+select:hover { border-color: rgba(230, 168, 23, 0.3); }
+select:focus { outline: none; border-color: rgba(230, 168, 23, 0.5); box-shadow: 0 0 0 2px rgba(230, 168, 23, 0.15); }
+
+label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82em;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* --- Canvas --- */
+.canvas-wrap {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  max-width: 920px;
+  animation: fadeInUp 0.6s ease-out 0.2s both;
+}
+canvas {
+  border-radius: 16px;
+  cursor: pointer;
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255,255,255,0.03);
+}
+
+/* --- Tooltip --- */
+#tooltip {
+  position: absolute;
+  background: rgba(15, 20, 35, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #e2e8f0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.8em;
+  pointer-events: none;
+  display: none;
+  z-index: 10;
+  line-height: 1.5;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  transition: opacity 0.15s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+/* --- Legend --- */
+.legend {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+  justify-content: center;
+  animation: fadeInUp 0.6s ease-out 0.3s both;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75em;
+  font-weight: 500;
+  color: #94a3b8;
+  padding: 5px 12px 5px 8px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: background 0.2s ease;
+}
+.legend-item:hover { background: rgba(255, 255, 255, 0.07); }
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* --- Top List --- */
+.top-list {
+  margin-top: 14px;
+  padding: 16px 20px;
+  max-width: 920px;
+  width: 100%;
+  animation: fadeInUp 0.6s ease-out 0.35s both;
+}
+.top-list h3 {
+  font-size: 0.95em;
+  font-weight: 700;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, #e6a817, #f0d060);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.top-list ol {
+  padding-left: 0;
+  list-style: none;
+  counter-reset: top-counter;
+}
+.top-list li {
+  counter-increment: top-counter;
+  margin-bottom: 6px;
+  color: #cbd5e1;
+  line-height: 1.5;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 0.82em;
+  transition: background 0.2s ease;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.top-list li:hover { background: rgba(255, 255, 255, 0.05); }
+.top-list li::before {
+  content: counter(top-counter);
+  font-weight: 700;
+  color: #475569;
+  font-size: 0.85em;
+  min-width: 18px;
+}
+.top-list li span.dots {
+  color: #e6a817;
+  font-weight: 700;
+}
+.top-list li span.res {
+  color: #64748b;
+  font-size: 0.9em;
+}
+.top-list p { color: #475569; font-size: 0.85em; }
+
+/* --- Info Panel --- */
+.info-toggle {
+  margin-top: 14px;
+  max-width: 920px;
+  width: 100%;
+  animation: fadeInUp 0.6s ease-out 0.4s both;
+}
+.info-toggle summary {
+  cursor: pointer;
+  font-size: 0.82em;
+  font-weight: 600;
+  color: #64748b;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.info-toggle summary:hover { background: rgba(255, 255, 255, 0.06); color: #94a3b8; }
+.info-toggle summary::-webkit-details-marker { display: none; }
+.info-toggle summary::before { content: '▸'; transition: transform 0.2s ease; display: inline-block; }
+.info-toggle[open] summary::before { transform: rotate(90deg); }
+.info-content {
+  padding: 14px 16px;
+  font-size: 0.8em;
+  line-height: 1.6;
+  color: #64748b;
+}
+.info-content b { color: #94a3b8; }
+
+/* --- Mobile --- */
 @media (max-width: 500px) {
-  body { padding: 10px 6px; }
-  h1 { font-size: 1.2em; }
-  .controls { gap: 6px; }
-  button { padding: 9px 12px; font-size: 0.85em; }
-  select { padding: 7px 8px; font-size: 0.85em; }
-  .legend { gap: 8px; font-size: 0.75em; }
-  .info, .top-list { padding: 10px 10px; font-size: 0.78em; }
+  body { padding: 12px 8px 32px; }
+  h1 { font-size: 1.3em; }
+  .controls { padding: 10px 12px; gap: 6px; }
+  button { padding: 9px 14px; font-size: 0.82em; }
+  select { padding: 8px 10px; font-size: 0.82em; }
+  .legend { gap: 6px; }
+  .legend-item { font-size: 0.7em; padding: 4px 10px 4px 6px; }
+  .top-list { padding: 12px 14px; }
+  .top-list li { padding: 6px 10px; font-size: 0.78em; }
 }
 </style>
 </head>
 <body>
-<h1>🏠 Catan 6P Settlement Optimizer</h1>
-<p class="subtitle">Click tiles to assign numbers, then see the best settlement spots</p>
-<div class="controls">
+
+<div class="header">
+  <h1 id="mainTitle">🏠 Catan Settlement Optimizer</h1>
+  <p class="subtitle" id="subtitle">Click tiles to assign numbers · see the best settlement spots</p>
+</div>
+
+<div class="controls glass">
+  <button id="mode4p" class="mode-btn active">4-Player</button>
+  <button id="mode6p" class="mode-btn">6-Player</button>
   <label>Assign: <select id="numberSelect">
     <option value="0">Desert</option>
     <option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
@@ -56,82 +343,173 @@ canvas { border-radius: 12px; background: #0f3460; cursor: pointer; width: 100%;
   <label>Show top: <select id="topN"><option value="5">5</option><option value="10" selected>10</option><option value="15">15</option><option value="20">20</option></select></label>
   <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none">
 </div>
+
 <div class="canvas-wrap">
-  <canvas id="board" width="820" height="760"></canvas>
+  <canvas id="board" width="920" height="860"></canvas>
   <div id="tooltip"></div>
 </div>
+
 <div class="legend">
-  <div class="legend-item"><div class="legend-dot" style="background:#00ff88;"></div> Best (top tier)</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#ffdd00;"></div> Great</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#ff8800;"></div> Good</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#ff3355;"></div> Weak</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#666;"></div> No value</div>
-</div>
-<div class="top-list" id="topList"></div>
-<div class="info">
-  <b>How it works:</b> Each number token has a probability of being rolled (dots on the token). 
-  A settlement vertex touches up to 3 tiles. The optimizer sums the probabilities of all adjacent tiles 
-  for every vertex and ranks them. Resource diversity is shown but not weighted — you decide what matters. 
-  Click a tile to assign a number, hit Random for a valid 6-player layout, or <b>📷 Scan Board</b> to 
-  take a photo of your real Catan board and auto-populate everything with AI vision (requires OpenAI API key, stored locally).
+  <div class="legend-item"><div class="legend-dot" style="background:#00ff88;box-shadow:0 0 6px #00ff8866;"></div> Best</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ffdd00;box-shadow:0 0 6px #ffdd0066;"></div> Great</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ff8800;box-shadow:0 0 6px #ff880066;"></div> Good</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ff3355;box-shadow:0 0 6px #ff335566;"></div> Weak</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#475569;"></div> No value</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1e40af;"></div> Port 3:1</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#059669;"></div> Port 2:1</div>
 </div>
 
+<div class="top-list glass" id="topList"></div>
+
+<details class="info-toggle">
+  <summary>How it works</summary>
+  <div class="info-content">
+    <b>Scoring Formula:</b> Score = Weighted Pips + Diversity + Number Spread + Port Bonus − Robber Risk + Expansion
+    <br><br>
+    <b>⚖️ Weighted Pips:</b> Each tile's pip count × resource scarcity weight. Ore & Wheat = 1.3x (cities + dev cards), Brick & Wood = 1.1x (early game), Sheep = 0.9x (most abundant).
+    <br><br>
+    <b>📊 Resource Probability:</b> Each number has a real probability (e.g. 6/8 = 13.9%, 2/12 = 2.8%). The breakdown shows your expected % chance of getting each resource per roll.
+    <br><br>
+    <b>🎲 Diversity Bonus:</b> 3 unique resources = +3, 2 = +1. More types = less trading needed.
+    <br><br>
+    <b>🎯 Number Spread:</b> 3 different numbers = +2, 2 = +1. Uncorrelated rolls = more consistent income.
+    <br><br>
+    <b>🚢 Port Bonus:</b> Matching 2:1 port with that resource = +3, generic 3:1 = +1.5, non-matching 2:1 = +1.
+    <br><br>
+    <b>🏴‍☠️ Robber Risk:</b> If >60% of your pips come from one hex, −1.5 penalty (robber magnet).
+    <br><br>
+    <b>🛤️ Expansion:</b> Nearby vertices with 4+ pips = better road-building options (up to +3).
+    <br><br>
+    Click a tile to assign a number, hit Random for a valid layout, or <b>📷 Scan Board</b> to
+    take a photo of your real Catan board and auto-populate with AI vision.
+  </div>
+</details>
+
 <script>
-// --- Catan 6-player board geometry ---
-// 6-player board: rows of 3,4,5,6,5,6,5,4,3 tiles (but actually it's 3,4,5,6,5,6,5,4,3 — wait)
-// Standard 6-player extension: rows 4,5,6,5,6,5,4  — nope
-// Actually: 6-player Catan has 30 land tiles. Layout rows: 3,4,5,6,5,4,3
-const ROWS = [3,4,5,6,5,4,3];
-const TOTAL_TILES = 30;
+let currentMode = '4p'; // '4p' or '6p'
+let ROWS = [3,4,5,4,3]; // Start with 4-player
+let TOTAL_TILES = 19;
+
+const BOARD_CONFIGS = {
+  '4p': {
+    rows: [3,4,5,4,3],
+    totalTiles: 19,
+    resources: { desert: 1, brick: 3, ore: 3, wood: 4, wheat: 4, sheep: 4 },
+    tokens: [0, 2,3,3,4,4,5,5,6,6,8,8,9,9,10,10,11,11,12],
+    ports: 9, // 4 generic (3:1) + 5 resource-specific (2:1)
+    title: "🏠 Catan 4P Settlement Optimizer"
+  },
+  '6p': {
+    rows: [3,4,5,6,5,4,3],
+    totalTiles: 30,
+    resources: { desert: 2, brick: 5, ore: 5, wood: 6, wheat: 6, sheep: 6 },
+    tokens: [0,0,2,2,3,3,3,4,4,4,5,5,5,6,6,6,6,8,8,8,8,9,9,9,10,10,10,11,11,11,12,12],
+    ports: 11, // 5 generic (3:1) + 6 resource-specific (2:1)
+    title: "🏠 Catan 6P Settlement Optimizer"
+  }
+};
 
 const RESOURCE_COLORS = {
   brick: '#c0392b', ore: '#7f8c8d', wood: '#27ae60', wheat: '#f1c40f', sheep: '#2ecc71', desert: '#c2b280'
 };
 const RESOURCE_NAMES = ['brick','ore','wood','wheat','sheep'];
-
-// Probability dots for each number
 const DOTS = {0:0, 2:1, 3:2, 4:3, 5:4, 6:5, 8:5, 9:4, 10:3, 11:2, 12:1};
+const PROB = {0:0, 2:1/36, 3:2/36, 4:3/36, 5:4/36, 6:5/36, 8:5/36, 9:4/36, 10:3/36, 11:2/36, 12:1/36};
 
-// 6-player token distribution: 2x(2,12), 3x(3,4,5,6,8,9,10,11), 2 deserts
-const SIX_P_TOKENS = [0,0, 2,2, 3,3,3, 4,4,4, 5,5,5, 6,6,6, 8,8,8, 9,9,9, 10,10,10, 11,11,11, 12,12];
-// That's 2+2+3+3+3+4+4+3+3+3+2 = 32... let me just use the correct distribution
-// Standard 6P: 2 deserts, tokens: 2,3,3,4,4,5,5,6,6,8,8,9,9,10,10,11,11,12 (base) + extension adds more
-// Easier: just use 30 tiles, shuffle numbers randomly with correct distribution
+// === SCORING ALGORITHM ===
+// Resource scarcity weights (ore/wheat > brick/wood > sheep)
+const RESOURCE_WEIGHT = { ore: 1.3, wheat: 1.3, brick: 1.1, wood: 1.1, sheep: 0.9, desert: 0 };
 
-const SIX_PLAYER_NUMBERS = [
-  0, 0,  // 2 deserts
-  2, 2,  // 2x2
-  12, 12, // 2x12
-  3, 3, 3, // 3x3
-  4, 4, 4,
-  5, 5, 5,
-  6, 6, 6,
-  8, 8, 8,
-  9, 9, 9,
-  10, 10, 10,
-  11, 11, 11
-]; // = 2+2+2+3+3+3+3+3+3+3 = 27... need 30
-// Let me just do 30 properly
-// Base game: 19 tiles (1 desert, 18 numbered). Extension adds 11 tiles (1 desert, 2 each of some, etc.)
-// I'll just let the random generator pick valid distributions for 30 tiles.
+function scoreVertex(v) {
+  if (!v.isLand || v.adjacentTiles.length === 0) return null;
+
+  // 1. Weighted pip count (probability × resource scarcity)
+  let weightedPips = 0;
+  let rawPips = 0;
+  const resourceCounts = {};
+  const resourceProbs = {};
+  const uniqueResources = new Set();
+  const adjNumbers = [];
+
+  for (const tIdx of v.adjacentTiles) {
+    const t = tiles[tIdx];
+    if (t.number === 0 || t.resource === 'desert') continue;
+    const pips = DOTS[t.number] || 0;
+    const prob = PROB[t.number] || 0;
+    const w = RESOURCE_WEIGHT[t.resource] || 1;
+    weightedPips += pips * w;
+    rawPips += pips;
+    uniqueResources.add(t.resource);
+    resourceCounts[t.resource] = (resourceCounts[t.resource] || 0) + 1;
+    resourceProbs[t.resource] = (resourceProbs[t.resource] || 0) + prob;
+    adjNumbers.push(t.number);
+  }
+
+  if (rawPips === 0) return null;
+
+  // 2. Diversity bonus: 3 unique = +3, 2 unique = +1, 1 = 0
+  const diversity = uniqueResources.size;
+  const diversityBonus = diversity >= 3 ? 3 : diversity === 2 ? 1 : 0;
+
+  // 3. Number spread bonus — reward different numbers (less correlated rolls)
+  const uniqueNumbers = new Set(adjNumbers);
+  const spreadBonus = uniqueNumbers.size >= 3 ? 2 : uniqueNumbers.size === 2 ? 1 : 0;
+
+  // 4. Port bonus
+  let portBonus = 0;
+  if (v.portAccess) {
+    if (v.portAccess.type === 'resource' && uniqueResources.has(v.portAccess.resource)) {
+      portBonus = 3; // Matching 2:1 port with that resource
+    } else if (v.portAccess.type === 'resource') {
+      portBonus = 1; // 2:1 port but no matching resource
+    } else {
+      portBonus = 1.5; // Generic 3:1 port
+    }
+  }
+
+  // 5. Robber risk penalty — if >60% of pips come from one hex, it's a robber magnet
+  let robberPenalty = 0;
+  if (adjNumbers.length > 1) {
+    const maxSinglePip = Math.max(...v.adjacentTiles.map(i => DOTS[tiles[i].number] || 0));
+    if (rawPips > 0 && maxSinglePip / rawPips > 0.6) {
+      robberPenalty = 1.5;
+    }
+  }
+
+  // 6. Expansion score — count nearby vertices that also have decent value
+  let expansionScore = 0;
+  const ROAD_DIST = HEX_R * Math.sqrt(3) * 1.2;
+  for (const other of vertices) {
+    if (other === v || !other.isLand || other.dots === 0) continue;
+    const d = Math.hypot(v.x - other.x, v.y - other.y);
+    if (d < ROAD_DIST && other.dots >= 4) {
+      expansionScore += 0.5;
+    }
+  }
+  expansionScore = Math.min(expansionScore, 3); // Cap
+
+  const totalScore = weightedPips + diversityBonus + spreadBonus + portBonus - robberPenalty + expansionScore;
+
+  return {
+    totalScore: Math.round(totalScore * 10) / 10,
+    weightedPips: Math.round(weightedPips * 10) / 10,
+    rawPips,
+    diversity,
+    diversityBonus,
+    spreadBonus,
+    portBonus,
+    robberPenalty,
+    expansionScore: Math.round(expansionScore * 10) / 10,
+    resources: uniqueResources,
+    resourceProbs,
+    resourceCounts,
+    adjNumbers
+  };
+}
 
 function generateRandomNumbers() {
-  // 6-player: 30 tiles, 2 deserts, 28 numbered
-  // Distribution: 2×{2,12}, 3×{3,4,5,6,8,9,10,11} = 2+2+3+3+3+3+3+3+3+3 = 28 numbered + 2 desert = 30 ✓
-  const nums = [
-    0, 0,
-    2, 2,
-    3, 3, 3,
-    4, 4, 4,
-    5, 5, 5,
-    6, 6, 6,
-    8, 8, 8,
-    9, 9, 9,
-    10, 10, 10,
-    11, 11, 11,
-    12, 12
-  ]; // = 30 ✓
-  // Shuffle
+  const config = BOARD_CONFIGS[currentMode];
+  const nums = [...config.tokens];
   for (let i = nums.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [nums[i], nums[j]] = [nums[j], nums[i]];
@@ -140,15 +518,11 @@ function generateRandomNumbers() {
 }
 
 function generateRandomResources() {
-  // 6P: 30 tiles. 2 desert, rest: brick 5, ore 5, wood 6, wheat 6, sheep 6
-  const res = [
-    ...Array(2).fill('desert'),
-    ...Array(5).fill('brick'),
-    ...Array(5).fill('ore'),
-    ...Array(6).fill('wood'),
-    ...Array(6).fill('wheat'),
-    ...Array(6).fill('sheep')
-  ];
+  const config = BOARD_CONFIGS[currentMode];
+  const res = [];
+  for (const [type, count] of Object.entries(config.resources)) {
+    res.push(...Array(count).fill(type));
+  }
   for (let i = res.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [res[i], res[j]] = [res[j], res[i]];
@@ -156,15 +530,16 @@ function generateRandomResources() {
   return res;
 }
 
-// State
-let tiles = []; // {cx, cy, number, resource, row, col}
-let vertices = []; // {x, y, adjacentTiles: [idx...], dots, resources}
+let tiles = [];
+let oceanTiles = [];
+let ports = [];
+let vertices = [];
 
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
 const tooltip = document.getElementById('tooltip');
 
-const HEX_R = 46; // radius
+const HEX_R = 40; // Reduced to fit ocean border
 const HEX_H = HEX_R * Math.sqrt(3);
 const CX = canvas.width / 2;
 const CY = canvas.height / 2;
@@ -174,55 +549,36 @@ function hexCorner(cx, cy, r, i) {
   return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
 }
 
+function switchMode(newMode) {
+  if (newMode === currentMode) return;
+  
+  currentMode = newMode;
+  const config = BOARD_CONFIGS[currentMode];
+  ROWS = [...config.rows];
+  TOTAL_TILES = config.totalTiles;
+  
+  // Update title
+  document.getElementById('mainTitle').textContent = config.title;
+  
+  // Update button states
+  document.getElementById('mode4p').classList.toggle('active', newMode === '4p');
+  document.getElementById('mode6p').classList.toggle('active', newMode === '6p');
+  
+  // Rebuild board
+  buildBoard();
+  drawBoard();
+}
+
 function buildBoard() {
   tiles = [];
-  const rowOffsets = [];
-  const totalRows = ROWS.length;
-  const startY = CY - ((totalRows - 1) / 2) * HEX_H;
+  oceanTiles = [];
+  ports = [];
   
-  let idx = 0;
-  for (let r = 0; r < ROWS.length; r++) {
-    const count = ROWS[r];
-    const y = startY + r * HEX_H;
-    const startX = CX - ((count - 1) / 2) * (HEX_R * 1.5 + HEX_R * 0.5);
-    // Horizontal spacing: 1.5 * R between centers
-    const spacing = HEX_R * 3;
-    const rowStartX = CX - ((count - 1) / 2) * (HEX_R * 1.5);
-    for (let c = 0; c < count; c++) {
-      const x = rowStartX + c * HEX_R * 1.5;
-      // Wait, hex grid spacing: horizontal = 1.5*R (pointy-top) but we use flat-top
-      // For flat-top hex: horiz spacing = sqrt(3)*R, vert spacing = 1.5*R
-      // Let me redo with flat-top hexes
-    }
-  }
-  
-  // Redo with flat-top hexes
-  tiles = [];
-  // flat-top hex: width = 2*R, height = sqrt(3)*R
-  // horiz spacing between centers in same row: 2*R * 3/4 * 2 = 3*R ... no
-  // flat-top: col spacing = 1.5*R*2? No.
-  // Let's use pointy-top. height = 2*R, width = sqrt(3)*R
-  // Row spacing (vertical): 1.5 * R... no
-  // Pointy-top: 
-  //   width = sqrt(3) * R
-  //   height = 2 * R
-  //   horizontal distance between adjacent hexes in same row = sqrt(3) * R
-  //   vertical distance between rows = 1.5 * R
-  //   odd rows offset by sqrt(3)/2 * R
-  
-  // But Catan board is arranged in expanding/contracting rows, not offset grid.
-  // Easier: just compute hex centers for the specific row structure.
-  
-  // Using pointy-top hexagons:
-  const hSpacing = Math.sqrt(3) * HEX_R; // horizontal distance between hex centers in same row
-  const vSpacing = 1.5 * HEX_R; // vertical distance between rows
-  
-  // But Catan rows alternate offset. In a Catan hex grid with rows [3,4,5,6,5,4,3]:
-  // Each row is centered, and consecutive rows are offset by hSpacing/2
-  
+  const vSpacing = 1.5 * HEX_R;
+  const hSpacing = Math.sqrt(3) * HEX_R;
   const totalHeight = (ROWS.length - 1) * vSpacing;
   const topY = CY - totalHeight / 2;
-  
+
   let tileIdx = 0;
   for (let r = 0; r < ROWS.length; r++) {
     const count = ROWS[r];
@@ -235,29 +591,152 @@ function buildBoard() {
         cy: y,
         number: 0,
         resource: 'desert',
-        row: r,
-        col: c,
-        idx: tileIdx++
+        row: r, col: c, idx: tileIdx++
       });
     }
   }
   
-  // Build vertices (each hex has 6 corners; merge shared corners)
+  buildOceanAndPorts();
   buildVertices();
+}
+
+function buildOceanAndPorts() {
+  const landBounds = tiles.reduce((bounds, tile) => ({
+    minX: Math.min(bounds.minX, tile.cx),
+    maxX: Math.max(bounds.maxX, tile.cx),
+    minY: Math.min(bounds.minY, tile.cy),
+    maxY: Math.max(bounds.maxY, tile.cy)
+  }), { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity });
+
+  const oceanDistance = Math.sqrt(3) * HEX_R; // Distance to ocean ring
+  
+  // Generate ocean hexes around the perimeter
+  const oceanPositions = [];
+  const hSpacing = Math.sqrt(3) * HEX_R;
+  const vSpacing = 1.5 * HEX_R;
+  
+  // Top and bottom caps
+  for (let r = -1; r <= ROWS.length; r++) {
+    let count, startOffset;
+    if (r === -1) {
+      count = ROWS[0] - 1;
+      startOffset = -0.5;
+    } else if (r === ROWS.length) {
+      count = ROWS[ROWS.length - 1] - 1;
+      startOffset = -0.5;
+    } else {
+      const maxCount = Math.max(...ROWS);
+      count = maxCount + 1;
+      startOffset = -(count - 1) / 2;
+    }
+    
+    const y = CY - (ROWS.length - 1) * vSpacing / 2 + r * vSpacing;
+    
+    for (let c = 0; c < count; c++) {
+      const x = CX + (startOffset + c) * hSpacing;
+      
+      // Check if this position would conflict with land tiles
+      const tooClose = tiles.some(tile => 
+        Math.hypot(x - tile.cx, y - tile.cy) < hSpacing * 0.9
+      );
+      
+      if (!tooClose) {
+        oceanPositions.push({ x, y, side: r === -1 ? 'top' : r === ROWS.length ? 'bottom' : 'side' });
+      }
+    }
+  }
+  
+  // Left and right sides
+  for (let r = 0; r < ROWS.length; r++) {
+    const count = ROWS[r];
+    const y = CY - (ROWS.length - 1) * vSpacing / 2 + r * vSpacing;
+    const rowWidth = (count - 1) * hSpacing;
+    
+    // Left side
+    const leftX = CX - rowWidth / 2 - hSpacing;
+    oceanPositions.push({ x: leftX, y, side: 'left' });
+    
+    // Right side  
+    const rightX = CX + rowWidth / 2 + hSpacing;
+    oceanPositions.push({ x: rightX, y, side: 'right' });
+  }
+  
+  // Create ocean tiles
+  oceanTiles = oceanPositions.map((pos, i) => ({
+    cx: pos.x,
+    cy: pos.y,
+    side: pos.side,
+    idx: i
+  }));
+  
+  // Generate ports
+  generatePorts();
+}
+
+function generatePorts() {
+  const config = BOARD_CONFIGS[currentMode];
+  ports = [];
+  
+  // Port positions for different sides
+  const portPositions = [];
+  
+  if (currentMode === '4p') {
+    // 4-player port layout - 9 ports total
+    portPositions.push(
+      { oceanIdx: 2, type: 'generic', resource: null }, // top
+      { oceanIdx: 5, type: 'resource', resource: 'wheat' }, // top-right
+      { oceanIdx: 9, type: 'generic', resource: null }, // right
+      { oceanIdx: 12, type: 'resource', resource: 'ore' }, // bottom-right
+      { oceanIdx: 16, type: 'resource', resource: 'sheep' }, // bottom
+      { oceanIdx: 19, type: 'generic', resource: null }, // bottom-left
+      { oceanIdx: 23, type: 'resource', resource: 'brick' }, // left
+      { oceanIdx: 26, type: 'generic', resource: null }, // top-left
+      { oceanIdx: 0, type: 'resource', resource: 'wood' } // top
+    );
+  } else {
+    // 6-player port layout - 11 ports total
+    portPositions.push(
+      { oceanIdx: 1, type: 'generic', resource: null },
+      { oceanIdx: 4, type: 'resource', resource: 'wheat' },
+      { oceanIdx: 8, type: 'generic', resource: null },
+      { oceanIdx: 12, type: 'resource', resource: 'ore' },
+      { oceanIdx: 16, type: 'generic', resource: null },
+      { oceanIdx: 20, type: 'resource', resource: 'sheep' },
+      { oceanIdx: 24, type: 'resource', resource: 'brick' },
+      { oceanIdx: 28, type: 'generic', resource: null },
+      { oceanIdx: 32, type: 'resource', resource: 'wood' },
+      { oceanIdx: 35, type: 'generic', resource: null },
+      { oceanIdx: 38, type: 'resource', resource: 'wheat' }
+    );
+  }
+  
+  // Create ports from positions
+  portPositions.forEach((portPos, i) => {
+    if (portPos.oceanIdx < oceanTiles.length) {
+      const oceanTile = oceanTiles[portPos.oceanIdx];
+      ports.push({
+        cx: oceanTile.cx,
+        cy: oceanTile.cy,
+        type: portPos.type, // 'generic' or 'resource'
+        resource: portPos.resource,
+        ratio: portPos.type === 'generic' ? '3:1' : '2:1',
+        oceanTileIdx: portPos.oceanIdx
+      });
+    }
+  });
 }
 
 function buildVertices() {
   vertices = [];
-  const vMap = new Map(); // key "x,y" -> vertex index
-  const SNAP = 3; // snap distance
-  
+  const vMap = new Map();
+  const SNAP = 3;
   function snapKey(x, y) {
-    // Round to nearest snap grid
     const sx = Math.round(x / SNAP) * SNAP;
     const sy = Math.round(y / SNAP) * SNAP;
     return `${sx},${sy}`;
   }
   
+  // Add vertices from land tiles
   for (let t = 0; t < tiles.length; t++) {
     const tile = tiles[t];
     for (let i = 0; i < 6; i++) {
@@ -265,12 +744,32 @@ function buildVertices() {
       const key = snapKey(corner.x, corner.y);
       if (!vMap.has(key)) {
         const vIdx = vertices.length;
-        vertices.push({ x: corner.x, y: corner.y, adjacentTiles: [t], key });
+        vertices.push({ x: corner.x, y: corner.y, adjacentTiles: [t], key, isLand: true });
         vMap.set(key, vIdx);
       } else {
         const vIdx = vMap.get(key);
         if (!vertices[vIdx].adjacentTiles.includes(t)) {
           vertices[vIdx].adjacentTiles.push(t);
+        }
+      }
+    }
+  }
+  
+  // Add vertices from ocean tiles (for port connections)
+  for (let t = 0; t < oceanTiles.length; t++) {
+    const tile = oceanTiles[t];
+    for (let i = 0; i < 6; i++) {
+      const corner = hexCorner(tile.cx, tile.cy, HEX_R, i);
+      const key = snapKey(corner.x, corner.y);
+      if (!vMap.has(key)) {
+        const vIdx = vertices.length;
+        vertices.push({ x: corner.x, y: corner.y, adjacentTiles: [], key, isLand: false, oceanTiles: [t] });
+        vMap.set(key, vIdx);
+      } else {
+        const vIdx = vMap.get(key);
+        if (!vertices[vIdx].oceanTiles) vertices[vIdx].oceanTiles = [];
+        if (!vertices[vIdx].oceanTiles.includes(t)) {
+          vertices[vIdx].oceanTiles.push(t);
         }
       }
     }
@@ -288,21 +787,32 @@ function computeVertexValues() {
     }
     v.dots = totalDots;
     v.resources = resources;
+    
+    // Check for port access
+    v.portAccess = null;
+    if (v.oceanTiles) {
+      for (const oceanIdx of v.oceanTiles) {
+        const port = ports.find(p => p.oceanTileIdx === oceanIdx);
+        if (port) {
+          v.portAccess = port;
+          break;
+        }
+      }
+    }
+
+    // Compute full score
+    v.score = scoreVertex(v);
   }
 }
 
 function randomizeBoard() {
   const numbers = generateRandomNumbers();
   const resources = generateRandomResources();
-  // Ensure deserts get 0
-  // First, assign resources, then assign numbers. Desert tiles get 0.
   for (let i = 0; i < tiles.length; i++) {
     tiles[i].resource = resources[i];
-    tiles[i].number = resources[i] === 'desert' ? 0 : 0; // will assign below
+    tiles[i].number = 0;
   }
-  // Assign numbered tokens to non-desert tiles
   const numberedTokens = numbers.filter(n => n > 0);
-  // Shuffle numbered tokens
   let ni = 0;
   for (let i = 0; i < tiles.length; i++) {
     if (tiles[i].resource === 'desert') {
@@ -314,142 +824,310 @@ function randomizeBoard() {
 }
 
 function drawBoard() {
+  const dpr = window.devicePixelRatio || 1;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
-  // Draw water background
-  ctx.fillStyle = '#0f3460';
+
+  // Radial gradient background
+  const grad = ctx.createRadialGradient(CX, CY, 0, CX, CY, canvas.width * 0.6);
+  grad.addColorStop(0, '#0f2847');
+  grad.addColorStop(0.6, '#0a1a35');
+  grad.addColorStop(1, '#060d1f');
+  ctx.fillStyle = grad;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  
-  // Draw tiles
-  for (const tile of tiles) {
-    drawHex(tile);
+
+  // Subtle grid dots for texture
+  ctx.fillStyle = 'rgba(255,255,255,0.015)';
+  for (let x = 0; x < canvas.width; x += 20) {
+    for (let y = 0; y < canvas.height; y += 20) {
+      ctx.fillRect(x, y, 1, 1);
+    }
   }
+
+  // Draw ocean tiles first
+  for (const oceanTile of oceanTiles) drawOceanHex(oceanTile);
   
-  // Compute vertex values
+  // Draw ports
+  for (const port of ports) drawPort(port);
+
+  // Draw land tiles
+  for (const tile of tiles) drawHex(tile);
+
   computeVertexValues();
-  
-  // Find max dots for color scaling
-  const maxDots = Math.max(...vertices.map(v => v.dots), 1);
-  
-  // Get sorted vertices for top-N
-  const sorted = [...vertices].filter(v => v.dots > 0).sort((a, b) => b.dots - a.dots);
+  const scored = vertices.filter(v => v.isLand && v.score);
+  const maxScore = Math.max(...scored.map(v => v.score.totalScore), 1);
+  const sorted = [...scored].sort((a, b) => b.score.totalScore - a.score.totalScore);
   const topN = parseInt(document.getElementById('topN').value);
   const topSet = new Set(sorted.slice(0, topN));
-  
-  // Draw vertices
-  for (const v of vertices) {
-    if (v.dots === 0) continue;
-    const ratio = v.dots / maxDots;
-    let color, radius;
-    if (topSet.has(v) && sorted.indexOf(v) < Math.ceil(topN * 0.3)) {
-      color = '#00ff88'; radius = 10;
-    } else if (topSet.has(v) && sorted.indexOf(v) < Math.ceil(topN * 0.6)) {
-      color = '#ffdd00'; radius = 9;
+
+  for (const v of scored) {
+    const ratio = v.score.totalScore / maxScore;
+    const rank = sorted.indexOf(v);
+    let color, radius, glowColor;
+
+    if (topSet.has(v) && rank < Math.ceil(topN * 0.3)) {
+      color = '#00ff88'; radius = 10; glowColor = 'rgba(0,255,136,0.5)';
+    } else if (topSet.has(v) && rank < Math.ceil(topN * 0.6)) {
+      color = '#ffdd00'; radius = 9; glowColor = 'rgba(255,221,0,0.4)';
     } else if (topSet.has(v)) {
-      color = '#ff8800'; radius = 8;
+      color = '#ff8800'; radius = 8; glowColor = 'rgba(255,136,0,0.35)';
     } else {
-      color = `rgba(255,255,255,${0.15 + ratio * 0.35})`;
+      color = `rgba(255,255,255,${0.12 + ratio * 0.3})`;
       radius = 4 + ratio * 3;
+      glowColor = null;
     }
-    
-    ctx.beginPath();
-    ctx.arc(v.x, v.y, radius, 0, Math.PI * 2);
-    ctx.fillStyle = color;
-    ctx.fill();
-    
-    if (topSet.has(v)) {
-      ctx.strokeStyle = 'white';
+
+    // Glow for top spots
+    if (glowColor) {
+      ctx.save();
+      ctx.shadowColor = glowColor;
+      ctx.shadowBlur = 12;
+      ctx.beginPath();
+      ctx.arc(v.x, v.y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.restore();
+
+      // White ring
+      ctx.beginPath();
+      ctx.arc(v.x, v.y, radius, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255,255,255,0.6)';
       ctx.lineWidth = 1.5;
       ctx.stroke();
-      
-      // Draw dots number
+
+      // Score number on dot
       ctx.fillStyle = '#000';
-      ctx.font = 'bold 10px sans-serif';
+      ctx.font = 'bold 7px Inter, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(v.dots, v.x, v.y);
+      ctx.fillText(v.score.totalScore.toFixed(0), v.x, v.y);
+    } else {
+      ctx.beginPath();
+      ctx.arc(v.x, v.y, radius, 0, Math.PI * 2);
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+
+    // Port indicator on vertex
+    if (v.portAccess) {
+      const portColor = v.portAccess.type === 'generic' ? '#1e40af' : '#059669';
+      ctx.beginPath();
+      ctx.arc(v.x - radius - 3, v.y - radius - 3, 3, 0, Math.PI * 2);
+      ctx.fillStyle = portColor;
+      ctx.fill();
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = 1;
+      ctx.stroke();
     }
   }
-  
-  // Update top list
+
   updateTopList(sorted, topN);
+}
+
+function drawOceanHex(oceanTile) {
+  const corners = [];
+  for (let i = 0; i < 6; i++) corners.push(hexCorner(oceanTile.cx, oceanTile.cy, HEX_R - 1, i));
+
+  // Ocean hex fill with wave-like gradient
+  ctx.beginPath();
+  ctx.moveTo(corners[0].x, corners[0].y);
+  for (let i = 1; i < 6; i++) ctx.lineTo(corners[i].x, corners[i].y);
+  ctx.closePath();
+
+  // Deep blue ocean with subtle gradient
+  const oceanGrad = ctx.createRadialGradient(oceanTile.cx - 10, oceanTile.cy - 10, 0, oceanTile.cx, oceanTile.cy, HEX_R);
+  oceanGrad.addColorStop(0, '#1e3a8a');
+  oceanGrad.addColorStop(0.5, '#1e40af');
+  oceanGrad.addColorStop(1, '#1d4ed8');
+  ctx.fillStyle = oceanGrad;
+  ctx.fill();
+
+  // Subtle wave texture
+  const waveGrad = ctx.createLinearGradient(
+    oceanTile.cx - HEX_R, oceanTile.cy - HEX_R,
+    oceanTile.cx + HEX_R, oceanTile.cy + HEX_R
+  );
+  waveGrad.addColorStop(0, 'rgba(255,255,255,0.05)');
+  waveGrad.addColorStop(0.3, 'rgba(255,255,255,0.15)');
+  waveGrad.addColorStop(0.7, 'rgba(255,255,255,0.05)');
+  waveGrad.addColorStop(1, 'rgba(255,255,255,0.1)');
+  ctx.fillStyle = waveGrad;
+  ctx.fill();
+
+  // Border
+  ctx.strokeStyle = 'rgba(30,58,138,0.8)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+}
+
+function drawPort(port) {
+  // Draw port indicator on ocean hex
+  const corners = [];
+  for (let i = 0; i < 6; i++) corners.push(hexCorner(port.cx, port.cy, HEX_R - 8, i));
+
+  // Port symbol background
+  ctx.beginPath();
+  ctx.arc(port.cx, port.cy, 12, 0, Math.PI * 2);
+  ctx.fillStyle = port.type === 'generic' ? '#1e40af' : '#059669';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Port ratio text
+  ctx.fillStyle = 'white';
+  ctx.font = 'bold 7px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(port.ratio, port.cx, port.cy - 2);
+
+  // Resource icon for resource-specific ports
+  if (port.type === 'resource' && port.resource) {
+    ctx.font = '6px Inter, sans-serif';
+    ctx.fillText(port.resource.charAt(0).toUpperCase(), port.cx, port.cy + 6);
+  }
+
+  // Draw connection lines to nearby land vertices
+  const nearbyVertices = vertices.filter(v => 
+    v.isLand && Math.hypot(v.x - port.cx, v.y - port.cy) < HEX_R * 2
+  );
+  
+  nearbyVertices.slice(0, 2).forEach(vertex => {
+    ctx.beginPath();
+    ctx.moveTo(port.cx, port.cy);
+    ctx.lineTo(vertex.x, vertex.y);
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
 }
 
 function drawHex(tile) {
   const corners = [];
   for (let i = 0; i < 6; i++) corners.push(hexCorner(tile.cx, tile.cy, HEX_R - 2, i));
-  
+
+  // Hex fill
   ctx.beginPath();
   ctx.moveTo(corners[0].x, corners[0].y);
   for (let i = 1; i < 6; i++) ctx.lineTo(corners[i].x, corners[i].y);
   ctx.closePath();
-  
-  ctx.fillStyle = RESOURCE_COLORS[tile.resource] || '#555';
+
+  const baseColor = RESOURCE_COLORS[tile.resource] || '#555';
+  ctx.fillStyle = baseColor;
   ctx.fill();
-  ctx.strokeStyle = '#111';
+
+  // Subtle inner gradient for depth
+  const innerGrad = ctx.createRadialGradient(tile.cx - 8, tile.cy - 8, 0, tile.cx, tile.cy, HEX_R);
+  innerGrad.addColorStop(0, 'rgba(255,255,255,0.1)');
+  innerGrad.addColorStop(1, 'rgba(0,0,0,0.15)');
+  ctx.fillStyle = innerGrad;
+  ctx.fill();
+
+  // Border
+  ctx.strokeStyle = 'rgba(0,0,0,0.4)';
   ctx.lineWidth = 2;
   ctx.stroke();
-  
+  // Lighter inner border
+  const innerCorners = [];
+  for (let i = 0; i < 6; i++) innerCorners.push(hexCorner(tile.cx, tile.cy, HEX_R - 4, i));
+  ctx.beginPath();
+  ctx.moveTo(innerCorners[0].x, innerCorners[0].y);
+  for (let i = 1; i < 6; i++) ctx.lineTo(innerCorners[i].x, innerCorners[i].y);
+  ctx.closePath();
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
   // Number token
   if (tile.number > 0) {
+    const isHot = tile.number === 6 || tile.number === 8;
+
+    // Token shadow
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.4)';
+    ctx.shadowBlur = 6;
+    ctx.shadowOffsetY = 2;
     ctx.beginPath();
-    ctx.arc(tile.cx, tile.cy, 16, 0, Math.PI * 2);
+    ctx.arc(tile.cx, tile.cy, 15, 0, Math.PI * 2);
     ctx.fillStyle = '#f5f0dc';
     ctx.fill();
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 1;
+    ctx.restore();
+
+    // Token border
+    ctx.beginPath();
+    ctx.arc(tile.cx, tile.cy, 15, 0, Math.PI * 2);
+    ctx.strokeStyle = isHot ? 'rgba(204,0,0,0.3)' : 'rgba(0,0,0,0.15)';
+    ctx.lineWidth = 1.5;
     ctx.stroke();
-    
-    ctx.fillStyle = (tile.number === 6 || tile.number === 8) ? '#cc0000' : '#222';
-    ctx.font = (tile.number === 6 || tile.number === 8) ? 'bold 14px sans-serif' : '13px sans-serif';
+
+    ctx.fillStyle = isHot ? '#cc0000' : '#1a1a2e';
+    ctx.font = isHot ? 'bold 13px Inter, sans-serif' : '600 12px Inter, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(tile.number, tile.cx, tile.cy - 1);
-    
+
     // Dots
     const d = DOTS[tile.number];
-    const dotY = tile.cy + 10;
-    const dotStart = tile.cx - (d - 1) * 3;
-    ctx.fillStyle = (tile.number === 6 || tile.number === 8) ? '#cc0000' : '#555';
+    const dotY = tile.cy + 9;
+    const dotStart = tile.cx - (d - 1) * 2.5;
+    ctx.fillStyle = isHot ? '#cc0000' : '#888';
     for (let i = 0; i < d; i++) {
       ctx.beginPath();
-      ctx.arc(dotStart + i * 6, dotY, 1.5, 0, Math.PI * 2);
+      ctx.arc(dotStart + i * 5, dotY, 1.5, 0, Math.PI * 2);
       ctx.fill();
     }
   }
-  
+
   // Resource label
-  ctx.fillStyle = 'rgba(255,255,255,0.7)';
-  ctx.font = '9px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.65)';
+  ctx.font = '500 7px Inter, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText(tile.resource, tile.cx, tile.cy + (tile.number > 0 ? 22 : 5));
+  ctx.fillText(tile.resource, tile.cx, tile.cy + (tile.number > 0 ? 20 : 4));
 }
 
 function updateTopList(sorted, topN) {
   const el = document.getElementById('topList');
   const shown = sorted.slice(0, topN);
   if (shown.length === 0) {
-    el.innerHTML = '<h3>Top Settlement Spots</h3><p style="color:#666">Assign numbers to tiles first (click tiles or hit Random)</p>';
+    el.innerHTML = '<h3>Top Settlement Spots</h3><p>Assign numbers to tiles first (click tiles or hit Random)</p>';
     return;
   }
   let html = `<h3>Top ${topN} Settlement Spots</h3><ol>`;
   for (const v of shown) {
+    const s = v.score;
     const resList = v.adjacentTiles.map(i => {
       const t = tiles[i];
       return t.number > 0 ? `${t.resource}(${t.number})` : null;
     }).filter(Boolean).join(', ');
-    html += `<li><span class="dots">${v.dots} pips</span> — <span class="res">${resList || 'none'}</span></li>`;
+    
+    const portText = v.portAccess ? ` 🚢${v.portAccess.ratio}${v.portAccess.resource ? ' ' + v.portAccess.resource : ''}` : '';
+    
+    // Resource probability spread
+    const probParts = Object.entries(s.resourceProbs).map(([res, prob]) => 
+      `${res}: ${(prob * 100).toFixed(1)}%`
+    ).join(', ');
+    
+    // Score breakdown chips
+    let chips = `<span class="dots">${s.totalScore}</span> `;
+    chips += `<span class="res">— ${resList || 'none'}${portText}</span>`;
+    chips += `<br><span class="res" style="font-size:0.85em;color:#475569;">`;
+    chips += `⚖️${s.weightedPips} wpips · 🎲${s.diversity} types · 📊${probParts}`;
+    if (s.robberPenalty > 0) chips += ` · 🏴‍☠️-${s.robberPenalty}`;
+    if (s.portBonus > 0) chips += ` · 🚢+${s.portBonus}`;
+    if (s.expansionScore > 0) chips += ` · 🛤️+${s.expansionScore}`;
+    if (s.spreadBonus > 0) chips += ` · 🎯+${s.spreadBonus} spread`;
+    chips += `</span>`;
+    
+    html += `<li>${chips}</li>`;
   }
   html += '</ol>';
   el.innerHTML = html;
 }
 
-// Click handling — assign number to tile
+// Click handling
 canvas.addEventListener('click', (e) => {
   const rect = canvas.getBoundingClientRect();
   const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
   const my = (e.clientY - rect.top) * (canvas.height / rect.height);
-  
   let closest = null, minDist = Infinity;
   for (const tile of tiles) {
     const d = Math.hypot(mx - tile.cx, my - tile.cy);
@@ -460,33 +1138,39 @@ canvas.addEventListener('click', (e) => {
     closest.number = num;
     if (num === 0) closest.resource = 'desert';
     else if (closest.resource === 'desert') {
-      // Assign a random resource
       closest.resource = RESOURCE_NAMES[Math.floor(Math.random() * RESOURCE_NAMES.length)];
     }
     drawBoard();
   }
 });
 
-// Tooltip on hover
+// Tooltip
 canvas.addEventListener('mousemove', (e) => {
   const rect = canvas.getBoundingClientRect();
   const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
   const my = (e.clientY - rect.top) * (canvas.height / rect.height);
-  
   let closest = null, minDist = Infinity;
   for (const v of vertices) {
-    if (v.dots === 0) continue;
+    if (v.dots === 0 || !v.isLand) continue;
     const d = Math.hypot(mx - v.x, my - v.y);
     if (d < 15 && d < minDist) { closest = v; minDist = d; }
   }
-  
-  if (closest) {
-    const lines = [`<b>${closest.dots} pips</b> (${(closest.dots / 36 * 100).toFixed(1)}% per roll)`];
+  if (closest && closest.score) {
+    const s = closest.score;
+    const lines = [`<b>Score: ${s.totalScore}</b>`];
+    lines.push(`<b>${s.rawPips} pips</b> (weighted: ${s.weightedPips})`);
     for (const tIdx of closest.adjacentTiles) {
       const t = tiles[tIdx];
-      if (t.number > 0) lines.push(`${t.resource} ${t.number} (${DOTS[t.number]} pips)`);
+      if (t.number > 0) {
+        const prob = (PROB[t.number] * 100).toFixed(1);
+        lines.push(`${t.resource} ${t.number} — ${prob}% chance/roll`);
+      }
     }
-    lines.push(`Diversity: ${closest.resources.size} resource${closest.resources.size !== 1 ? 's' : ''}`);
+    lines.push(`Diversity: ${s.diversity} type${s.diversity !== 1 ? 's' : ''} (+${s.diversityBonus})`);
+    if (s.spreadBonus > 0) lines.push(`Number spread: +${s.spreadBonus}`);
+    if (s.portBonus > 0) lines.push(`Port: ${closest.portAccess.ratio} ${closest.portAccess.resource || 'any'} (+${s.portBonus})`);
+    if (s.robberPenalty > 0) lines.push(`Robber risk: -${s.robberPenalty}`);
+    if (s.expansionScore > 0) lines.push(`Expansion: +${s.expansionScore}`);
     tooltip.innerHTML = lines.join('<br>');
     tooltip.style.display = 'block';
     tooltip.style.left = (e.clientX - rect.left + 15) + 'px';
@@ -495,9 +1179,11 @@ canvas.addEventListener('mousemove', (e) => {
     tooltip.style.display = 'none';
   }
 });
-
 canvas.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
 
+// Event listeners
+document.getElementById('mode4p').addEventListener('click', () => switchMode('4p'));
+document.getElementById('mode6p').addEventListener('click', () => switchMode('6p'));
 document.getElementById('randomBtn').addEventListener('click', () => { randomizeBoard(); drawBoard(); });
 document.getElementById('clearBtn').addEventListener('click', () => {
   for (const t of tiles) { t.number = 0; t.resource = 'desert'; }
@@ -509,7 +1195,6 @@ document.getElementById('topN').addEventListener('change', drawBoard);
 const scanBtn = document.getElementById('scanBtn');
 const photoInput = document.getElementById('photoInput');
 
-// API key modal
 function getApiKey() {
   let key = localStorage.getItem('openai_api_key');
   if (key) return key;
@@ -530,16 +1215,13 @@ scanBtn.addEventListener('click', () => {
 photoInput.addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
-  
   const key = localStorage.getItem('openai_api_key');
   if (!key) return;
 
-  // Show loading state
   scanBtn.textContent = '⏳ Analyzing...';
   scanBtn.disabled = true;
 
   try {
-    // Convert to base64
     const base64 = await new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result.split(',')[1]);
@@ -562,7 +1244,7 @@ For each tile, identify:
 2. The number token on it (2-12, or 0 for desert)
 
 Return ONLY a JSON array of objects, one per tile, in row-by-row order (top row left-to-right, then next row, etc.):
-[{"resource":"wheat","number":5},{"resource":"ore","number":8},...] 
+[{"resource":"wheat","number":5},{"resource":"ore","number":8},...]
 
 If you can't identify a tile clearly, use your best guess. Desert tiles have number 0.` },
             { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${base64}` } }
@@ -572,7 +1254,6 @@ If you can't identify a tile clearly, use your best guess. Desert tiles have num
     });
 
     const data = await response.json();
-    
     if (data.error) {
       if (data.error.code === 'invalid_api_key') {
         localStorage.removeItem('openai_api_key');
@@ -584,7 +1265,6 @@ If you can't identify a tile clearly, use your best guess. Desert tiles have num
     }
 
     const content = data.choices[0].message.content;
-    // Extract JSON from response (might be wrapped in ```json...```)
     const jsonMatch = content.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
       alert('Could not parse board from image. Try a clearer photo.');
@@ -592,20 +1272,12 @@ If you can't identify a tile clearly, use your best guess. Desert tiles have num
     }
 
     const parsed = JSON.parse(jsonMatch[0]);
-    
-    // Determine if it's a 4-player (19 tiles) or 6-player (30 tiles) board
     if (parsed.length === 19) {
-      // Rebuild board for standard layout
-      ROWS.length = 0;
-      ROWS.push(3, 4, 5, 4, 3);
-      buildBoard();
+      switchMode('4p');
     } else if (parsed.length >= 28 && parsed.length <= 30) {
-      ROWS.length = 0;
-      ROWS.push(3, 4, 5, 6, 5, 4, 3);
-      buildBoard();
+      switchMode('6p');
     }
 
-    // Apply to tiles
     const count = Math.min(parsed.length, tiles.length);
     for (let i = 0; i < count; i++) {
       const p = parsed[i];
@@ -616,7 +1288,6 @@ If you can't identify a tile clearly, use your best guess. Desert tiles have num
 
     drawBoard();
     alert(`✅ Board scanned! ${count} tiles detected.`);
-
   } catch (err) {
     console.error(err);
     alert('Failed to analyze image: ' + err.message);
