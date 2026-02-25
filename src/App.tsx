@@ -417,7 +417,7 @@ export default function App() {
             variants={fadeInUp}
             className="text-slate-400 text-lg mb-12 max-w-2xl -mt-8"
           >
-            The crown jewel — a real-time performance dashboard for my autonomous BTC trading bot. Live P&L, strategy breakdowns, regime detection, and 62K+ trade history.
+            Real-time monitoring for my autonomous trading systems. Live P&L, position tracking, service health for 9 supervised processes, and trade history — all tunneled through Cloudflare.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 40 }}
@@ -789,10 +789,10 @@ export default function App() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-lg text-slate-300 leading-relaxed max-w-md"
             >
-              AI systems builder and trading bot architect.
+              Autonomous systems builder and prediction market architect.
               <br />
               <br />
-              I am obsessed with autonomous systems. Whether building a 24/7 BTC trading bot with 23 ML strategies, deploying AI agents across multiple platforms, or architecting real-time dashboards — I build systems that run, learn, and scale without intervention.
+              I build systems that trade real money without intervention. From whale copy-trading on Polymarket with gasless relays and proxy wallets, to an AI agent managing my digital life across three platforms, to a 9-service supervisor running 24/7 — I architect infrastructure that works while I sleep.
             </motion.p>
           </motion.div>
         </div>

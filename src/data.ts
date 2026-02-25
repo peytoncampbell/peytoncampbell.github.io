@@ -12,18 +12,18 @@ export const NAV_LINKS = [
 export const HERO = {
   headline: 'I build things that work autonomously.',
   subheadline:
-    'Full-stack engineer and ML developer. I design systems that trade, learn, and deliver — without human intervention.',
+    'Full-stack engineer building autonomous trading systems on Polymarket. I design systems that copy whale trades, manage risk, and profit — without human intervention.',
   stats: [
-    { label: '62,000+ Trades Executed', icon: Code2 },
-    { label: '23 ML Strategies Live', icon: Brain },
-    { label: '510% Paper ROI', icon: Trophy },
+    { label: '210+ Live Positions', icon: Code2 },
+    { label: 'Whale Copy-Trading System', icon: Brain },
+    { label: '$147+ Resolved Profit', icon: Trophy },
   ],
 };
 
 export const HIGHLIGHTS = [
   {
-    label: '24/7 Autonomous Trading Bot',
-    detail: 'BTC scalper with 23 ML strategies, real-time regime detection, and live dashboard.',
+    label: '24/7 Whale Copy-Trading Bot',
+    detail: 'Polymarket prediction market bot copying whale trades with gasless relays, proxy wallet architecture, and real USDC profit.',
     icon: Sparkles,
   },
   {
@@ -40,9 +40,9 @@ export const HIGHLIGHTS = [
 
 export const SKILLS = [
   {
-    title: 'Production Engineering',
-    tags: ['C#', 'React', '.NET MAUI', 'Trading Bots', 'Dashboards'],
-    copy: 'Building autonomous trading systems, real-time dashboards, and cross-platform apps. From 24/7 BTC bots to scoreboard control software — I ship production systems that run without hand-holding.',
+    title: 'Autonomous Trading Systems',
+    tags: ['Python', 'Web3', 'Polymarket', 'Trading Bots', 'Dashboards'],
+    copy: 'Building whale copy-trading systems on Polymarket with gasless relays, proxy wallets, and 9 supervised services. From on-chain trade copying to real-time dashboards — I ship production systems that run 24/7.',
     icon: Layout,
   },
   {
@@ -101,10 +101,10 @@ export const PROCESS = [
 ];
 
 export const LIVE_STATUS = [
-  { label: 'Focus', value: 'BTC Bot + AI Systems' },
+  { label: 'Focus', value: 'Polymarket + Autonomous Systems' },
   { label: 'Status', value: 'Building 24/7' },
   { label: 'Location', value: 'London, ON → Toronto' },
-  { label: 'Bot', value: '62K+ trades' },
+  { label: 'Bot', value: '210+ live positions' },
 ];
 
 export const EXPERIENCE = [
@@ -118,17 +118,6 @@ export const EXPERIENCE = [
       'Automated regression testing in Python, cutting validation time by 40% while improving defect catch rate.',
       'Modernizing legacy codebases into cross-platform .NET MAUI apps using MVVM and shared component libraries.',
       'Architecting REST APIs to sync scoreboard hardware, edge devices, and mobile clients in real time.',
-    ],
-  },
-  {
-    company: 'West Haven Golf & Country Club',
-    location: 'London, ON',
-    title: 'Bartender / Server',
-    period: 'Nov 2024 - Present',
-    description: 'Client Relations & Service.',
-    bullets: [
-      'Managed high-volume service in a fast-paced environment while maintaining excellent client relations.',
-      'Collaborated with cross-functional teams to ensure seamless operations during peak hours.',
     ],
   },
 ];
@@ -151,15 +140,14 @@ export const EDUCATION = [
 export const PROJECTS = [
   {
     id: 10,
-    title: 'BTC Trading Bot',
+    title: 'Whale Copy-Trading System',
     category: 'ML/AI',
     featured: true,
-    description:
-      'Autonomous crypto trading system running 24/7 with 23 ML-powered strategies. Real-time regime detection via RandomForest/XGBoost, automatic position sizing, and a live performance dashboard via Cloudflare tunnel.',
-    tech: ['Python', 'scikit-learn', 'XGBoost', 'Binance API', 'OKX API'],
+    description: 'Live Polymarket prediction market system that copies trades from a high-performing whale wallet. Gasless relay execution via proxy wallet, automated position management, and real USDC profit. Running 24/7 with 9 supervised services.',
+    tech: ['Python', 'Web3', 'Polymarket CLOB', 'Polygon', 'Cloudflare'],
     role: 'Solo builder',
-    metrics: ['62,000+ trades executed', '510% paper ROI', '23 concurrent ML strategies', 'Live dashboard'],
-    cta: { label: 'Live Dashboard', url: 'https://btc-dashboard-amber.vercel.app' },
+    metrics: ['210+ live positions', '$147+ resolved profit (32W/14L)', 'Gasless relay execution', 'Proxy wallet architecture', '9 supervised services'],
+    cta: null,
   },
   {
     id: 14,
@@ -172,18 +160,6 @@ export const PROJECTS = [
     role: 'Founder',
     metrics: ['Full-stack consulting', 'AI integration', 'Trading systems'],
     cta: { label: 'Visit Site', url: 'https://campbell-solutions.vercel.app' },
-  },
-  {
-    id: 11,
-    title: 'Polymarket Trading Bot',
-    category: 'ML/AI',
-    featured: false,
-    description:
-      'Prediction market bot that scans for mispriced contracts using AI-powered research. Automated order execution with risk management, portfolio tracking, and arbitrage detection.',
-    tech: ['Python', 'Polymarket CLOB', 'Web3', 'Polygon'],
-    role: 'Solo builder',
-    metrics: ['Arbitrage detection', 'AI research engine', 'Auto-execution'],
-    cta: null,
   },
   {
     id: 12,
@@ -202,24 +178,22 @@ export const PROJECTS = [
     title: 'Real-Time Trading Dashboard',
     category: 'Production',
     featured: false,
-    description:
-      'Live performance dashboard for the BTC bot. Pulls real-time data through Cloudflare tunnel, displays P&L, strategy breakdowns, regime detection, and trade history.',
+    description: 'Live performance dashboard for autonomous trading systems. Real-time data through Cloudflare tunnel, P&L tracking, trade history, and system monitoring.',
     tech: ['Next.js', 'TypeScript', 'Tailwind', 'Cloudflare Tunnel', 'Vercel'],
     role: 'Solo builder',
     metrics: ['Real-time data via tunnel', 'Auto-refresh', 'Mobile responsive'],
-    cta: { label: 'View Live', url: 'https://btc-dashboard-amber.vercel.app' },
+    cta: { label: 'View Live', url: 'https://peytoncampbell.ca/dash/' },
   },
   {
     id: 15,
     title: 'Catan Settlement Optimizer',
     category: 'Tools',
     featured: false,
-    description:
-      'Interactive 6-player Catan board tool that calculates optimal settlement placements. Assign tile numbers or generate random boards, then instantly see the highest-value intersections ranked by expected resource yield.',
+    description: 'Interactive 6-player Catan board optimizer with dynamic scarcity scoring, port concentration engine, resource rarity ledger, and weighted probability analysis. Generates random boards and ranks optimal settlement placements.',
     tech: ['JavaScript', 'Canvas API', 'Algorithms'],
     role: 'Solo builder',
-    metrics: ['Interactive hex board', 'Real-time scoring', 'Top-N ranking'],
-    cta: { label: 'Try It', url: 'https://peytoncampbell.ca/catan.html' },
+    metrics: ['Dynamic scarcity scoring', 'Port concentration engine', 'Resource rarity ledger', 'Weighted probability analysis'],
+    cta: { label: 'Try It', url: 'https://peytoncampbell.ca/catan/' },
   },
   {
     id: 1,
@@ -294,58 +268,51 @@ export const TECH_STACK = [
 
 export const BUILDING_NOW = [
   {
-    name: 'BTC Trading Bot',
+    name: 'Whale Copy-Trading',
     status: 'Live',
     statusColor: 'green',
-    detail: '62K+ trades, 23 ML strategies, running 24/7',
-    icon: Bot,
-  },
-  {
-    name: 'Polymarket Bot',
-    status: 'In Development',
-    statusColor: 'amber',
-    detail: 'AI-powered prediction market arbitrage',
+    detail: '210+ positions, $147+ resolved profit, real USDC',
     icon: Rocket,
   },
   {
-    name: 'Jarvis AI',
+    name: 'Jarvis AI Agent',
     status: 'Live',
     statusColor: 'green',
-    detail: 'Personal AI agent across 3 platforms',
+    detail: 'OpenClaw-powered agent across Telegram/Signal/Discord',
     icon: Brain,
   },
   {
-    name: 'Campbell Solutions',
-    status: 'Consulting',
-    statusColor: 'blue',
-    detail: 'Tech consulting & development services',
-    icon: Briefcase,
+    name: 'Catan Optimizer',
+    status: 'Live',
+    statusColor: 'green',
+    detail: 'Dynamic scarcity scoring, port engine, rarity ledger',
+    icon: Bot,
   },
 ];
 
 export const BLOG_POSTS = [
   {
-    title: 'Building a 30,000-Trade Autonomous Trading Bot',
+    title: 'How I Built a Whale Copy-Trading System on Polymarket',
     date: 'Feb 2026',
     readTime: '8 min',
-    excerpt: 'How I built and deployed a 24/7 cryptocurrency trading system with 23 ML strategies, real-time regime detection, and a live performance dashboard.',
-    tags: ['Python', 'ML', 'Trading'],
+    excerpt: 'Architecture deep-dive: gasless relays, proxy wallets, on-chain trade detection, and turning whale alpha into real USDC profit.',
+    tags: ['Python', 'Web3', 'Trading'],
     href: '#'
   },
   {
-    title: 'Automating Job Applications Across 6 ATS Platforms',
+    title: 'Running 9 Services on a Single Machine with a Custom Supervisor',
     date: 'Feb 2026',
     readTime: '6 min',
-    excerpt: 'Deep dive into building an AI agent that automatically applies to jobs across multiple platforms while maintaining personalization and avoiding detection.',
-    tags: ['Automation', 'AI', 'Career'],
+    excerpt: 'How I built a process supervisor managing signal engines, traders, WebSocket listeners, and API servers — with health checks, auto-restart, and Windows Task Scheduler integration.',
+    tags: ['Infrastructure', 'Python', 'DevOps'],
     href: '#'
   },
   {
-    title: 'Why I Built My Own AI Assistant',
+    title: 'Building Jarvis: An AI Agent That Runs My Digital Life',
     date: 'Feb 2026',
     readTime: '5 min',
-    excerpt: 'From Telegram to Discord to Signal — building Jarvis, a persistent memory AI assistant that runs my digital life across multiple platforms.',
-    tags: ['AI', 'TypeScript', 'Productivity'],
+    excerpt: 'From Telegram to Discord to Signal — building a persistent-memory AI assistant with autonomous job applications, browser automation, and proactive monitoring.',
+    tags: ['AI', 'TypeScript', 'Automation'],
     href: '#'
   }
 ];
