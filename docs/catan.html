@@ -580,7 +580,7 @@ canvas {
 <details class="info-panel glass">
   <summary>📐 How it works <span class="info-teaser">Weighted Pips + Diversity + Ports + Expansion − Robber Risk</span></summary>
   <div class="info-content">
-    <b>Scoring Formula:</b> Score = Weighted Pips + Diversity + Number Spread + Port Bonus − Robber Risk + Expansion
+    <b>Scoring Formula:</b> Score = Weighted Pips + Diversity + Number Spread + Port Bonus + Port Concentration − Robber Risk + Expansion
     <br><br>
     <b>⚖️ Weighted Pips:</b> Each tile's pip count × <b>dynamic scarcity weight</b>. Weights blend strategic value (ore/wheat for cities) with board-specific rarity — resources with fewer tiles and lower pip totals get boosted. Check the Rarity Ledger to see current weights.
     <br><br>
@@ -591,6 +591,8 @@ canvas {
     <b>🎯 Number Spread:</b> 3 different numbers = +2, 2 = +1. Uncorrelated rolls = more consistent income.
     <br><br>
     <b>🚢 Port Bonus:</b> Matching 2:1 port with that resource = +3, generic 3:1 = +1.5, non-matching 2:1 = +1.
+    <br><br>
+    <b>⚡ Port Concentration:</b> When you have a 2:1 port AND produce lots of the matching resource: 4-5 pips = +2, 6-7 pips = +4, 8+ pips = +6. For 3:1 ports, +1 bonus if total weighted pips > 10. Vertices with 6+ matching resource pips get strategy tags like "Port Engine" or "Port Monopoly".
     <br><br>
     <b>🏴‍☠️ Robber Risk:</b> If >60% of your pips come from one hex, −1.5 penalty (robber magnet).
     <br><br>
@@ -698,6 +700,12 @@ function scoreVertex(v, complementOf) {
       if (complementOf.adjNumbers && complementOf.adjNumbers.includes(t.number)) {
         w *= 0.85; // slight penalty for same numbers
       }
+      
+      // ENHANCEMENT 2: Pair Scoring Adjustment - boost matching port resources
+      if (complementOf.portAccess && complementOf.portAccess.type === 'resource' && 
+          t.resource === complementOf.portAccess.resource) {
+        w *= 2.0; // 100% bonus for hexes matching the 1st settlement's 2:1 port resource
+      }
     }
     
     weightedPips += pips * w;
@@ -726,13 +734,65 @@ function scoreVertex(v, complementOf) {
   const spreadBonus = uniqueNumbers.size >= 3 ? 2 : uniqueNumbers.size === 2 ? 1 : 0;
 
   let portBonus = 0;
+  let portConcentrationBonus = 0;
+  let strategyTag = null;
+  
   if (v.portAccess) {
     if (v.portAccess.type === 'resource' && uniqueResources.has(v.portAccess.resource)) {
       portBonus = 3;
+      
+      // ENHANCEMENT 1: Port Concentration Bonus
+      const portResource = v.portAccess.resource;
+      let totalMatchingPips = 0;
+      
+      // Calculate total pips of matching resource
+      if (settleMode && pickedSettlements.length > 0) {
+        // In settlement mode, consider ALL picked settlements
+        for (const settlement of pickedSettlements) {
+          for (const tIdx of settlement.adjacentTiles) {
+            const t = tiles[tIdx];
+            if (t.resource === portResource && t.number > 0) {
+              totalMatchingPips += DOTS[t.number] || 0;
+            }
+          }
+        }
+        // Add this vertex's contribution
+        for (const tIdx of v.adjacentTiles) {
+          const t = tiles[tIdx];
+          if (t.resource === portResource && t.number > 0) {
+            totalMatchingPips += DOTS[t.number] || 0;
+          }
+        }
+      } else {
+        // Single settlement scoring - just this vertex's adjacent hexes
+        for (const tIdx of v.adjacentTiles) {
+          const t = tiles[tIdx];
+          if (t.resource === portResource && t.number > 0) {
+            totalMatchingPips += DOTS[t.number] || 0;
+          }
+        }
+      }
+      
+      // Apply concentration bonus based on matching resource pips
+      if (totalMatchingPips >= 8) {
+        portConcentrationBonus = 6;
+        strategyTag = `Port Monopoly: ${portResource} 🔥`;
+      } else if (totalMatchingPips >= 6) {
+        portConcentrationBonus = 4;
+        strategyTag = `Port Engine: ${portResource} 🔥`;
+      } else if (totalMatchingPips >= 4) {
+        portConcentrationBonus = 2;
+      }
     } else if (v.portAccess.type === 'resource') {
       portBonus = 1;
     } else {
+      // 3:1 port bonus
       portBonus = 1.5;
+      
+      // ENHANCEMENT 1: For 3:1 ports, give bonus if total weighted pips > 10
+      if (weightedPips > 10) {
+        portConcentrationBonus = 1;
+      }
     }
   }
 
@@ -755,7 +815,7 @@ function scoreVertex(v, complementOf) {
   }
   expansionScore = Math.min(expansionScore, 3);
 
-  const totalScore = weightedPips + diversityBonus + spreadBonus + portBonus - robberPenalty + expansionScore;
+  const totalScore = weightedPips + diversityBonus + spreadBonus + portBonus + portConcentrationBonus - robberPenalty + expansionScore;
 
   return {
     totalScore: Math.round(totalScore * 10) / 10,
@@ -765,8 +825,10 @@ function scoreVertex(v, complementOf) {
     diversityBonus,
     spreadBonus,
     portBonus,
+    portConcentrationBonus,
     robberPenalty,
     expansionScore: Math.round(expansionScore * 10) / 10,
+    strategyTag,
     resources: uniqueResources,
     resourceProbs,
     resourceCounts,
@@ -1700,10 +1762,12 @@ function updateTopList(sorted, topN) {
     let stats = `<span>⚖️ ${s.weightedPips} wpips</span><span>🎲 ${s.diversity} types</span>`;
     if (s.spreadBonus > 0) stats += `<span>🎯 +${s.spreadBonus} spread</span>`;
     if (s.portBonus > 0) stats += `<span>🚢 +${s.portBonus} port</span>`;
+    if (s.portConcentrationBonus > 0) stats += `<span>⚡ +${s.portConcentrationBonus} conc</span>`;
     if (s.robberPenalty > 0) stats += `<span>🏴‍☠️ −${s.robberPenalty}</span>`;
     if (s.expansionScore > 0) stats += `<span>🛤️ +${s.expansionScore} expand</span>`;
     
     const portText = v.portAccess ? ` · ${v.portAccess.ratio} ${v.portAccess.resource || 'any'}` : '';
+    const strategyText = s.strategyTag ? `<div style="margin-top:3px;font-size:0.75em;font-weight:600;color:#e6a817;">${s.strategyTag}</div>` : '';
     
     html += `<div class="top-card">
       <div class="top-rank ${rankClass}">${i + 1}</div>
@@ -1711,6 +1775,7 @@ function updateTopList(sorted, topN) {
       <div class="top-detail">
         <div class="top-resources">${chips}</div>
         <div class="top-stats">${stats}</div>
+        ${strategyText}
       </div>
     </div>`;
   }
@@ -2098,6 +2163,8 @@ canvas.addEventListener('mousemove', (e) => {
     lines.push(`Diversity: ${s.diversity} type${s.diversity !== 1 ? 's' : ''} (+${s.diversityBonus})`);
     if (s.spreadBonus > 0) lines.push(`Number spread: +${s.spreadBonus}`);
     if (s.portBonus > 0) lines.push(`Port: ${closest.portAccess.ratio} ${closest.portAccess.resource || 'any'} (+${s.portBonus})`);
+    if (s.portConcentrationBonus > 0) lines.push(`Port Concentration: +${s.portConcentrationBonus}`);
+    if (s.strategyTag) lines.push(`<b style="color:#e6a817;">${s.strategyTag}</b>`);
     if (s.robberPenalty > 0) lines.push(`Robber risk: -${s.robberPenalty}`);
     if (s.expansionScore > 0) lines.push(`Expansion: +${s.expansionScore}`);
     if (settleMode && pickedSettlements.includes(closest)) {
