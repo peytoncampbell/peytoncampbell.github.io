@@ -509,6 +509,79 @@ canvas {
   .res-chip { font-size: 0.7em; padding: 1px 6px; }
   .info-teaser { display: none; }
 }
+
+/* --- Draft Mode --- */
+button.draft-mode {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  color: white;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+}
+button.draft-mode.active {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  box-shadow: 0 2px 12px rgba(139, 92, 246, 0.4);
+}
+.draft-panel {
+  max-width: 920px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 14px 18px;
+  display: none;
+  animation: fadeInUp 0.3s ease-out;
+}
+.draft-panel.visible { display: block; }
+.draft-turn-indicator {
+  text-align: center;
+  padding: 10px 16px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  font-weight: 700;
+  font-size: 1.05em;
+}
+.draft-player-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.draft-player-row.current {
+  border-color: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.06);
+}
+.draft-player-badge {
+  min-width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px; font-weight: 800; font-size: 0.8em; color: white;
+}
+.draft-player-settlements {
+  display: flex; gap: 4px; flex-wrap: wrap; flex: 1;
+}
+.draft-controls {
+  display: flex; gap: 8px; margin-top: 10px; justify-content: center;
+}
+.draft-player-count {
+  display: flex; align-items: center; gap: 6px; margin-left: 8px;
+}
+.draft-player-count select {
+  padding: 6px 10px;
+}
+.draft-summary {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(124, 58, 237, 0.08);
+  border: 1px solid rgba(124, 58, 237, 0.15);
+}
+.draft-summary h4 {
+  font-size: 0.88em; font-weight: 700; color: #a78bfa; margin-bottom: 8px;
+}
+.draft-resource-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;
+  font-size: 0.72em; text-align: center;
+}
 </style>
 </head>
 <body>
@@ -537,6 +610,7 @@ canvas {
   <button id="shareBtn" class="secondary">🔗 Share</button>
   <!-- #8: Settlement planning -->
   <button id="settleBtn" class="secondary settle-mode">🏘️ Plan Settlements</button>
+  <button id="draftBtn" class="secondary draft-mode">🎯 Draft Mode</button>
   <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none">
 </div>
 
@@ -565,6 +639,26 @@ canvas {
   <p style="font-size:0.8em;color:#64748b;margin-bottom:10px;">Click vertices on the board to pick your settlements. The 2nd pick will be scored to complement your 1st.</p>
   <div class="settle-picks" id="settlePicks"></div>
   <div class="settle-combined" id="settleCombined" style="display:none;"></div>
+</div>
+
+<!-- Draft Mode Panel -->
+<div id="draftPanel" class="draft-panel glass">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+    <h3 style="font-size:0.92em;font-weight:700;color:#8b5cf6;">🎯 Draft Mode</h3>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <label style="font-size:0.78em;color:#94a3b8;">Players:</label>
+      <select id="draftPlayerCount" style="padding:5px 8px;font-size:0.78em;">
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4" selected>4</option>
+      </select>
+      <button id="draftUndoBtn" class="secondary" style="padding:5px 10px;font-size:0.75em;">↩ Undo</button>
+      <button id="draftResetBtn" class="secondary" style="padding:5px 10px;font-size:0.75em;">🔄 Reset</button>
+    </div>
+  </div>
+  <div id="draftTurnIndicator" class="draft-turn-indicator"></div>
+  <div id="draftPlayers"></div>
+  <div id="draftSummary"></div>
 </div>
 
 <!-- #2: Resource Distribution as proper HTML -->
@@ -1511,11 +1605,19 @@ function drawBoard() {
     }
   }
 
+  // Draft mode overlays
+  if (draftMode) {
+    drawDraftBlockedVertices();
+    drawDraftSettlements();
+    drawDraftRecommendations();
+  }
+
   updateTopList(sorted, topN);
   updateResourceDist();
   updateResourcePool();
   updateRarityLedger();
   updateSettlePanel();
+  updateDraftPanel();
 }
 
 function updateResourcePool() {
@@ -2083,6 +2185,11 @@ canvas.addEventListener('click', (e) => {
   const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
   const my = (e.clientY - rect.top) * (canvas.height / rect.height);
   
+  // Draft mode click
+  if (draftMode) {
+    if (draftClickVertex(mx, my)) return;
+  }
+  
   // #8: In settle mode, clicking picks a vertex
   if (settleMode) {
     let closestV = null, minDist = Infinity;
@@ -2208,6 +2315,13 @@ document.getElementById('shareBtn').addEventListener('click', shareBoard);
 
 // #8: Settlement planning toggle
 document.getElementById('settleBtn').addEventListener('click', () => {
+  // Disable draft mode if active
+  if (draftMode) {
+    draftMode = false;
+    draftPicks = [];
+    document.getElementById('draftBtn').classList.remove('active');
+    document.getElementById('draftBtn').textContent = '🎯 Draft Mode';
+  }
   settleMode = !settleMode;
   pickedSettlements = [];
   selectedPair = null;
@@ -2326,6 +2440,317 @@ If you can't identify a tile clearly, use your best guess. Desert tiles have num
     scanBtn.disabled = false;
     photoInput.value = '';
   }
+});
+
+// === Draft Mode ===
+let draftMode = false;
+let draftPlayerCount = 4;
+let draftPicks = []; // {vertexIdx, player} in order
+let draftOrder = []; // sequence of player numbers
+const DRAFT_COLORS = { 1: '#3b82f6', 2: '#ef4444', 3: '#22c55e', 4: '#a855f7' };
+const DRAFT_LABELS = { 1: 'P1 (Blue)', 2: 'P2 (Red)', 3: 'P3 (Green)', 4: 'P4 (Purple)' };
+
+function buildDraftOrder(n) {
+  // Snake draft: 1→2→...→n→n→...→2→1
+  const order = [];
+  for (let i = 1; i <= n; i++) order.push(i);
+  for (let i = n; i >= 1; i--) order.push(i);
+  return order;
+}
+
+function getDraftCurrentPlayer() {
+  if (draftPicks.length >= draftOrder.length) return null;
+  return draftOrder[draftPicks.length];
+}
+
+function getDraftRound() {
+  return draftPicks.length < draftPlayerCount ? 1 : 2;
+}
+
+function isDraftVertexBlocked(vIdx) {
+  for (const pick of draftPicks) {
+    if (pick.vertexIdx === vIdx) return true;
+    // Check edge-adjacent
+    if (!window.edges) isValidSettlementPair(vertices[0], vertices[1]); // force edge build
+    for (const [a, b] of window.edges) {
+      if ((a === pick.vertexIdx && b === vIdx) || (a === vIdx && b === pick.vertexIdx)) return true;
+    }
+  }
+  return false;
+}
+
+function getDraftPlayerPicks(player) {
+  return draftPicks.filter(p => p.player === player);
+}
+
+function getDraftComplementOf(player) {
+  const picks = getDraftPlayerPicks(player);
+  if (picks.length === 0) return null;
+  const v = vertices[picks[0].vertexIdx];
+  return v.score || scoreVertex(v, null);
+}
+
+function toggleDraftMode() {
+  draftMode = !draftMode;
+  if (draftMode) {
+    // Disable settle mode
+    if (settleMode) {
+      settleMode = false;
+      pickedSettlements = [];
+      selectedPair = null;
+      document.getElementById('settleBtn').classList.remove('active');
+      document.getElementById('settleBtn').textContent = '🏘️ Plan Settlements';
+      const engineEl = document.getElementById('resourceEngine');
+      if (engineEl) engineEl.remove();
+    }
+    draftPicks = [];
+    draftPlayerCount = parseInt(document.getElementById('draftPlayerCount').value);
+    draftOrder = buildDraftOrder(draftPlayerCount);
+  }
+  document.getElementById('draftBtn').classList.toggle('active', draftMode);
+  document.getElementById('draftBtn').textContent = draftMode ? '🎯 Exit Draft' : '🎯 Draft Mode';
+  drawBoard();
+}
+
+function draftClickVertex(mx, my) {
+  const currentPlayer = getDraftCurrentPlayer();
+  if (!currentPlayer) return false;
+
+  let closestV = null, closestIdx = -1, minDist = Infinity;
+  for (let i = 0; i < vertices.length; i++) {
+    const v = vertices[i];
+    if (!v.isLand || !v.score || v.score.totalScore <= 0) continue;
+    const d = Math.hypot(mx - v.x, my - v.y);
+    if (d < 20 && d < minDist) { closestV = v; closestIdx = i; minDist = d; }
+  }
+  if (!closestV || closestIdx === -1) return false;
+
+  if (isDraftVertexBlocked(closestIdx)) {
+    showToast('⛔ That spot is blocked (too close to another settlement)');
+    return true;
+  }
+
+  draftPicks.push({ vertexIdx: closestIdx, player: currentPlayer });
+  drawBoard();
+
+  if (draftPicks.length >= draftOrder.length) {
+    showToast('🎉 Draft complete! All settlements placed.');
+  }
+  return true;
+}
+
+function draftUndo() {
+  if (draftPicks.length === 0) return;
+  draftPicks.pop();
+  drawBoard();
+}
+
+function draftReset() {
+  draftPicks = [];
+  draftPlayerCount = parseInt(document.getElementById('draftPlayerCount').value);
+  draftOrder = buildDraftOrder(draftPlayerCount);
+  drawBoard();
+}
+
+function drawDraftSettlements() {
+  for (const pick of draftPicks) {
+    const v = vertices[pick.vertexIdx];
+    const color = DRAFT_COLORS[pick.player];
+
+    // Glow
+    ctx.save();
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 14;
+    ctx.beginPath();
+    ctx.arc(v.x, v.y, 13, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.restore();
+
+    // Border
+    ctx.beginPath();
+    ctx.arc(v.x, v.y, 13, 0, Math.PI * 2);
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // House icon
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 11px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🏠', v.x, v.y);
+  }
+}
+
+function drawDraftBlockedVertices() {
+  for (let i = 0; i < vertices.length; i++) {
+    const v = vertices[i];
+    if (!v.isLand || !v.score || v.score.totalScore <= 0) continue;
+    if (isDraftVertexBlocked(i)) {
+      // Already drawn as a placed settlement or skip
+      if (draftPicks.some(p => p.vertexIdx === i)) continue;
+      ctx.beginPath();
+      ctx.arc(v.x, v.y, 6, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,50,50,0.25)';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(v.x, v.y, 6, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255,50,50,0.4)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+  }
+}
+
+function drawDraftRecommendations() {
+  const currentPlayer = getDraftCurrentPlayer();
+  if (!currentPlayer) return;
+
+  const complementOf = getDraftComplementOf(currentPlayer);
+
+  // Score all valid vertices
+  const candidates = [];
+  for (let i = 0; i < vertices.length; i++) {
+    const v = vertices[i];
+    if (!v.isLand || isDraftVertexBlocked(i)) continue;
+    const s = scoreVertex(v, complementOf);
+    if (s && s.totalScore > 0) candidates.push({ idx: i, score: s.totalScore });
+  }
+  candidates.sort((a, b) => b.score - a.score);
+
+  const top3 = candidates.slice(0, 3);
+  for (let r = 0; r < top3.length; r++) {
+    const v = vertices[top3[r].idx];
+    const color = DRAFT_COLORS[currentPlayer];
+    const alpha = r === 0 ? 0.8 : r === 1 ? 0.5 : 0.3;
+    ctx.save();
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.arc(v.x, v.y, 16, 0, Math.PI * 2);
+    ctx.strokeStyle = color;
+    ctx.globalAlpha = alpha;
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+    ctx.restore();
+
+    // Rank label
+    ctx.fillStyle = color;
+    ctx.font = 'bold 8px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`#${r + 1}`, v.x, v.y - 18);
+  }
+}
+
+function updateDraftPanel() {
+  const panel = document.getElementById('draftPanel');
+  if (!draftMode) { panel.classList.remove('visible'); return; }
+  panel.classList.add('visible');
+
+  const currentPlayer = getDraftCurrentPlayer();
+  const turnEl = document.getElementById('draftTurnIndicator');
+  const playersEl = document.getElementById('draftPlayers');
+  const summaryEl = document.getElementById('draftSummary');
+
+  // Turn indicator
+  if (currentPlayer) {
+    const round = getDraftRound();
+    const pickNum = draftPicks.length + 1;
+    turnEl.style.background = DRAFT_COLORS[currentPlayer] + '22';
+    turnEl.style.border = `2px solid ${DRAFT_COLORS[currentPlayer]}`;
+    turnEl.style.color = DRAFT_COLORS[currentPlayer];
+    turnEl.innerHTML = `Pick #${pickNum} — ${DRAFT_LABELS[currentPlayer]}'s turn (Round ${round})`;
+  } else {
+    turnEl.style.background = 'rgba(34,197,94,0.1)';
+    turnEl.style.border = '2px solid #22c55e';
+    turnEl.style.color = '#22c55e';
+    turnEl.innerHTML = '🎉 Draft Complete!';
+  }
+
+  // Player rows
+  let html = '';
+  for (let p = 1; p <= draftPlayerCount; p++) {
+    const picks = getDraftPlayerPicks(p);
+    const isCurrent = currentPlayer === p;
+    html += `<div class="draft-player-row${isCurrent ? ' current' : ''}">
+      <div class="draft-player-badge" style="background:${DRAFT_COLORS[p]}">P${p}</div>
+      <div class="draft-player-settlements">`;
+
+    if (picks.length === 0) {
+      html += `<span style="font-size:0.78em;color:#64748b;">No settlements yet</span>`;
+    }
+    for (const pick of picks) {
+      const v = vertices[pick.vertexIdx];
+      let chips = '';
+      for (const tIdx of v.adjacentTiles) {
+        const t = tiles[tIdx];
+        if (t.number > 0 && t.resource !== 'desert') {
+          chips += `<span class="res-chip" style="background:${RESOURCE_COLORS[t.resource]};font-size:0.68em;margin:1px;">${RESOURCE_EMOJI[t.resource]}${t.number}</span>`;
+        }
+      }
+      const s = v.score || scoreVertex(v, null);
+      html += `<div style="display:inline-flex;flex-wrap:wrap;gap:2px;padding:3px 6px;border-radius:5px;background:rgba(255,255,255,0.04);border:1px solid ${DRAFT_COLORS[p]}33;">
+        <span style="font-size:0.7em;font-weight:700;color:${DRAFT_COLORS[p]};margin-right:2px;">${s ? s.totalScore : '?'}</span>${chips}</div>`;
+    }
+
+    html += `</div></div>`;
+  }
+  playersEl.innerHTML = html;
+
+  // Summary after draft complete
+  if (!currentPlayer && draftPicks.length >= draftOrder.length) {
+    let sumHtml = '<div class="draft-summary"><h4>📊 Draft Results — Resource Coverage</h4>';
+    for (let p = 1; p <= draftPlayerCount; p++) {
+      const picks = getDraftPlayerPicks(p);
+      const income = { brick: 0, ore: 0, wood: 0, wheat: 0, sheep: 0 };
+      for (const pick of picks) {
+        const v = vertices[pick.vertexIdx];
+        for (const tIdx of v.adjacentTiles) {
+          const t = tiles[tIdx];
+          if (t.number > 0 && t.resource !== 'desert' && income.hasOwnProperty(t.resource)) {
+            income[t.resource] += PROB[t.number] || 0;
+          }
+        }
+      }
+      sumHtml += `<div style="margin-top:10px;"><div style="font-weight:600;color:${DRAFT_COLORS[p]};font-size:0.85em;margin-bottom:4px;">${DRAFT_LABELS[p]}</div>`;
+      sumHtml += `<div class="draft-resource-grid">`;
+      for (const r of RESOURCE_NAMES) {
+        const pct = (income[r] * 100).toFixed(1);
+        const has = income[r] > 0;
+        sumHtml += `<div style="padding:3px;border-radius:4px;background:${has ? RESOURCE_COLORS[r] + '33' : 'rgba(255,255,255,0.03)'};color:${has ? '#e2e8f0' : '#475569'};">
+          ${RESOURCE_EMOJI[r]}<br>${pct}%</div>`;
+      }
+      sumHtml += `</div>`;
+
+      // Road suggestions
+      const coveredRes = RESOURCE_NAMES.filter(r => income[r] > 0);
+      const missingRes = RESOURCE_NAMES.filter(r => income[r] === 0);
+      if (missingRes.length > 0) {
+        sumHtml += `<div style="font-size:0.72em;color:#94a3b8;margin-top:4px;">🛤️ Road toward: ${missingRes.map(r => RESOURCE_EMOJI[r] + ' ' + r).join(', ')}</div>`;
+      } else {
+        sumHtml += `<div style="font-size:0.72em;color:#22c55e;margin-top:4px;">✅ Full resource coverage!</div>`;
+      }
+      sumHtml += `</div>`;
+    }
+    sumHtml += '</div>';
+    summaryEl.innerHTML = sumHtml;
+  } else {
+    summaryEl.innerHTML = '';
+  }
+}
+
+// Draft mode button
+document.getElementById('draftBtn').addEventListener('click', toggleDraftMode);
+document.getElementById('draftUndoBtn').addEventListener('click', draftUndo);
+document.getElementById('draftResetBtn').addEventListener('click', draftReset);
+document.getElementById('draftPlayerCount').addEventListener('change', () => {
+  draftPlayerCount = parseInt(document.getElementById('draftPlayerCount').value);
+  draftOrder = buildDraftOrder(draftPlayerCount);
+  draftPicks = [];
+  drawBoard();
 });
 
 // Init
