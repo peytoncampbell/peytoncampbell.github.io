@@ -364,13 +364,24 @@ canvas {
 <details class="info-toggle">
   <summary>How it works</summary>
   <div class="info-content">
-    <b>Each number token</b> has a probability of being rolled (dots on the token).
-    A settlement vertex touches up to 3 tiles. The optimizer sums the probabilities of all adjacent tiles
-    for every vertex and ranks them. Resource diversity is shown but not weighted — you decide what matters.
+    <b>Scoring Formula:</b> Score = Weighted Pips + Diversity + Number Spread + Port Bonus − Robber Risk + Expansion
+    <br><br>
+    <b>⚖️ Weighted Pips:</b> Each tile's pip count × resource scarcity weight. Ore & Wheat = 1.3x (cities + dev cards), Brick & Wood = 1.1x (early game), Sheep = 0.9x (most abundant).
+    <br><br>
+    <b>📊 Resource Probability:</b> Each number has a real probability (e.g. 6/8 = 13.9%, 2/12 = 2.8%). The breakdown shows your expected % chance of getting each resource per roll.
+    <br><br>
+    <b>🎲 Diversity Bonus:</b> 3 unique resources = +3, 2 = +1. More types = less trading needed.
+    <br><br>
+    <b>🎯 Number Spread:</b> 3 different numbers = +2, 2 = +1. Uncorrelated rolls = more consistent income.
+    <br><br>
+    <b>🚢 Port Bonus:</b> Matching 2:1 port with that resource = +3, generic 3:1 = +1.5, non-matching 2:1 = +1.
+    <br><br>
+    <b>🏴‍☠️ Robber Risk:</b> If >60% of your pips come from one hex, −1.5 penalty (robber magnet).
+    <br><br>
+    <b>🛤️ Expansion:</b> Nearby vertices with 4+ pips = better road-building options (up to +3).
+    <br><br>
     Click a tile to assign a number, hit Random for a valid layout, or <b>📷 Scan Board</b> to
-    take a photo of your real Catan board and auto-populate everything with AI vision (requires OpenAI API key, stored locally).
-    <br><br><b>Ports</b> provide trade advantages at specific vertices. Ocean hexes with ports show trade ratios 
-    and point toward the vertices they serve.
+    take a photo of your real Catan board and auto-populate with AI vision.
   </div>
 </details>
 
@@ -403,6 +414,98 @@ const RESOURCE_COLORS = {
 };
 const RESOURCE_NAMES = ['brick','ore','wood','wheat','sheep'];
 const DOTS = {0:0, 2:1, 3:2, 4:3, 5:4, 6:5, 8:5, 9:4, 10:3, 11:2, 12:1};
+const PROB = {0:0, 2:1/36, 3:2/36, 4:3/36, 5:4/36, 6:5/36, 8:5/36, 9:4/36, 10:3/36, 11:2/36, 12:1/36};
+
+// === SCORING ALGORITHM ===
+// Resource scarcity weights (ore/wheat > brick/wood > sheep)
+const RESOURCE_WEIGHT = { ore: 1.3, wheat: 1.3, brick: 1.1, wood: 1.1, sheep: 0.9, desert: 0 };
+
+function scoreVertex(v) {
+  if (!v.isLand || v.adjacentTiles.length === 0) return null;
+
+  // 1. Weighted pip count (probability × resource scarcity)
+  let weightedPips = 0;
+  let rawPips = 0;
+  const resourceCounts = {};
+  const resourceProbs = {};
+  const uniqueResources = new Set();
+  const adjNumbers = [];
+
+  for (const tIdx of v.adjacentTiles) {
+    const t = tiles[tIdx];
+    if (t.number === 0 || t.resource === 'desert') continue;
+    const pips = DOTS[t.number] || 0;
+    const prob = PROB[t.number] || 0;
+    const w = RESOURCE_WEIGHT[t.resource] || 1;
+    weightedPips += pips * w;
+    rawPips += pips;
+    uniqueResources.add(t.resource);
+    resourceCounts[t.resource] = (resourceCounts[t.resource] || 0) + 1;
+    resourceProbs[t.resource] = (resourceProbs[t.resource] || 0) + prob;
+    adjNumbers.push(t.number);
+  }
+
+  if (rawPips === 0) return null;
+
+  // 2. Diversity bonus: 3 unique = +3, 2 unique = +1, 1 = 0
+  const diversity = uniqueResources.size;
+  const diversityBonus = diversity >= 3 ? 3 : diversity === 2 ? 1 : 0;
+
+  // 3. Number spread bonus — reward different numbers (less correlated rolls)
+  const uniqueNumbers = new Set(adjNumbers);
+  const spreadBonus = uniqueNumbers.size >= 3 ? 2 : uniqueNumbers.size === 2 ? 1 : 0;
+
+  // 4. Port bonus
+  let portBonus = 0;
+  if (v.portAccess) {
+    if (v.portAccess.type === 'resource' && uniqueResources.has(v.portAccess.resource)) {
+      portBonus = 3; // Matching 2:1 port with that resource
+    } else if (v.portAccess.type === 'resource') {
+      portBonus = 1; // 2:1 port but no matching resource
+    } else {
+      portBonus = 1.5; // Generic 3:1 port
+    }
+  }
+
+  // 5. Robber risk penalty — if >60% of pips come from one hex, it's a robber magnet
+  let robberPenalty = 0;
+  if (adjNumbers.length > 1) {
+    const maxSinglePip = Math.max(...v.adjacentTiles.map(i => DOTS[tiles[i].number] || 0));
+    if (rawPips > 0 && maxSinglePip / rawPips > 0.6) {
+      robberPenalty = 1.5;
+    }
+  }
+
+  // 6. Expansion score — count nearby vertices that also have decent value
+  let expansionScore = 0;
+  const ROAD_DIST = HEX_R * Math.sqrt(3) * 1.2;
+  for (const other of vertices) {
+    if (other === v || !other.isLand || other.dots === 0) continue;
+    const d = Math.hypot(v.x - other.x, v.y - other.y);
+    if (d < ROAD_DIST && other.dots >= 4) {
+      expansionScore += 0.5;
+    }
+  }
+  expansionScore = Math.min(expansionScore, 3); // Cap
+
+  const totalScore = weightedPips + diversityBonus + spreadBonus + portBonus - robberPenalty + expansionScore;
+
+  return {
+    totalScore: Math.round(totalScore * 10) / 10,
+    weightedPips: Math.round(weightedPips * 10) / 10,
+    rawPips,
+    diversity,
+    diversityBonus,
+    spreadBonus,
+    portBonus,
+    robberPenalty,
+    expansionScore: Math.round(expansionScore * 10) / 10,
+    resources: uniqueResources,
+    resourceProbs,
+    resourceCounts,
+    adjNumbers
+  };
+}
 
 function generateRandomNumbers() {
   const config = BOARD_CONFIGS[currentMode];
@@ -696,6 +799,9 @@ function computeVertexValues() {
         }
       }
     }
+
+    // Compute full score
+    v.score = scoreVertex(v);
   }
 }
 
@@ -747,14 +853,14 @@ function drawBoard() {
   for (const tile of tiles) drawHex(tile);
 
   computeVertexValues();
-  const maxDots = Math.max(...vertices.filter(v => v.isLand).map(v => v.dots), 1);
-  const sorted = [...vertices].filter(v => v.dots > 0 && v.isLand).sort((a, b) => b.dots - a.dots);
+  const scored = vertices.filter(v => v.isLand && v.score);
+  const maxScore = Math.max(...scored.map(v => v.score.totalScore), 1);
+  const sorted = [...scored].sort((a, b) => b.score.totalScore - a.score.totalScore);
   const topN = parseInt(document.getElementById('topN').value);
   const topSet = new Set(sorted.slice(0, topN));
 
-  for (const v of vertices) {
-    if (v.dots === 0 || !v.isLand) continue;
-    const ratio = v.dots / maxDots;
+  for (const v of scored) {
+    const ratio = v.score.totalScore / maxScore;
     const rank = sorted.indexOf(v);
     let color, radius, glowColor;
 
@@ -788,12 +894,12 @@ function drawBoard() {
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      // Dots number
+      // Score number on dot
       ctx.fillStyle = '#000';
-      ctx.font = 'bold 8px Inter, sans-serif';
+      ctx.font = 'bold 7px Inter, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(v.dots, v.x, v.y);
+      ctx.fillText(v.score.totalScore.toFixed(0), v.x, v.y);
     } else {
       ctx.beginPath();
       ctx.arc(v.x, v.y, radius, 0, Math.PI * 2);
@@ -987,14 +1093,31 @@ function updateTopList(sorted, topN) {
   }
   let html = `<h3>Top ${topN} Settlement Spots</h3><ol>`;
   for (const v of shown) {
+    const s = v.score;
     const resList = v.adjacentTiles.map(i => {
       const t = tiles[i];
       return t.number > 0 ? `${t.resource}(${t.number})` : null;
     }).filter(Boolean).join(', ');
     
-    const portText = v.portAccess ? ` | ${v.portAccess.ratio} ${v.portAccess.resource || 'any'}` : '';
+    const portText = v.portAccess ? ` 🚢${v.portAccess.ratio}${v.portAccess.resource ? ' ' + v.portAccess.resource : ''}` : '';
     
-    html += `<li><span class="dots">${v.dots} pips</span> <span class="res">— ${resList || 'none'}${portText}</span></li>`;
+    // Resource probability spread
+    const probParts = Object.entries(s.resourceProbs).map(([res, prob]) => 
+      `${res}: ${(prob * 100).toFixed(1)}%`
+    ).join(', ');
+    
+    // Score breakdown chips
+    let chips = `<span class="dots">${s.totalScore}</span> `;
+    chips += `<span class="res">— ${resList || 'none'}${portText}</span>`;
+    chips += `<br><span class="res" style="font-size:0.85em;color:#475569;">`;
+    chips += `⚖️${s.weightedPips} wpips · 🎲${s.diversity} types · 📊${probParts}`;
+    if (s.robberPenalty > 0) chips += ` · 🏴‍☠️-${s.robberPenalty}`;
+    if (s.portBonus > 0) chips += ` · 🚢+${s.portBonus}`;
+    if (s.expansionScore > 0) chips += ` · 🛤️+${s.expansionScore}`;
+    if (s.spreadBonus > 0) chips += ` · 🎯+${s.spreadBonus} spread`;
+    chips += `</span>`;
+    
+    html += `<li>${chips}</li>`;
   }
   html += '</ol>';
   el.innerHTML = html;
@@ -1032,16 +1155,22 @@ canvas.addEventListener('mousemove', (e) => {
     const d = Math.hypot(mx - v.x, my - v.y);
     if (d < 15 && d < minDist) { closest = v; minDist = d; }
   }
-  if (closest) {
-    const lines = [`<b>${closest.dots} pips</b> (${(closest.dots / 36 * 100).toFixed(1)}% per roll)`];
+  if (closest && closest.score) {
+    const s = closest.score;
+    const lines = [`<b>Score: ${s.totalScore}</b>`];
+    lines.push(`<b>${s.rawPips} pips</b> (weighted: ${s.weightedPips})`);
     for (const tIdx of closest.adjacentTiles) {
       const t = tiles[tIdx];
-      if (t.number > 0) lines.push(`${t.resource} ${t.number} (${DOTS[t.number]} pips)`);
+      if (t.number > 0) {
+        const prob = (PROB[t.number] * 100).toFixed(1);
+        lines.push(`${t.resource} ${t.number} — ${prob}% chance/roll`);
+      }
     }
-    lines.push(`Diversity: ${closest.resources.size} resource${closest.resources.size !== 1 ? 's' : ''}`);
-    if (closest.portAccess) {
-      lines.push(`Port: ${closest.portAccess.ratio} ${closest.portAccess.resource || 'any'}`);
-    }
+    lines.push(`Diversity: ${s.diversity} type${s.diversity !== 1 ? 's' : ''} (+${s.diversityBonus})`);
+    if (s.spreadBonus > 0) lines.push(`Number spread: +${s.spreadBonus}`);
+    if (s.portBonus > 0) lines.push(`Port: ${closest.portAccess.ratio} ${closest.portAccess.resource || 'any'} (+${s.portBonus})`);
+    if (s.robberPenalty > 0) lines.push(`Robber risk: -${s.robberPenalty}`);
+    if (s.expansionScore > 0) lines.push(`Expansion: +${s.expansionScore}`);
     tooltip.innerHTML = lines.join('<br>');
     tooltip.style.display = 'block';
     tooltip.style.left = (e.clientX - rect.left + 15) + 'px';
