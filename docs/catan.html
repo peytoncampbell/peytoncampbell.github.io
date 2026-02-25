@@ -601,71 +601,47 @@ function buildBoard() {
 }
 
 function buildOceanAndPorts() {
-  const landBounds = tiles.reduce((bounds, tile) => ({
-    minX: Math.min(bounds.minX, tile.cx),
-    maxX: Math.max(bounds.maxX, tile.cx),
-    minY: Math.min(bounds.minY, tile.cy),
-    maxY: Math.max(bounds.maxY, tile.cy)
-  }), { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity });
-
-  const oceanDistance = Math.sqrt(3) * HEX_R; // Distance to ocean ring
-  
-  // Generate ocean hexes around the perimeter
-  const oceanPositions = [];
   const hSpacing = Math.sqrt(3) * HEX_R;
   const vSpacing = 1.5 * HEX_R;
   
-  // Top and bottom caps
-  for (let r = -1; r <= ROWS.length; r++) {
-    let count, startOffset;
-    if (r === -1) {
-      count = ROWS[0] - 1;
-      startOffset = -0.5;
-    } else if (r === ROWS.length) {
-      count = ROWS[ROWS.length - 1] - 1;
-      startOffset = -0.5;
-    } else {
-      const maxCount = Math.max(...ROWS);
-      count = maxCount + 1;
-      startOffset = -(count - 1) / 2;
-    }
-    
-    const y = CY - (ROWS.length - 1) * vSpacing / 2 + r * vSpacing;
-    
-    for (let c = 0; c < count; c++) {
-      const x = CX + (startOffset + c) * hSpacing;
-      
-      // Check if this position would conflict with land tiles
-      const tooClose = tiles.some(tile => 
-        Math.hypot(x - tile.cx, y - tile.cy) < hSpacing * 0.9
-      );
-      
-      if (!tooClose) {
-        oceanPositions.push({ x, y, side: r === -1 ? 'top' : r === ROWS.length ? 'bottom' : 'side' });
-      }
-    }
+  function isLandAt(x, y) {
+    return tiles.some(t => Math.hypot(x - t.cx, y - t.cy) < HEX_R * 0.5);
   }
   
-  // Left and right sides
-  for (let r = 0; r < ROWS.length; r++) {
-    const count = ROWS[r];
-    const y = CY - (ROWS.length - 1) * vSpacing / 2 + r * vSpacing;
-    const rowWidth = (count - 1) * hSpacing;
-    
-    // Left side
-    const leftX = CX - rowWidth / 2 - hSpacing;
-    oceanPositions.push({ x: leftX, y, side: 'left' });
-    
-    // Right side  
-    const rightX = CX + rowWidth / 2 + hSpacing;
-    oceanPositions.push({ x: rightX, y, side: 'right' });
+  // For each land tile, compute all 6 hex neighbor positions.
+  // Keep any neighbor that isn't itself a land tile (= ocean).
+  const seen = new Set();
+  const oceanPositions = [];
+  
+  // Flat-top hex neighbor offsets (dx, dy) for pointy-top hexes:
+  // Pointy-top neighbors at distance hSpacing:
+  //   Same row: left (-hSpacing, 0), right (+hSpacing, 0)
+  //   Row above: (-hSpacing/2, -vSpacing), (+hSpacing/2, -vSpacing)
+  //   Row below: (-hSpacing/2, +vSpacing), (+hSpacing/2, +vSpacing)
+  const neighborOffsets = [
+    [-hSpacing, 0], [hSpacing, 0],
+    [-hSpacing/2, -vSpacing], [hSpacing/2, -vSpacing],
+    [-hSpacing/2, vSpacing], [hSpacing/2, vSpacing]
+  ];
+  
+  for (const tile of tiles) {
+    for (const [dx, dy] of neighborOffsets) {
+      const nx = tile.cx + dx;
+      const ny = tile.cy + dy;
+      const key = Math.round(nx) + ',' + Math.round(ny);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (!isLandAt(nx, ny)) {
+        oceanPositions.push({ x: nx, y: ny });
+      }
+    }
   }
   
   // Create ocean tiles
   oceanTiles = oceanPositions.map((pos, i) => ({
     cx: pos.x,
     cy: pos.y,
-    side: pos.side,
+    side: 'ocean',
     idx: i
   }));
   
@@ -673,57 +649,114 @@ function buildOceanAndPorts() {
   generatePorts();
 }
 
+function getCoastalEdges() {
+  // Find all edges of land hexes that face outward (no adjacent land hex on the other side)
+  const hSpacing = Math.sqrt(3) * HEX_R;
+  const edges = [];
+  
+  for (const tile of tiles) {
+    for (let i = 0; i < 6; i++) {
+      const c1 = hexCorner(tile.cx, tile.cy, HEX_R, i);
+      const c2 = hexCorner(tile.cx, tile.cy, HEX_R, (i + 1) % 6);
+      const midX = (c1.x + c2.x) / 2;
+      const midY = (c1.y + c2.y) / 2;
+      
+      // Check if any other land tile shares this edge
+      const isCoastal = !tiles.some(other => {
+        if (other === tile) return false;
+        const d = Math.hypot(other.cx - tile.cx, other.cy - tile.cy);
+        if (d > hSpacing * 1.1) return false;
+        // Check if the midpoint of this edge is close to the midpoint of one of other's edges
+        for (let j = 0; j < 6; j++) {
+          const oc1 = hexCorner(other.cx, other.cy, HEX_R, j);
+          const oc2 = hexCorner(other.cx, other.cy, HEX_R, (j + 1) % 6);
+          const omx = (oc1.x + oc2.x) / 2;
+          const omy = (oc1.y + oc2.y) / 2;
+          if (Math.hypot(midX - omx, midY - omy) < 5) return true;
+        }
+        return false;
+      });
+      
+      if (isCoastal) {
+        const angle = Math.atan2(midY - CY, midX - CX);
+        edges.push({ midX, midY, v1: c1, v2: c2, angle, tileIdx: tile.idx, edgeIdx: i });
+      }
+    }
+  }
+  
+  // Sort clockwise (starting from top, going clockwise = starting from -PI/2 increasing)
+  edges.sort((a, b) => {
+    const aa = (a.angle + Math.PI * 2.5 + Math.PI / 2) % (Math.PI * 2);
+    const bb = (b.angle + Math.PI * 2.5 + Math.PI / 2) % (Math.PI * 2);
+    return aa - bb;
+  });
+  
+  return edges;
+}
+
 function generatePorts() {
   const config = BOARD_CONFIGS[currentMode];
   ports = [];
   
-  // Port positions for different sides
-  const portPositions = [];
+  const coastalEdges = getCoastalEdges();
+  const totalEdges = coastalEdges.length; // Should be ~18 for 4p, ~24 for 6p
   
+  // Standard Catan port types going clockwise from top-left
+  // 4-player: 9 ports (4 generic + 5 resource), placed every other coastal edge
+  // 6-player: 11 ports (5 generic + 6 resource)
+  let portTypes;
   if (currentMode === '4p') {
-    // 4-player port layout - 9 ports total
-    portPositions.push(
-      { oceanIdx: 2, type: 'generic', resource: null }, // top
-      { oceanIdx: 5, type: 'resource', resource: 'wheat' }, // top-right
-      { oceanIdx: 9, type: 'generic', resource: null }, // right
-      { oceanIdx: 12, type: 'resource', resource: 'ore' }, // bottom-right
-      { oceanIdx: 16, type: 'resource', resource: 'sheep' }, // bottom
-      { oceanIdx: 19, type: 'generic', resource: null }, // bottom-left
-      { oceanIdx: 23, type: 'resource', resource: 'brick' }, // left
-      { oceanIdx: 26, type: 'generic', resource: null }, // top-left
-      { oceanIdx: 0, type: 'resource', resource: 'wood' } // top
-    );
+    // Standard Catan 5th edition beginner layout, clockwise from NW
+    portTypes = [
+      { type: 'generic', resource: null },    // NW
+      { type: 'resource', resource: 'wheat' }, // NE
+      { type: 'resource', resource: 'ore' },   // E-upper
+      { type: 'generic', resource: null },     // E-lower
+      { type: 'resource', resource: 'sheep' }, // SE
+      { type: 'generic', resource: null },     // S
+      { type: 'generic', resource: null },     // SW
+      { type: 'resource', resource: 'brick' }, // W
+      { type: 'resource', resource: 'wood' },  // NW-upper
+    ];
   } else {
-    // 6-player port layout - 11 ports total
-    portPositions.push(
-      { oceanIdx: 1, type: 'generic', resource: null },
-      { oceanIdx: 4, type: 'resource', resource: 'wheat' },
-      { oceanIdx: 8, type: 'generic', resource: null },
-      { oceanIdx: 12, type: 'resource', resource: 'ore' },
-      { oceanIdx: 16, type: 'generic', resource: null },
-      { oceanIdx: 20, type: 'resource', resource: 'sheep' },
-      { oceanIdx: 24, type: 'resource', resource: 'brick' },
-      { oceanIdx: 28, type: 'generic', resource: null },
-      { oceanIdx: 32, type: 'resource', resource: 'wood' },
-      { oceanIdx: 35, type: 'generic', resource: null },
-      { oceanIdx: 38, type: 'resource', resource: 'wheat' }
-    );
+    portTypes = [
+      { type: 'generic', resource: null },
+      { type: 'resource', resource: 'wheat' },
+      { type: 'resource', resource: 'ore' },
+      { type: 'generic', resource: null },
+      { type: 'resource', resource: 'sheep' },
+      { type: 'generic', resource: null },
+      { type: 'resource', resource: 'brick' },
+      { type: 'generic', resource: null },
+      { type: 'resource', resource: 'wood' },
+      { type: 'generic', resource: null },
+      { type: 'resource', resource: 'wheat' },
+    ];
   }
   
-  // Create ports from positions
-  portPositions.forEach((portPos, i) => {
-    if (portPos.oceanIdx < oceanTiles.length) {
-      const oceanTile = oceanTiles[portPos.oceanIdx];
-      ports.push({
-        cx: oceanTile.cx,
-        cy: oceanTile.cy,
-        type: portPos.type, // 'generic' or 'resource'
-        resource: portPos.resource,
-        ratio: portPos.type === 'generic' ? '3:1' : '2:1',
-        oceanTileIdx: portPos.oceanIdx
-      });
-    }
-  });
+  const numPorts = portTypes.length;
+  const step = totalEdges / numPorts;
+  
+  for (let i = 0; i < numPorts; i++) {
+    const edgeIndex = Math.round(i * step) % totalEdges;
+    const edge = coastalEdges[edgeIndex];
+    
+    // Port position is offset outward from the coastal edge midpoint
+    const outX = edge.midX + (edge.midX - CX) * 0.4;
+    const outY = edge.midY + (edge.midY - CY) * 0.4;
+    
+    ports.push({
+      cx: outX,
+      cy: outY,
+      type: portTypes[i].type,
+      resource: portTypes[i].resource,
+      ratio: portTypes[i].type === 'generic' ? '3:1' : '2:1',
+      // Store the two coastal vertices this port connects to
+      vertex1: edge.v1,
+      vertex2: edge.v2,
+      edgeMid: { x: edge.midX, y: edge.midY }
+    });
+  }
 }
 
 function buildVertices() {
@@ -788,12 +821,13 @@ function computeVertexValues() {
     v.dots = totalDots;
     v.resources = resources;
     
-    // Check for port access
+    // Check for port access — vertex must be near one of the port's two coastal vertices
     v.portAccess = null;
-    if (v.oceanTiles) {
-      for (const oceanIdx of v.oceanTiles) {
-        const port = ports.find(p => p.oceanTileIdx === oceanIdx);
-        if (port) {
+    for (const port of ports) {
+      if (port.vertex1 && port.vertex2) {
+        const d1 = Math.hypot(v.x - port.vertex1.x, v.y - port.vertex1.y);
+        const d2 = Math.hypot(v.x - port.vertex2.x, v.y - port.vertex2.y);
+        if (d1 < 5 || d2 < 5) {
           v.portAccess = port;
           break;
         }
@@ -960,45 +994,41 @@ function drawOceanHex(oceanTile) {
 }
 
 function drawPort(port) {
-  // Draw port indicator on ocean hex
-  const corners = [];
-  for (let i = 0; i < 6; i++) corners.push(hexCorner(port.cx, port.cy, HEX_R - 8, i));
+  // Draw connection lines from port to its two coastal vertices
+  if (port.vertex1 && port.vertex2) {
+    [port.vertex1, port.vertex2].forEach(v => {
+      ctx.beginPath();
+      ctx.moveTo(port.cx, port.cy);
+      ctx.lineTo(v.x, v.y);
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4, 3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    });
+  }
 
   // Port symbol background
   ctx.beginPath();
-  ctx.arc(port.cx, port.cy, 12, 0, Math.PI * 2);
+  ctx.arc(port.cx, port.cy, 14, 0, Math.PI * 2);
   ctx.fillStyle = port.type === 'generic' ? '#1e40af' : '#059669';
   ctx.fill();
   ctx.strokeStyle = 'rgba(255,255,255,0.8)';
-  ctx.lineWidth = 1;
+  ctx.lineWidth = 1.5;
   ctx.stroke();
 
   // Port ratio text
   ctx.fillStyle = 'white';
-  ctx.font = 'bold 7px Inter, sans-serif';
+  ctx.font = 'bold 8px Inter, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(port.ratio, port.cx, port.cy - 2);
 
   // Resource icon for resource-specific ports
   if (port.type === 'resource' && port.resource) {
-    ctx.font = '6px Inter, sans-serif';
-    ctx.fillText(port.resource.charAt(0).toUpperCase(), port.cx, port.cy + 6);
+    ctx.font = 'bold 6px Inter, sans-serif';
+    ctx.fillText(port.resource.substring(0, 2).toUpperCase(), port.cx, port.cy + 7);
   }
-
-  // Draw connection lines to nearby land vertices
-  const nearbyVertices = vertices.filter(v => 
-    v.isLand && Math.hypot(v.x - port.cx, v.y - port.cy) < HEX_R * 2
-  );
-  
-  nearbyVertices.slice(0, 2).forEach(vertex => {
-    ctx.beginPath();
-    ctx.moveTo(port.cx, port.cy);
-    ctx.lineTo(vertex.x, vertex.y);
-    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-  });
 }
 
 function drawHex(tile) {

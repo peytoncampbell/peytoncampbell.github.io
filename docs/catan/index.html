@@ -603,118 +603,36 @@ function buildBoard() {
 function buildOceanAndPorts() {
   const hSpacing = Math.sqrt(3) * HEX_R;
   const vSpacing = 1.5 * HEX_R;
-  const totalHeight = (ROWS.length - 1) * vSpacing;
-  const topY = CY - totalHeight / 2;
-  
-  // Build a set of occupied grid positions (row, col) using same logic as land placement
-  // But use a pixel-based lookup keyed by grid coords
-  const landGrid = new Set(); // "row,col"
-  
-  // We'll use an extended grid. For each row r, tiles go from col 0..count-1
-  // The pixel position of grid(r,c) is:
-  //   y = topY + r * vSpacing
-  //   x = CX - (ROWS[r]-1)*hSpacing/2 + c * hSpacing
-  // But ocean rows extend beyond ROWS, so we need a unified coordinate system.
-  //
-  // Use offset coordinates: store each tile as (row, colOffset) where colOffset
-  // is measured from a common reference. For pointy-top, even rows and odd rows
-  // are offset by half a hex width.
-  //
-  // Simpler approach: use the actual pixel grid. Place land tiles, then for each
-  // row in an extended range, check all possible column positions and keep those
-  // adjacent to land but not land themselves.
-  
-  // Determine the max row width for the extended grid
-  const maxCount = Math.max(...ROWS);
-  const extendedRows = ROWS.length + 2; // one extra row top and bottom
-  
-  // For each row, compute the expected tile count and center offset
-  // The hex grid staggers: adjacent rows offset by hSpacing/2
-  // We need to figure out the stagger pattern from the land tiles
-  
-  // Actually, let's use the land tile positions to determine the grid precisely
-  // Group land tiles by row
-  const rowTiles = {};
-  for (const tile of tiles) {
-    const r = tile.row;
-    if (!rowTiles[r]) rowTiles[r] = [];
-    rowTiles[r].push(tile);
-  }
-  
-  // For each land row, get the leftmost tile x to determine offset pattern
-  const rowOffsets = {};
-  for (let r = 0; r < ROWS.length; r++) {
-    const sorted = rowTiles[r].sort((a, b) => a.cx - b.cx);
-    rowOffsets[r] = sorted[0].cx; // leftmost x
-  }
-  
-  // Build land position set with tolerance matching
-  function gridKey(x, y) {
-    return Math.round(x * 10) + ',' + Math.round(y * 10);
-  }
-  
-  const landKeys = new Set();
-  for (const tile of tiles) {
-    landKeys.add(gridKey(tile.cx, tile.cy));
-  }
   
   function isLandAt(x, y) {
     return tiles.some(t => Math.hypot(x - t.cx, y - t.cy) < HEX_R * 0.5);
   }
   
-  // Generate all possible hex positions in a larger grid encompassing the board + 1 ring
+  // For each land tile, compute all 6 hex neighbor positions.
+  // Keep any neighbor that isn't itself a land tile (= ocean).
+  const seen = new Set();
   const oceanPositions = [];
   
-  // Extended row range
-  for (let r = -1; r <= ROWS.length; r++) {
-    const y = topY + r * vSpacing;
-    
-    // Figure out column positions for this row
-    // Adjacent rows to an existing land row share the stagger pattern
-    let refRow; // nearest land row to determine offset
-    if (r >= 0 && r < ROWS.length) {
-      refRow = r;
-    } else if (r === -1) {
-      refRow = 0;
-    } else {
-      refRow = ROWS.length - 1;
-    }
-    
-    // The stagger: rows with different tile counts are offset by hSpacing/2
-    // In a standard Catan layout, row r's first tile x = CX - (count-1)*hSpacing/2
-    // For ocean rows above/below, we need to match the stagger of adjacent land rows
-    
-    // Determine the x-offset for this extended row
-    // For a row adjacent to land row refRow, the stagger depends on the hex grid parity
-    // The key insight: between two adjacent rows, tiles are offset by hSpacing/2
-    // If land row has count N at positions [x0, x0+h, x0+2h, ...],
-    // the adjacent row's positions are at [x0-h/2, x0+h/2, x0+3h/2, ...]
-    
-    let startX, colCount;
-    if (r >= 0 && r < ROWS.length) {
-      // Land row — use actual positions, but extend left and right by 1
-      const count = ROWS[r];
-      startX = CX - (count - 1) * hSpacing / 2 - hSpacing;
-      colCount = count + 2;
-    } else {
-      // Ocean-only row above or below
-      // Must align with adjacent land row's stagger
-      const adjCount = ROWS[refRow];
-      const adjStartX = CX - (adjCount - 1) * hSpacing / 2;
-      // Adjacent row is offset by hSpacing/2
-      startX = adjStartX - hSpacing / 2 - hSpacing;
-      colCount = adjCount + 2;
-    }
-    
-    for (let c = 0; c < colCount; c++) {
-      const x = startX + c * hSpacing;
-      
-      if (!isLandAt(x, y)) {
-        // Check if adjacent to at least one land tile
-        const adjToLand = tiles.some(t => Math.hypot(x - t.cx, y - t.cy) < hSpacing * 1.1);
-        if (adjToLand) {
-          oceanPositions.push({ x, y });
-        }
+  // Flat-top hex neighbor offsets (dx, dy) for pointy-top hexes:
+  // Pointy-top neighbors at distance hSpacing:
+  //   Same row: left (-hSpacing, 0), right (+hSpacing, 0)
+  //   Row above: (-hSpacing/2, -vSpacing), (+hSpacing/2, -vSpacing)
+  //   Row below: (-hSpacing/2, +vSpacing), (+hSpacing/2, +vSpacing)
+  const neighborOffsets = [
+    [-hSpacing, 0], [hSpacing, 0],
+    [-hSpacing/2, -vSpacing], [hSpacing/2, -vSpacing],
+    [-hSpacing/2, vSpacing], [hSpacing/2, vSpacing]
+  ];
+  
+  for (const tile of tiles) {
+    for (const [dx, dy] of neighborOffsets) {
+      const nx = tile.cx + dx;
+      const ny = tile.cy + dy;
+      const key = Math.round(nx) + ',' + Math.round(ny);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      if (!isLandAt(nx, ny)) {
+        oceanPositions.push({ x: nx, y: ny });
       }
     }
   }
