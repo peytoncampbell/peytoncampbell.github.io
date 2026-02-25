@@ -361,6 +361,8 @@ canvas {
 
 <div id="resourcePool" class="glass" style="width:100%;max-width:520px;margin:12px auto;padding:16px 20px;border-radius:16px;background:rgba(255,255,255,0.04);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.08);"></div>
 
+<div id="rarityLedger" class="glass" style="width:100%;max-width:520px;margin:12px auto;padding:16px 20px;border-radius:16px;background:rgba(255,255,255,0.04);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.08);"></div>
+
 <div class="top-list glass" id="topList"></div>
 
 <details class="info-toggle">
@@ -412,7 +414,7 @@ const BOARD_CONFIGS = {
 };
 
 const RESOURCE_COLORS = {
-  brick: '#c0392b', ore: '#7f8c8d', wood: '#27ae60', wheat: '#f1c40f', sheep: '#2ecc71', desert: '#c2b280'
+  brick: '#b5451d', ore: '#6b7d8a', wood: '#1a7a3a', wheat: '#daa520', sheep: '#7ec850', desert: '#c2b280'
 };
 const RESOURCE_NAMES = ['brick','ore','wood','wheat','sheep'];
 const DOTS = {0:0, 2:1, 3:2, 4:3, 5:4, 6:5, 8:5, 9:4, 10:3, 11:2, 12:1};
@@ -969,6 +971,7 @@ function drawBoard() {
 
   updateTopList(sorted, topN);
   updateResourcePool();
+  updateRarityLedger();
 }
 
 function updateResourcePool() {
@@ -981,7 +984,7 @@ function updateResourcePool() {
     }
   }
   const maxProb = Math.max(...Object.values(pool), 0.001);
-  const colors = { brick:'#c0392b', ore:'#7f8c8d', wood:'#27ae60', wheat:'#f39c12', sheep:'#2ecc71' };
+  const colors = { brick:'#b5451d', ore:'#6b7d8a', wood:'#1a7a3a', wheat:'#daa520', sheep:'#7ec850' };
   const labels = { brick:'🧱 Brick', ore:'⛰️ Ore', wood:'🌲 Wood', wheat:'🌾 Wheat', sheep:'🐑 Sheep' };
   let html = '<div style="font:600 0.95em Inter,sans-serif;color:#e2e8f0;margin-bottom:10px;">📊 Resource Probability Pool</div>';
   for (const r of RESOURCE_NAMES) {
@@ -995,6 +998,64 @@ function updateResourcePool() {
       <span style="width:45px;font-variant-numeric:tabular-nums;">${pct}%</span>
     </div>`;
   }
+  el.innerHTML = html;
+}
+
+function updateRarityLedger() {
+  const el = document.getElementById('rarityLedger');
+  const config = BOARD_CONFIGS[currentMode];
+  const totalLand = config.totalTiles - config.resources.desert;
+  
+  // Count tiles and total pips per resource on this board
+  const tileCount = {};
+  const totalPips = {};
+  for (const r of RESOURCE_NAMES) { tileCount[r] = 0; totalPips[r] = 0; }
+  for (const t of tiles) {
+    if (t.resource !== 'desert' && RESOURCE_NAMES.includes(t.resource)) {
+      tileCount[t.resource]++;
+      totalPips[t.resource] += (DOTS[t.number] || 0);
+    }
+  }
+  
+  const anyAssigned = RESOURCE_NAMES.some(r => tileCount[r] > 0);
+  if (!anyAssigned) {
+    el.innerHTML = '<div style="font:600 0.95em Inter,sans-serif;color:#e2e8f0;margin-bottom:6px;">📋 Resource Rarity</div><div style="font:400 0.8em Inter,sans-serif;color:#64748b;">Assign numbers to see rarity breakdown</div>';
+    return;
+  }
+
+  const maxPips = Math.max(...Object.values(totalPips), 1);
+  const colors = { brick:'#b5451d', ore:'#6b7d8a', wood:'#1a7a3a', wheat:'#daa520', sheep:'#7ec850' };
+  const labels = { brick:'🧱 Brick', ore:'⛰️ Ore', wood:'🌲 Wood', wheat:'🌾 Wheat', sheep:'🐑 Sheep' };
+  
+  // Sort by total pips ascending (rarest first)
+  const sorted = [...RESOURCE_NAMES].sort((a, b) => totalPips[a] - totalPips[b]);
+  
+  let html = '<div style="font:600 0.95em Inter,sans-serif;color:#e2e8f0;margin-bottom:10px;">📋 Resource Rarity <span style="font-weight:400;font-size:0.8em;color:#64748b;">— sorted rarest → most common</span></div>';
+  
+  for (const r of sorted) {
+    const pips = totalPips[r];
+    const count = tileCount[r];
+    const barW = Math.max(2, (pips / maxPips) * 100);
+    
+    // Rarity tag
+    let tag, tagColor;
+    const pipRatio = pips / maxPips;
+    if (pipRatio <= 0.4) { tag = 'RARE'; tagColor = '#ef4444'; }
+    else if (pipRatio <= 0.65) { tag = 'SCARCE'; tagColor = '#f59e0b'; }
+    else if (pipRatio <= 0.85) { tag = 'COMMON'; tagColor = '#3b82f6'; }
+    else { tag = 'ABUNDANT'; tagColor = '#22c55e'; }
+    
+    html += `<div style="display:flex;align-items:center;gap:8px;margin:6px 0;font:500 0.8em Inter,sans-serif;color:#cbd5e1;">
+      <span style="width:80px;text-align:right;">${labels[r]}</span>
+      <div style="flex:1;height:16px;background:rgba(255,255,255,0.06);border-radius:8px;overflow:hidden;position:relative;">
+        <div style="width:${barW}%;height:100%;background:${colors[r]};border-radius:8px;transition:width 0.3s;"></div>
+      </div>
+      <span style="width:30px;text-align:center;font-variant-numeric:tabular-nums;">${count}×</span>
+      <span style="width:40px;text-align:center;font-variant-numeric:tabular-nums;">${pips}♦</span>
+      <span style="width:65px;text-align:center;font-size:0.75em;font-weight:700;color:${tagColor};background:${tagColor}18;padding:2px 6px;border-radius:4px;">${tag}</span>
+    </div>`;
+  }
+  
   el.innerHTML = html;
 }
 
@@ -1371,6 +1432,7 @@ If you can't identify a tile clearly, use your best guess. Desert tiles have num
 
 // Init
 buildBoard();
+randomizeBoard();
 drawBoard();
 </script>
 </body>
