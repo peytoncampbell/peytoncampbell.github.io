@@ -227,27 +227,6 @@ export default function App() {
     <div className="min-h-screen text-slate-300 selection:bg-blue-500/30 selection:text-white">
       <ScrollProgress />
 
-      {/* Availability Banner */}
-      <div className="fixed top-0 left-0 right-0 z-[55] pointer-events-none">
-        <motion.div
-          initial={{ y: -40, opacity: 0 }}
-          animate={{ y: scrolled ? -40 : 0, opacity: scrolled ? 0 : 1 }}
-          transition={{ duration: 0.3 }}
-          className="flex justify-center pt-2"
-        >
-          <a
-            href="#contact"
-            className="pointer-events-auto inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold bg-green-500/10 border border-green-500/25 text-green-400 hover:bg-green-500/15 hover:border-green-400/40 transition-all duration-300 backdrop-blur-sm"
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
-            </span>
-            Open to opportunities — Available for full-time & consulting
-          </a>
-        </motion.div>
-      </div>
-
       {/* Navbar */}
       <nav
         className={clsx(
@@ -280,7 +259,7 @@ export default function App() {
           </div>
 
           <button
-            className="md:hidden text-white p-2"
+            className="md:hidden text-white p-3 min-w-[44px] min-h-[44px] flex items-center justify-center"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label={isMobileMenuOpen ? 'Close navigation' : 'Open navigation'}
           >
@@ -304,7 +283,7 @@ export default function App() {
                   key={link.label}
                   href={link.href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-xl font-bold text-slate-300 hover:text-white transition-colors"
+                  className="text-xl font-bold text-slate-300 hover:text-white transition-colors py-2 min-h-[44px] flex items-center justify-center"
                 >
                   {link.label}
                 </a>
@@ -340,7 +319,7 @@ export default function App() {
               </motion.div>
               <motion.h1
                 variants={fadeInUp}
-                className="text-6xl md:text-8xl font-extrabold tracking-tight mb-8 leading-[1.05] gradient-text-hero"
+                className="text-4xl sm:text-6xl md:text-8xl font-extrabold tracking-tight mb-8 leading-[1.05] gradient-text-hero"
               >
                 {HERO.headline}
               </motion.h1>
@@ -455,8 +434,8 @@ export default function App() {
                 <div className="w-3 h-3 rounded-full bg-green-500/70 hover:bg-green-500 transition-colors cursor-pointer" />
               </div>
               <div className="flex-1 mx-4">
-                <div className="bg-slate-900/80 rounded-lg px-4 py-2 text-xs text-slate-500 font-mono border border-slate-800/50 max-w-md mx-auto text-center flex items-center justify-center gap-2">
-                  <span className="text-green-400/70">🔒</span> peytoncampbell.ca/dash/
+                <div className="bg-slate-900/80 rounded-lg px-3 sm:px-4 py-2 text-[10px] sm:text-xs text-slate-500 font-mono border border-slate-800/50 max-w-md mx-auto text-center flex items-center justify-center gap-1.5 sm:gap-2 truncate">
+                  <span className="text-green-400/70 flex-shrink-0">🔒</span> <span className="truncate">peytoncampbell.ca/dash/</span>
                 </div>
               </div>
             </div>
@@ -464,7 +443,7 @@ export default function App() {
               <iframe
                 src="https://peytoncampbell.ca/dash/"
                 title="BTC Trading Dashboard"
-                className="w-full h-[500px] md:h-[650px] border-0"
+                className="w-full h-[350px] sm:h-[500px] md:h-[650px] border-0"
                 loading="lazy"
               />
             </div>
@@ -748,7 +727,7 @@ export default function App() {
 
       {/* Duality - On & Off The Court */}
       <section className="flex flex-col md:flex-row min-h-[650px] relative" id="duality" ref={dualityRef}>
-        <div className="flex-1 relative flex flex-col justify-center p-12 md:p-20 overflow-hidden group duality-divider">
+        <div className="flex-1 relative flex flex-col justify-center p-6 sm:p-12 md:p-20 overflow-hidden group duality-divider">
           <AnimatePresence mode="wait">
             <motion.div
               key={athleteImageIndex}
@@ -790,7 +769,7 @@ export default function App() {
           </motion.div>
         </div>
 
-        <div className="flex-1 p-12 md:p-20 flex flex-col justify-center relative overflow-hidden group">
+        <div className="flex-1 p-6 sm:p-12 md:p-20 flex flex-col justify-center relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-950/20 to-slate-950 pointer-events-none" />
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 bg-gradient-to-br from-blue-500/5 to-cyan-500/3 pointer-events-none" />
           <motion.div className="relative z-10" style={{ y: dualityY }}>
