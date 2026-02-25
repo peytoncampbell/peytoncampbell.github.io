@@ -667,6 +667,8 @@ let RESOURCE_WEIGHT = { ...BASE_RESOURCE_WEIGHT };
 // === #8: Settlement Planning State ===
 let settleMode = false;
 let pickedSettlements = []; // array of vertex objects
+let optimalPairs = []; // top 10 settlement pairs
+let selectedPair = null; // currently selected pair for resource engine
 
 function scoreVertex(v, complementOf) {
   if (!v.isLand || v.adjacentTiles.length === 0) return null;
@@ -770,6 +772,201 @@ function scoreVertex(v, complementOf) {
     resourceCounts,
     adjNumbers
   };
+}
+
+// Check if two vertices are valid settlement pair (respect distance rule)
+function isValidSettlementPair(v1, v2) {
+  // Build edges array if not exists
+  if (!window.edges) {
+    window.edges = [];
+    const SNAP = 3;
+    function snapKey(x, y) {
+      const sx = Math.round(x / SNAP) * SNAP;
+      const sy = Math.round(y / SNAP) * SNAP;
+      return `${sx},${sy}`;
+    }
+    
+    // Create edges between adjacent vertices on the hex grid
+    for (let t = 0; t < tiles.length; t++) {
+      const tile = tiles[t];
+      for (let i = 0; i < 6; i++) {
+        const c1 = hexCorner(tile.cx, tile.cy, HEX_R, i);
+        const c2 = hexCorner(tile.cx, tile.cy, HEX_R, (i + 1) % 6);
+        const key1 = snapKey(c1.x, c1.y);
+        const key2 = snapKey(c2.x, c2.y);
+        
+        // Find vertex indices
+        const v1Idx = vertices.findIndex(v => v.key === key1);
+        const v2Idx = vertices.findIndex(v => v.key === key2);
+        
+        if (v1Idx !== -1 && v2Idx !== -1) {
+          window.edges.push([v1Idx, v2Idx]);
+        }
+      }
+    }
+  }
+  
+  const v1Idx = vertices.indexOf(v1);
+  const v2Idx = vertices.indexOf(v2);
+  if (v1Idx === -1 || v2Idx === -1) return false;
+  
+  // Check if vertices are connected by an edge
+  for (const [a, b] of window.edges) {
+    if ((a === v1Idx && b === v2Idx) || (a === v2Idx && b === v1Idx)) {
+      return false; // Adjacent vertices, invalid
+    }
+  }
+  
+  return true;
+}
+
+// Score a settlement pair with synergy bonuses
+function scorePair(v1, v2) {
+  const s1 = scoreVertex(v1, null);
+  const s2 = scoreVertex(v2, null);
+  if (!s1 || !s2) return null;
+  
+  // Combined resources and numbers
+  const combinedResources = new Set([...s1.resources, ...s2.resources]);
+  const combinedNumbers = new Set([...s1.adjNumbers, ...s2.adjNumbers]);
+  
+  // Base score sum
+  const baseScore = s1.totalScore + s2.totalScore;
+  
+  // Resource diversity bonus (big bonus for 5 unique resources)
+  let diversityBonus = 0;
+  const uniqueCount = combinedResources.size;
+  if (uniqueCount === 5) diversityBonus = 8;
+  else if (uniqueCount === 4) diversityBonus = 4;
+  else if (uniqueCount === 3) diversityBonus = 2;
+  
+  // Number spread coverage bonus
+  let spreadBonus = 0;
+  const numberCount = combinedNumbers.size;
+  if (numberCount >= 5) spreadBonus = 3;
+  else if (numberCount >= 4) spreadBonus = 2;
+  else if (numberCount >= 3) spreadBonus = 1;
+  
+  // Port synergy bonus
+  let portBonus = 0;
+  if (v1.portAccess && combinedResources.has(v1.portAccess.resource)) portBonus += 2;
+  if (v2.portAccess && combinedResources.has(v2.portAccess.resource)) portBonus += 2;
+  if (v1.portAccess && v1.portAccess.type === 'generic') portBonus += 1;
+  if (v2.portAccess && v2.portAccess.type === 'generic') portBonus += 1;
+  
+  // Overlap penalty (same resources/numbers reduce efficiency)
+  let overlapPenalty = 0;
+  const resourceOverlap = s1.resources.size + s2.resources.size - combinedResources.size;
+  const numberOverlap = s1.adjNumbers.length + s2.adjNumbers.length - combinedNumbers.size;
+  overlapPenalty = resourceOverlap * 0.5 + numberOverlap * 0.3;
+  
+  const totalScore = baseScore + diversityBonus + spreadBonus + portBonus - overlapPenalty;
+  
+  return {
+    v1, v2,
+    totalScore: Math.round(totalScore * 10) / 10,
+    baseScore: Math.round(baseScore * 10) / 10,
+    diversityBonus,
+    spreadBonus,
+    portBonus,
+    overlapPenalty: Math.round(overlapPenalty * 10) / 10,
+    combinedResources,
+    combinedNumbers,
+    resourceCount: combinedResources.size,
+    numberCount: combinedNumbers.size
+  };
+}
+
+// Find top 10 optimal settlement pairs
+function findOptimalPairs() {
+  const validVertices = vertices.filter(v => v.isLand && v.score && v.score.totalScore > 0);
+  const pairs = [];
+  
+  // Brute force all valid pairs
+  for (let i = 0; i < validVertices.length; i++) {
+    for (let j = i + 1; j < validVertices.length; j++) {
+      const v1 = validVertices[i];
+      const v2 = validVertices[j];
+      
+      if (isValidSettlementPair(v1, v2)) {
+        const pairScore = scorePair(v1, v2);
+        if (pairScore) {
+          pairs.push(pairScore);
+        }
+      }
+    }
+  }
+  
+  // Sort by total score and take top 10
+  pairs.sort((a, b) => b.totalScore - a.totalScore);
+  optimalPairs = pairs.slice(0, 10);
+}
+
+// Calculate resource engine analysis for a settlement pair
+function calculateResourceEngine(v1, v2) {
+  const resourceIncome = {
+    brick: 0, ore: 0, wood: 0, wheat: 0, sheep: 0
+  };
+  
+  // Calculate expected income per turn from both settlements
+  for (const v of [v1, v2]) {
+    for (const tIdx of v.adjacentTiles) {
+      const t = tiles[tIdx];
+      if (t.number > 0 && t.resource !== 'desert' && resourceIncome.hasOwnProperty(t.resource)) {
+        resourceIncome[t.resource] += PROB[t.number];
+      }
+    }
+  }
+  
+  // Building requirements
+  const buildings = {
+    road: { brick: 1, wood: 1 },
+    settlement: { brick: 1, wood: 1, wheat: 1, sheep: 1 },
+    city: { ore: 3, wheat: 2 },
+    devCard: { ore: 1, wheat: 1, sheep: 1 }
+  };
+  
+  // Calculate affordability
+  const affordability = {};
+  
+  for (const [building, cost] of Object.entries(buildings)) {
+    if (building === 'city') {
+      // For city: expected turns to accumulate (different calculation)
+      const orePerTurn = resourceIncome.ore;
+      const wheatPerTurn = resourceIncome.wheat;
+      
+      if (orePerTurn > 0 && wheatPerTurn > 0) {
+        // Expected turns = max(turns_for_ore, turns_for_wheat)
+        const turnsForOre = 3 / orePerTurn;
+        const turnsForWheat = 2 / wheatPerTurn;
+        affordability[building] = Math.max(turnsForOre, turnsForWheat);
+      } else {
+        affordability[building] = Infinity;
+      }
+    } else {
+      // For other buildings: probability of getting all required resources in one turn cycle
+      let prob = 1;
+      for (const [resource, amount] of Object.entries(cost)) {
+        const income = resourceIncome[resource];
+        if (income === 0) {
+          prob = 0;
+          break;
+        }
+        // Probability of getting at least 'amount' of resource in one turn
+        // Using Poisson approximation for multiple resources
+        const expectedIncome = income;
+        if (amount === 1) {
+          prob *= (1 - Math.exp(-expectedIncome)); // P(X >= 1) = 1 - P(X = 0)
+        } else {
+          // For multiple resources, simple approximation
+          prob *= Math.min(expectedIncome / amount, 1);
+        }
+      }
+      affordability[building] = prob;
+    }
+  }
+  
+  return { resourceIncome, affordability };
 }
 
 function generateRandomNumbers() {
@@ -1179,8 +1376,8 @@ function drawBoard() {
     const rank = sorted.indexOf(v);
     let color, radius, glowColor;
     
-    // Check if this vertex is a picked settlement
-    const isPicked = pickedSettlements.includes(v);
+    // Check if this vertex is a picked settlement or part of selected pair
+    const isPicked = pickedSettlements.includes(v) || (selectedPair && (selectedPair.v1 === v || selectedPair.v2 === v));
 
     if (isPicked) {
       color = '#10b981'; radius = 14; glowColor = 'rgba(16,185,129,0.6)';
@@ -1532,54 +1729,224 @@ function updateSettlePanel() {
   }
   panel.classList.add('visible');
   
-  if (pickedSettlements.length === 0) {
-    picksEl.innerHTML = '<p style="color:#64748b;font-size:0.82em;">Click a vertex on the board to pick your 1st settlement...</p>';
-    combinedEl.style.display = 'none';
-    return;
-  }
+  // Find optimal pairs when entering settle mode
+  findOptimalPairs();
   
   let html = '';
-  for (let i = 0; i < pickedSettlements.length; i++) {
-    const v = pickedSettlements[i];
-    const s = v.score || scoreVertex(v);
-    if (!s) continue;
+  
+  // Show optimal pairs section
+  html += `<div style="margin-bottom: 16px;">
+    <h4 style="font-size:0.88em;font-weight:600;color:#10b981;margin-bottom:8px;">🏆 Top 10 Optimal Settlement Pairs</h4>
+    <div id="optimalPairsList" style="max-height:200px;overflow-y:auto;border:1px solid rgba(255,255,255,0.06);border-radius:8px;background:rgba(255,255,255,0.02);">`;
+  
+  for (let i = 0; i < optimalPairs.length; i++) {
+    const pair = optimalPairs[i];
+    const resources = [...pair.combinedResources].map(r => RESOURCE_EMOJI[r]).join('');
     
-    let resChips = '';
-    for (const tIdx of v.adjacentTiles) {
-      const t = tiles[tIdx];
-      if (t.number > 0 && t.resource !== 'desert') {
-        resChips += `<span class="res-chip" style="background:${RESOURCE_COLORS[t.resource]};font-size:0.72em;">${RESOURCE_EMOJI[t.resource]} ${t.resource} ${t.number}</span>`;
-      }
-    }
+    let rankBadge = '';
+    if (i === 0) rankBadge = '🥇';
+    else if (i === 1) rankBadge = '🥈';
+    else if (i === 2) rankBadge = '🥉';
+    else rankBadge = `${i + 1}.`;
     
-    html += `<div class="settle-pick">
-      <h4>${i === 0 ? '1st' : '2nd'} Settlement</h4>
-      <div class="pick-score">${s.totalScore}</div>
-      <div class="pick-resources">${resChips}</div>
+    const isSelected = selectedPair === pair;
+    const bgColor = isSelected ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.03)';
+    const borderColor = isSelected ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.06)';
+    
+    html += `<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid rgba(255,255,255,0.04);background:${bgColor};border-left:2px solid ${borderColor};cursor:pointer;" onclick="selectPair(${i})">
+      <span style="font-weight:700;min-width:25px;color:#10b981;">${rankBadge}</span>
+      <span style="font-weight:700;color:#e6a817;min-width:35px;">${pair.totalScore}</span>
+      <span style="font-size:0.78em;color:#cbd5e1;flex:1;">
+        ${pair.resourceCount}/5 resources (${resources}) · ${pair.numberCount} numbers
+      </span>
+      <button onclick="event.stopPropagation(); highlightPair(${i})" style="padding:3px 8px;font-size:0.7em;background:rgba(16,185,129,0.2);color:#10b981;border:1px solid rgba(16,185,129,0.3);border-radius:4px;cursor:pointer;">Show</button>
     </div>`;
   }
-  picksEl.innerHTML = html;
   
-  // Combined stats
-  if (pickedSettlements.length === 2) {
-    const allRes = new Set();
-    let totalProb = 0;
-    const allNums = new Set();
-    for (const v of pickedSettlements) {
+  html += `</div></div>`;
+  
+  // Show manual selection section
+  html += `<div style="margin-bottom: 12px;">
+    <h4 style="font-size:0.88em;font-weight:600;color:#94a3b8;margin-bottom:8px;">🎯 Manual Selection</h4>
+    <p style="font-size:0.78em;color:#64748b;margin-bottom:8px;">Or click vertices on the board to pick a custom pair</p>
+  </div>`;
+  
+  // Show current selection
+  if (selectedPair) {
+    html += `<div style="padding:10px 12px;border-radius:8px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.15);margin-bottom:12px;">
+      <h4 style="font-size:0.85em;font-weight:600;color:#10b981;margin-bottom:6px;">✓ Selected Pair</h4>
+      <div style="font-size:0.78em;color:#a7f3d0;">
+        Score: ${selectedPair.totalScore} · Resources: ${[...selectedPair.combinedResources].map(r => `${RESOURCE_EMOJI[r]} ${r}`).join(', ')}
+      </div>
+    </div>`;
+  } else if (pickedSettlements.length > 0) {
+    html += '<div style="margin-bottom: 12px;">';
+    for (let i = 0; i < pickedSettlements.length; i++) {
+      const v = pickedSettlements[i];
+      const s = v.score || scoreVertex(v);
+      if (!s) continue;
+      
+      let resChips = '';
       for (const tIdx of v.adjacentTiles) {
         const t = tiles[tIdx];
         if (t.number > 0 && t.resource !== 'desert') {
-          allRes.add(t.resource);
-          totalProb += PROB[t.number] || 0;
-          allNums.add(t.number);
+          resChips += `<span class="res-chip" style="background:${RESOURCE_COLORS[t.resource]};font-size:0.72em;margin:1px;">${RESOURCE_EMOJI[t.resource]} ${t.resource} ${t.number}</span>`;
         }
       }
+      
+      html += `<div style="padding:8px 10px;border-radius:6px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);margin-bottom:6px;">
+        <h4 style="font-size:0.8em;font-weight:600;color:#94a3b8;margin-bottom:4px;">${i === 0 ? '1st' : '2nd'} Settlement (Score: ${s.totalScore})</h4>
+        <div style="display:flex;gap:3px;flex-wrap:wrap;">${resChips}</div>
+      </div>`;
     }
-    combinedEl.innerHTML = `<b>Combined Coverage:</b> ${allRes.size}/5 resource types · ${allNums.size} unique numbers · ${(totalProb * 100).toFixed(1)}% total roll probability · Resources: ${[...allRes].map(r => `${RESOURCE_EMOJI[r]} ${r}`).join(', ')}`;
-    combinedEl.style.display = 'block';
-  } else {
-    combinedEl.style.display = 'none';
+    html += '</div>';
+    
+    if (pickedSettlements.length === 2) {
+      // Auto-select this pair for resource engine
+      selectedPair = { v1: pickedSettlements[0], v2: pickedSettlements[1] };
+      const pairScore = scorePair(pickedSettlements[0], pickedSettlements[1]);
+      if (pairScore) {
+        selectedPair = pairScore;
+      }
+    }
   }
+  
+  picksEl.innerHTML = html;
+  
+  // Show resource engine if pair is selected
+  updateResourceEngine();
+  
+  combinedEl.style.display = 'none'; // Hide old combined display
+}
+
+// Make these functions global for HTML onclick handlers
+window.selectPair = function(index) {
+  selectedPair = optimalPairs[index];
+  pickedSettlements = [selectedPair.v1, selectedPair.v2];
+  drawBoard();
+}
+
+window.highlightPair = function(index) {
+  pickedSettlements = [optimalPairs[index].v1, optimalPairs[index].v2];
+  selectedPair = optimalPairs[index]; // Also select it for resource engine
+  drawBoard();
+}
+
+// Update resource engine analysis panel
+function updateResourceEngine() {
+  const engineEl = document.getElementById('resourceEngine');
+  
+  if (!selectedPair) {
+    if (engineEl) engineEl.remove();
+    return;
+  }
+  
+  const engine = calculateResourceEngine(selectedPair.v1, selectedPair.v2);
+  
+  // Create resource engine panel if it doesn't exist
+  if (!engineEl) {
+    const panel = document.getElementById('settlePanel');
+    const engineDiv = document.createElement('div');
+    engineDiv.id = 'resourceEngine';
+    engineDiv.style.cssText = `
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.15);
+    `;
+    panel.appendChild(engineDiv);
+  }
+  
+  const el = document.getElementById('resourceEngine');
+  
+  let html = `<h4 style="font-size:0.9em;font-weight:700;color:#10b981;margin-bottom:12px;">🔧 Resource Engine Analysis</h4>`;
+  
+  // Resource income per 36 rolls
+  html += `<div style="margin-bottom:14px;">
+    <h5 style="font-size:0.82em;font-weight:600;color:#a7f3d0;margin-bottom:6px;">📊 Expected Income (per 36 rolls)</h5>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;font-size:0.75em;">`;
+  
+  for (const resource of ['brick', 'ore', 'wood', 'wheat', 'sheep']) {
+    const income = (engine.resourceIncome[resource] * 36).toFixed(1);
+    const prob = (engine.resourceIncome[resource] * 100).toFixed(1);
+    html += `<div style="text-align:center;padding:4px;border-radius:4px;background:rgba(255,255,255,0.05);">
+      <div style="font-size:0.7em;color:#94a3b8;">${RESOURCE_EMOJI[resource]}</div>
+      <div style="font-weight:600;color:#e2e8f0;">${income}</div>
+      <div style="font-size:0.65em;color:#64748b;">${prob}%</div>
+    </div>`;
+  }
+  
+  html += `</div></div>`;
+  
+  // Building affordability
+  html += `<div>
+    <h5 style="font-size:0.82em;font-weight:600;color:#a7f3d0;margin-bottom:8px;">🏗️ Building Affordability</h5>`;
+  
+  const buildings = {
+    road: { icon: '🛤️', name: 'Road', desc: 'Brick + Wood' },
+    settlement: { icon: '🏠', name: 'Settlement', desc: 'Brick + Wood + Wheat + Sheep' },
+    city: { icon: '🏙️', name: 'City', desc: '3 Ore + 2 Wheat' },
+    devCard: { icon: '🃏', name: 'Dev Card', desc: 'Ore + Wheat + Sheep' }
+  };
+  
+  for (const [key, info] of Object.entries(buildings)) {
+    const afford = engine.affordability[key];
+    
+    let display, color, bgColor;
+    if (key === 'city') {
+      if (afford === Infinity) {
+        display = 'Never';
+        color = '#ef4444';
+        bgColor = 'rgba(239, 68, 68, 0.1)';
+      } else if (afford <= 3) {
+        display = `~${afford.toFixed(1)} turns`;
+        color = '#22c55e';
+        bgColor = 'rgba(34, 197, 94, 0.1)';
+      } else if (afford <= 6) {
+        display = `~${afford.toFixed(1)} turns`;
+        color = '#f59e0b';
+        bgColor = 'rgba(245, 158, 11, 0.1)';
+      } else {
+        display = `~${afford.toFixed(1)} turns`;
+        color = '#ef4444';
+        bgColor = 'rgba(239, 68, 68, 0.1)';
+      }
+    } else {
+      if (afford === 0) {
+        display = 'Never';
+        color = '#ef4444';
+        bgColor = 'rgba(239, 68, 68, 0.1)';
+      } else if (afford >= 0.7) {
+        display = `${(afford * 100).toFixed(0)}% per turn`;
+        color = '#22c55e';
+        bgColor = 'rgba(34, 197, 94, 0.1)';
+      } else if (afford >= 0.3) {
+        display = `${(afford * 100).toFixed(0)}% per turn`;
+        color = '#f59e0b';
+        bgColor = 'rgba(245, 158, 11, 0.1)';
+      } else {
+        display = `${(afford * 100).toFixed(0)}% per turn`;
+        color = '#ef4444';
+        bgColor = 'rgba(239, 68, 68, 0.1)';
+      }
+    }
+    
+    html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;margin:3px 0;border-radius:6px;background:${bgColor};">
+      <div style="display:flex;align-items:center;gap:8px;flex:1;">
+        <span style="font-size:1em;">${info.icon}</span>
+        <div>
+          <div style="font-size:0.8em;font-weight:600;color:#e2e8f0;">${info.name}</div>
+          <div style="font-size:0.7em;color:#94a3b8;">${info.desc}</div>
+        </div>
+      </div>
+      <div style="font-size:0.75em;font-weight:600;color:${color};">${display}</div>
+    </div>`;
+  }
+  
+  html += `</div>`;
+  
+  el.innerHTML = html;
 }
 
 // === #7: Share Board State ===
@@ -1660,7 +2027,31 @@ canvas.addEventListener('click', (e) => {
       if (d < 20 && d < minDist) { closestV = v; minDist = d; }
     }
     if (closestV && pickedSettlements.length < 2 && !pickedSettlements.includes(closestV)) {
+      // Check if this would make a valid pair
+      if (pickedSettlements.length === 1) {
+        if (!isValidSettlementPair(pickedSettlements[0], closestV)) {
+          showToast('⚠️ Settlements must not be adjacent!');
+          return;
+        }
+      }
       pickedSettlements.push(closestV);
+      
+      // If we now have a pair, set it as selected
+      if (pickedSettlements.length === 2) {
+        const pairScore = scorePair(pickedSettlements[0], pickedSettlements[1]);
+        selectedPair = pairScore || { v1: pickedSettlements[0], v2: pickedSettlements[1] };
+      } else {
+        selectedPair = null;
+      }
+      
+      drawBoard();
+      return;
+    } else if (closestV && pickedSettlements.includes(closestV)) {
+      // Clicking already selected vertex deselects it
+      pickedSettlements = pickedSettlements.filter(v => v !== closestV);
+      selectedPair = null;
+      const engineEl = document.getElementById('resourceEngine');
+      if (engineEl) engineEl.remove();
       drawBoard();
       return;
     }
@@ -1752,12 +2143,22 @@ document.getElementById('shareBtn').addEventListener('click', shareBoard);
 document.getElementById('settleBtn').addEventListener('click', () => {
   settleMode = !settleMode;
   pickedSettlements = [];
+  selectedPair = null;
+  optimalPairs = [];
   document.getElementById('settleBtn').classList.toggle('active', settleMode);
   document.getElementById('settleBtn').textContent = settleMode ? '🏘️ Exit Planner' : '🏘️ Plan Settlements';
+  
+  // Clean up resource engine panel
+  const engineEl = document.getElementById('resourceEngine');
+  if (engineEl) engineEl.remove();
+  
   drawBoard();
 });
 document.getElementById('resetPicksBtn').addEventListener('click', () => {
   pickedSettlements = [];
+  selectedPair = null;
+  const engineEl = document.getElementById('resourceEngine');
+  if (engineEl) engineEl.remove();
   drawBoard();
 });
 
