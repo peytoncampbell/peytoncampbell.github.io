@@ -92,8 +92,8 @@ const RESOURCE_NAMES = ['brick','ore','wood','wheat','sheep'];
 // Probability dots for each number
 const DOTS = {0:0, 2:1, 3:2, 4:3, 5:4, 6:5, 8:5, 9:4, 10:3, 11:2, 12:1};
 
-// 6-player token distribution: 2x(2,12), 3x(3,4,5,9,10,11), 4x(6,8), 2 deserts
-const SIX_P_TOKENS = [0,0, 2,2, 3,3,3, 4,4,4, 5,5,5, 6,6,6,6, 8,8,8,8, 9,9,9, 10,10,10, 11,11,11, 12,12];
+// 6-player token distribution: 2x(2,12), 3x(3,4,5,6,8,9,10,11), 2 deserts
+const SIX_P_TOKENS = [0,0, 2,2, 3,3,3, 4,4,4, 5,5,5, 6,6,6, 8,8,8, 9,9,9, 10,10,10, 11,11,11, 12,12];
 // That's 2+2+3+3+3+4+4+3+3+3+2 = 32... let me just use the correct distribution
 // Standard 6P: 2 deserts, tokens: 2,3,3,4,4,5,5,6,6,8,8,9,9,10,10,11,11,12 (base) + extension adds more
 // Easier: just use 30 tiles, shuffle numbers randomly with correct distribution
@@ -117,14 +117,14 @@ const SIX_PLAYER_NUMBERS = [
 
 function generateRandomNumbers() {
   // 6-player: 30 tiles, 2 deserts, 28 numbered
-  // Distribution: 2×{2,12}, 3×{3,4,5,9,10,11}, 4×{6,8} = 2+2+3+3+3+3+3+3+4+4 = 30-2 = 28 ✓
+  // Distribution: 2×{2,12}, 3×{3,4,5,6,8,9,10,11} = 2+2+3+3+3+3+3+3+3+3 = 28 numbered + 2 desert = 30 ✓
   const nums = [
     0, 0,
     2, 2,
     3, 3, 3,
-    4, 4, 4, 4,
+    4, 4, 4,
     5, 5, 5,
-    6, 6, 6, 6,
+    6, 6, 6,
     8, 8, 8,
     9, 9, 9,
     10, 10, 10,
