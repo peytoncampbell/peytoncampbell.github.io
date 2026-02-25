@@ -359,6 +359,8 @@ canvas {
   <div class="legend-item"><div class="legend-dot" style="background:#059669;"></div> Port 2:1</div>
 </div>
 
+<div id="resourcePool" class="glass" style="width:100%;max-width:520px;margin:12px auto;padding:16px 20px;border-radius:16px;background:rgba(255,255,255,0.04);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.08);"></div>
+
 <div class="top-list glass" id="topList"></div>
 
 <details class="info-toggle">
@@ -737,17 +739,28 @@ function generatePorts() {
   const numPorts = portTypes.length;
   const step = totalEdges / numPorts;
   
+  const usedOceanTiles = new Set();
   for (let i = 0; i < numPorts; i++) {
     const edgeIndex = Math.round(i * step) % totalEdges;
     const edge = coastalEdges[edgeIndex];
     
-    // Port position is offset outward from the coastal edge midpoint
+    // Port position = center of the nearest unused ocean tile
     const outX = edge.midX + (edge.midX - CX) * 0.4;
     const outY = edge.midY + (edge.midY - CY) * 0.4;
+    // Sort ocean tiles by distance to the pushed-out midpoint, pick closest unused
+    const sorted = [...oceanTiles].map((ot, idx) => ({
+      idx, cx: ot.cx, cy: ot.cy,
+      d: Math.hypot(ot.cx - outX, ot.cy - outY)
+    })).sort((a, b) => a.d - b.d);
+    let chosen = sorted[0];
+    for (const candidate of sorted) {
+      if (!usedOceanTiles.has(candidate.idx)) { chosen = candidate; break; }
+    }
+    usedOceanTiles.add(chosen.idx);
     
     ports.push({
-      cx: outX,
-      cy: outY,
+      cx: chosen.cx,
+      cy: chosen.cy,
       type: portTypes[i].type,
       resource: portTypes[i].resource,
       ratio: portTypes[i].type === 'generic' ? '3:1' : '2:1',
@@ -955,6 +968,34 @@ function drawBoard() {
   }
 
   updateTopList(sorted, topN);
+  updateResourcePool();
+}
+
+function updateResourcePool() {
+  const el = document.getElementById('resourcePool');
+  const pool = {};
+  for (const r of RESOURCE_NAMES) pool[r] = 0;
+  for (const t of tiles) {
+    if (t.resource !== 'desert' && t.number > 0 && pool.hasOwnProperty(t.resource)) {
+      pool[t.resource] += (DOTS[t.number] || 0) / 36;
+    }
+  }
+  const maxProb = Math.max(...Object.values(pool), 0.001);
+  const colors = { brick:'#c0392b', ore:'#7f8c8d', wood:'#27ae60', wheat:'#f39c12', sheep:'#2ecc71' };
+  const labels = { brick:'🧱 Brick', ore:'⛰️ Ore', wood:'🌲 Wood', wheat:'🌾 Wheat', sheep:'🐑 Sheep' };
+  let html = '<div style="font:600 0.95em Inter,sans-serif;color:#e2e8f0;margin-bottom:10px;">📊 Resource Probability Pool</div>';
+  for (const r of RESOURCE_NAMES) {
+    const pct = (pool[r] * 100).toFixed(1);
+    const barW = Math.max(1, (pool[r] / maxProb) * 100);
+    html += `<div style="display:flex;align-items:center;gap:8px;margin:5px 0;font:500 0.8em Inter,sans-serif;color:#cbd5e1;">
+      <span style="width:80px;text-align:right;">${labels[r]}</span>
+      <div style="flex:1;height:14px;background:rgba(255,255,255,0.06);border-radius:7px;overflow:hidden;">
+        <div style="width:${barW}%;height:100%;background:${colors[r]};border-radius:7px;transition:width 0.3s;"></div>
+      </div>
+      <span style="width:45px;font-variant-numeric:tabular-nums;">${pct}%</span>
+    </div>`;
+  }
+  el.innerHTML = html;
 }
 
 function drawOceanHex(oceanTile) {
