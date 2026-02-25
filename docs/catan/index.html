@@ -922,37 +922,47 @@ function drawResourceOverlay() {
   if (!anyAssigned) return;
 
   const dpr = window.devicePixelRatio || 1;
-  const boxW = 150 * dpr;
-  const lineH = 18 * dpr;
-  const padX = 10 * dpr;
-  const padY = 8 * dpr;
+  // Responsive sizing: compact on mobile (<500 CSS px)
+  const cssPx = canvas.width / dpr;
+  const isMobile = cssPx < 500;
+  const scale = isMobile ? 0.7 : 1;
+
+  const boxW = Math.round(140 * scale * dpr);
+  const lineH = Math.round(16 * scale * dpr);
+  const padX = Math.round(8 * scale * dpr);
+  const padY = Math.round(6 * scale * dpr);
   const boxH = (RESOURCE_NAMES.length + 1) * lineH + padY * 2;
-  const x0 = canvas.width - boxW - 12 * dpr;
-  const y0 = 12 * dpr;
+  const margin = Math.round(6 * dpr);
+  const x0 = canvas.width - boxW - margin;
+  const y0 = margin;
 
   // Background
   ctx.save();
-  ctx.globalAlpha = 0.85;
+  ctx.globalAlpha = 0.82;
   ctx.fillStyle = '#0f172a';
   ctx.beginPath();
-  ctx.roundRect(x0, y0, boxW, boxH, 8 * dpr);
+  ctx.roundRect(x0, y0, boxW, boxH, 6 * dpr);
   ctx.fill();
   ctx.globalAlpha = 1;
-  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.10)';
   ctx.lineWidth = 1;
   ctx.stroke();
 
   // Title
+  const titleSize = Math.round(9 * scale * dpr);
   ctx.fillStyle = '#e2e8f0';
-  ctx.font = `bold ${10 * dpr}px Inter, sans-serif`;
+  ctx.font = `bold ${titleSize}px Inter, sans-serif`;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
-  ctx.fillText('Resource Distribution', x0 + padX, y0 + padY);
+  ctx.fillText(isMobile ? 'Resources' : 'Resource Distribution', x0 + padX, y0 + padY);
 
   const maxPips = Math.max(...Object.values(totalPips), 1);
-  const labels = { brick:'🧱', ore:'⛰️', wood:'🌲', wheat:'🌾', sheep:'🐑' };
   const colors = RESOURCE_COLORS;
-  const barMaxW = boxW - padX * 2 - 60 * dpr;
+  const labelW = Math.round(32 * scale * dpr);
+  const countW = Math.round(48 * scale * dpr);
+  const barMaxW = boxW - padX * 2 - labelW - countW - Math.round(4 * dpr);
+  const fontSize = Math.round(7.5 * scale * dpr);
+  const barH = Math.round(10 * scale * dpr);
 
   const sorted = [...RESOURCE_NAMES].sort((a, b) => totalPips[b] - totalPips[a]);
   for (let i = 0; i < sorted.length; i++) {
@@ -960,21 +970,22 @@ function drawResourceOverlay() {
     const rowY = y0 + padY + (i + 1) * lineH;
     const barW = Math.max(2, (totalPips[r] / maxPips) * barMaxW);
 
-    // Label
+    // Label (abbreviated on mobile)
     ctx.fillStyle = '#cbd5e1';
-    ctx.font = `500 ${8 * dpr}px Inter, sans-serif`;
+    ctx.font = `500 ${fontSize}px Inter, sans-serif`;
     ctx.textAlign = 'left';
-    ctx.fillText(`${r}`, x0 + padX, rowY);
+    const label = isMobile ? r.slice(0, 3) : r;
+    ctx.fillText(label, x0 + padX, rowY);
 
     // Bar
     ctx.fillStyle = colors[r];
     ctx.beginPath();
-    ctx.roundRect(x0 + padX + 38 * dpr, rowY, barW, 12 * dpr, 3 * dpr);
+    ctx.roundRect(x0 + padX + labelW, rowY, barW, barH, 3 * dpr);
     ctx.fill();
 
     // Count
     ctx.fillStyle = '#94a3b8';
-    ctx.font = `500 ${7 * dpr}px Inter, sans-serif`;
+    ctx.font = `500 ${fontSize}px Inter, sans-serif`;
     ctx.textAlign = 'right';
     ctx.fillText(`${tileCount[r]}× ${totalPips[r]}♦`, x0 + boxW - padX, rowY + 1);
   }
