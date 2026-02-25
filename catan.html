@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Catan 6P Settlement Optimizer</title>
+<title>Catan Settlement Optimizer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -74,7 +74,7 @@ h1 {
   justify-content: center;
   align-items: center;
   padding: 12px 16px;
-  max-width: 820px;
+  max-width: 920px;
   width: 100%;
   animation: fadeInUp 0.6s ease-out 0.1s both;
 }
@@ -114,6 +114,11 @@ button.secondary:hover {
   color: #e2e8f0;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
+button.active {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
 
 select {
   background: rgba(255, 255, 255, 0.06);
@@ -149,7 +154,7 @@ label {
   position: relative;
   display: inline-block;
   width: 100%;
-  max-width: 820px;
+  max-width: 920px;
   animation: fadeInUp 0.6s ease-out 0.2s both;
 }
 canvas {
@@ -216,7 +221,7 @@ canvas {
 .top-list {
   margin-top: 14px;
   padding: 16px 20px;
-  max-width: 820px;
+  max-width: 920px;
   width: 100%;
   animation: fadeInUp 0.6s ease-out 0.35s both;
 }
@@ -270,7 +275,7 @@ canvas {
 /* --- Info Panel --- */
 .info-toggle {
   margin-top: 14px;
-  max-width: 820px;
+  max-width: 920px;
   width: 100%;
   animation: fadeInUp 0.6s ease-out 0.4s both;
 }
@@ -319,11 +324,13 @@ canvas {
 <body>
 
 <div class="header">
-  <h1>🏠 Catan 6P Settlement Optimizer</h1>
-  <p class="subtitle">Click tiles to assign numbers · see the best settlement spots</p>
+  <h1 id="mainTitle">🏠 Catan Settlement Optimizer</h1>
+  <p class="subtitle" id="subtitle">Click tiles to assign numbers · see the best settlement spots</p>
 </div>
 
 <div class="controls glass">
+  <button id="mode4p" class="mode-btn active">4-Player</button>
+  <button id="mode6p" class="mode-btn">6-Player</button>
   <label>Assign: <select id="numberSelect">
     <option value="0">Desert</option>
     <option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
@@ -338,7 +345,7 @@ canvas {
 </div>
 
 <div class="canvas-wrap">
-  <canvas id="board" width="820" height="760"></canvas>
+  <canvas id="board" width="920" height="860"></canvas>
   <div id="tooltip"></div>
 </div>
 
@@ -348,6 +355,8 @@ canvas {
   <div class="legend-item"><div class="legend-dot" style="background:#ff8800;box-shadow:0 0 6px #ff880066;"></div> Good</div>
   <div class="legend-item"><div class="legend-dot" style="background:#ff3355;box-shadow:0 0 6px #ff335566;"></div> Weak</div>
   <div class="legend-item"><div class="legend-dot" style="background:#475569;"></div> No value</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1e40af;"></div> Port 3:1</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#059669;"></div> Port 2:1</div>
 </div>
 
 <div class="top-list glass" id="topList"></div>
@@ -358,14 +367,36 @@ canvas {
     <b>Each number token</b> has a probability of being rolled (dots on the token).
     A settlement vertex touches up to 3 tiles. The optimizer sums the probabilities of all adjacent tiles
     for every vertex and ranks them. Resource diversity is shown but not weighted — you decide what matters.
-    Click a tile to assign a number, hit Random for a valid 6-player layout, or <b>📷 Scan Board</b> to
+    Click a tile to assign a number, hit Random for a valid layout, or <b>📷 Scan Board</b> to
     take a photo of your real Catan board and auto-populate everything with AI vision (requires OpenAI API key, stored locally).
+    <br><br><b>Ports</b> provide trade advantages at specific vertices. Ocean hexes with ports show trade ratios 
+    and point toward the vertices they serve.
   </div>
 </details>
 
 <script>
-const ROWS = [3,4,5,6,5,4,3];
-const TOTAL_TILES = 30;
+let currentMode = '4p'; // '4p' or '6p'
+let ROWS = [3,4,5,4,3]; // Start with 4-player
+let TOTAL_TILES = 19;
+
+const BOARD_CONFIGS = {
+  '4p': {
+    rows: [3,4,5,4,3],
+    totalTiles: 19,
+    resources: { desert: 1, brick: 3, ore: 3, wood: 4, wheat: 4, sheep: 4 },
+    tokens: [0, 2,3,3,4,4,5,5,6,6,8,8,9,9,10,10,11,11,12],
+    ports: 9, // 4 generic (3:1) + 5 resource-specific (2:1)
+    title: "🏠 Catan 4P Settlement Optimizer"
+  },
+  '6p': {
+    rows: [3,4,5,6,5,4,3],
+    totalTiles: 30,
+    resources: { desert: 2, brick: 5, ore: 5, wood: 6, wheat: 6, sheep: 6 },
+    tokens: [0,0,2,2,3,3,3,4,4,4,5,5,5,6,6,6,6,8,8,8,8,9,9,9,10,10,10,11,11,11,12,12],
+    ports: 11, // 5 generic (3:1) + 6 resource-specific (2:1)
+    title: "🏠 Catan 6P Settlement Optimizer"
+  }
+};
 
 const RESOURCE_COLORS = {
   brick: '#c0392b', ore: '#7f8c8d', wood: '#27ae60', wheat: '#f1c40f', sheep: '#2ecc71', desert: '#c2b280'
@@ -374,7 +405,8 @@ const RESOURCE_NAMES = ['brick','ore','wood','wheat','sheep'];
 const DOTS = {0:0, 2:1, 3:2, 4:3, 5:4, 6:5, 8:5, 9:4, 10:3, 11:2, 12:1};
 
 function generateRandomNumbers() {
-  const nums = [0,0,2,2,3,3,3,4,4,4,5,5,5,6,6,6,6,8,8,8,8,9,9,9,10,10,10,11,11,11,12,12];
+  const config = BOARD_CONFIGS[currentMode];
+  const nums = [...config.tokens];
   for (let i = nums.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [nums[i], nums[j]] = [nums[j], nums[i]];
@@ -383,14 +415,11 @@ function generateRandomNumbers() {
 }
 
 function generateRandomResources() {
-  const res = [
-    ...Array(2).fill('desert'),
-    ...Array(5).fill('brick'),
-    ...Array(5).fill('ore'),
-    ...Array(6).fill('wood'),
-    ...Array(6).fill('wheat'),
-    ...Array(6).fill('sheep')
-  ];
+  const config = BOARD_CONFIGS[currentMode];
+  const res = [];
+  for (const [type, count] of Object.entries(config.resources)) {
+    res.push(...Array(count).fill(type));
+  }
   for (let i = res.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [res[i], res[j]] = [res[j], res[i]];
@@ -399,13 +428,15 @@ function generateRandomResources() {
 }
 
 let tiles = [];
+let oceanTiles = [];
+let ports = [];
 let vertices = [];
 
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
 const tooltip = document.getElementById('tooltip');
 
-const HEX_R = 46;
+const HEX_R = 40; // Reduced to fit ocean border
 const HEX_H = HEX_R * Math.sqrt(3);
 const CX = canvas.width / 2;
 const CY = canvas.height / 2;
@@ -415,8 +446,31 @@ function hexCorner(cx, cy, r, i) {
   return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
 }
 
+function switchMode(newMode) {
+  if (newMode === currentMode) return;
+  
+  currentMode = newMode;
+  const config = BOARD_CONFIGS[currentMode];
+  ROWS = [...config.rows];
+  TOTAL_TILES = config.totalTiles;
+  
+  // Update title
+  document.getElementById('mainTitle').textContent = config.title;
+  
+  // Update button states
+  document.getElementById('mode4p').classList.toggle('active', newMode === '4p');
+  document.getElementById('mode6p').classList.toggle('active', newMode === '6p');
+  
+  // Rebuild board
+  buildBoard();
+  drawBoard();
+}
+
 function buildBoard() {
   tiles = [];
+  oceanTiles = [];
+  ports = [];
+  
   const vSpacing = 1.5 * HEX_R;
   const hSpacing = Math.sqrt(3) * HEX_R;
   const totalHeight = (ROWS.length - 1) * vSpacing;
@@ -438,7 +492,135 @@ function buildBoard() {
       });
     }
   }
+  
+  buildOceanAndPorts();
   buildVertices();
+}
+
+function buildOceanAndPorts() {
+  const landBounds = tiles.reduce((bounds, tile) => ({
+    minX: Math.min(bounds.minX, tile.cx),
+    maxX: Math.max(bounds.maxX, tile.cx),
+    minY: Math.min(bounds.minY, tile.cy),
+    maxY: Math.max(bounds.maxY, tile.cy)
+  }), { minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity });
+
+  const oceanDistance = Math.sqrt(3) * HEX_R; // Distance to ocean ring
+  
+  // Generate ocean hexes around the perimeter
+  const oceanPositions = [];
+  const hSpacing = Math.sqrt(3) * HEX_R;
+  const vSpacing = 1.5 * HEX_R;
+  
+  // Top and bottom caps
+  for (let r = -1; r <= ROWS.length; r++) {
+    let count, startOffset;
+    if (r === -1) {
+      count = ROWS[0] - 1;
+      startOffset = -0.5;
+    } else if (r === ROWS.length) {
+      count = ROWS[ROWS.length - 1] - 1;
+      startOffset = -0.5;
+    } else {
+      const maxCount = Math.max(...ROWS);
+      count = maxCount + 1;
+      startOffset = -(count - 1) / 2;
+    }
+    
+    const y = CY - (ROWS.length - 1) * vSpacing / 2 + r * vSpacing;
+    
+    for (let c = 0; c < count; c++) {
+      const x = CX + (startOffset + c) * hSpacing;
+      
+      // Check if this position would conflict with land tiles
+      const tooClose = tiles.some(tile => 
+        Math.hypot(x - tile.cx, y - tile.cy) < hSpacing * 0.9
+      );
+      
+      if (!tooClose) {
+        oceanPositions.push({ x, y, side: r === -1 ? 'top' : r === ROWS.length ? 'bottom' : 'side' });
+      }
+    }
+  }
+  
+  // Left and right sides
+  for (let r = 0; r < ROWS.length; r++) {
+    const count = ROWS[r];
+    const y = CY - (ROWS.length - 1) * vSpacing / 2 + r * vSpacing;
+    const rowWidth = (count - 1) * hSpacing;
+    
+    // Left side
+    const leftX = CX - rowWidth / 2 - hSpacing;
+    oceanPositions.push({ x: leftX, y, side: 'left' });
+    
+    // Right side  
+    const rightX = CX + rowWidth / 2 + hSpacing;
+    oceanPositions.push({ x: rightX, y, side: 'right' });
+  }
+  
+  // Create ocean tiles
+  oceanTiles = oceanPositions.map((pos, i) => ({
+    cx: pos.x,
+    cy: pos.y,
+    side: pos.side,
+    idx: i
+  }));
+  
+  // Generate ports
+  generatePorts();
+}
+
+function generatePorts() {
+  const config = BOARD_CONFIGS[currentMode];
+  ports = [];
+  
+  // Port positions for different sides
+  const portPositions = [];
+  
+  if (currentMode === '4p') {
+    // 4-player port layout - 9 ports total
+    portPositions.push(
+      { oceanIdx: 2, type: 'generic', resource: null }, // top
+      { oceanIdx: 5, type: 'resource', resource: 'wheat' }, // top-right
+      { oceanIdx: 9, type: 'generic', resource: null }, // right
+      { oceanIdx: 12, type: 'resource', resource: 'ore' }, // bottom-right
+      { oceanIdx: 16, type: 'resource', resource: 'sheep' }, // bottom
+      { oceanIdx: 19, type: 'generic', resource: null }, // bottom-left
+      { oceanIdx: 23, type: 'resource', resource: 'brick' }, // left
+      { oceanIdx: 26, type: 'generic', resource: null }, // top-left
+      { oceanIdx: 0, type: 'resource', resource: 'wood' } // top
+    );
+  } else {
+    // 6-player port layout - 11 ports total
+    portPositions.push(
+      { oceanIdx: 1, type: 'generic', resource: null },
+      { oceanIdx: 4, type: 'resource', resource: 'wheat' },
+      { oceanIdx: 8, type: 'generic', resource: null },
+      { oceanIdx: 12, type: 'resource', resource: 'ore' },
+      { oceanIdx: 16, type: 'generic', resource: null },
+      { oceanIdx: 20, type: 'resource', resource: 'sheep' },
+      { oceanIdx: 24, type: 'resource', resource: 'brick' },
+      { oceanIdx: 28, type: 'generic', resource: null },
+      { oceanIdx: 32, type: 'resource', resource: 'wood' },
+      { oceanIdx: 35, type: 'generic', resource: null },
+      { oceanIdx: 38, type: 'resource', resource: 'wheat' }
+    );
+  }
+  
+  // Create ports from positions
+  portPositions.forEach((portPos, i) => {
+    if (portPos.oceanIdx < oceanTiles.length) {
+      const oceanTile = oceanTiles[portPos.oceanIdx];
+      ports.push({
+        cx: oceanTile.cx,
+        cy: oceanTile.cy,
+        type: portPos.type, // 'generic' or 'resource'
+        resource: portPos.resource,
+        ratio: portPos.type === 'generic' ? '3:1' : '2:1',
+        oceanTileIdx: portPos.oceanIdx
+      });
+    }
+  });
 }
 
 function buildVertices() {
@@ -450,6 +632,8 @@ function buildVertices() {
     const sy = Math.round(y / SNAP) * SNAP;
     return `${sx},${sy}`;
   }
+  
+  // Add vertices from land tiles
   for (let t = 0; t < tiles.length; t++) {
     const tile = tiles[t];
     for (let i = 0; i < 6; i++) {
@@ -457,12 +641,32 @@ function buildVertices() {
       const key = snapKey(corner.x, corner.y);
       if (!vMap.has(key)) {
         const vIdx = vertices.length;
-        vertices.push({ x: corner.x, y: corner.y, adjacentTiles: [t], key });
+        vertices.push({ x: corner.x, y: corner.y, adjacentTiles: [t], key, isLand: true });
         vMap.set(key, vIdx);
       } else {
         const vIdx = vMap.get(key);
         if (!vertices[vIdx].adjacentTiles.includes(t)) {
           vertices[vIdx].adjacentTiles.push(t);
+        }
+      }
+    }
+  }
+  
+  // Add vertices from ocean tiles (for port connections)
+  for (let t = 0; t < oceanTiles.length; t++) {
+    const tile = oceanTiles[t];
+    for (let i = 0; i < 6; i++) {
+      const corner = hexCorner(tile.cx, tile.cy, HEX_R, i);
+      const key = snapKey(corner.x, corner.y);
+      if (!vMap.has(key)) {
+        const vIdx = vertices.length;
+        vertices.push({ x: corner.x, y: corner.y, adjacentTiles: [], key, isLand: false, oceanTiles: [t] });
+        vMap.set(key, vIdx);
+      } else {
+        const vIdx = vMap.get(key);
+        if (!vertices[vIdx].oceanTiles) vertices[vIdx].oceanTiles = [];
+        if (!vertices[vIdx].oceanTiles.includes(t)) {
+          vertices[vIdx].oceanTiles.push(t);
         }
       }
     }
@@ -480,6 +684,18 @@ function computeVertexValues() {
     }
     v.dots = totalDots;
     v.resources = resources;
+    
+    // Check for port access
+    v.portAccess = null;
+    if (v.oceanTiles) {
+      for (const oceanIdx of v.oceanTiles) {
+        const port = ports.find(p => p.oceanTileIdx === oceanIdx);
+        if (port) {
+          v.portAccess = port;
+          break;
+        }
+      }
+    }
   }
 }
 
@@ -506,7 +722,7 @@ function drawBoard() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   // Radial gradient background
-  const grad = ctx.createRadialGradient(CX, CY, 0, CX, CY, canvas.width * 0.55);
+  const grad = ctx.createRadialGradient(CX, CY, 0, CX, CY, canvas.width * 0.6);
   grad.addColorStop(0, '#0f2847');
   grad.addColorStop(0.6, '#0a1a35');
   grad.addColorStop(1, '#060d1f');
@@ -521,26 +737,33 @@ function drawBoard() {
     }
   }
 
+  // Draw ocean tiles first
+  for (const oceanTile of oceanTiles) drawOceanHex(oceanTile);
+  
+  // Draw ports
+  for (const port of ports) drawPort(port);
+
+  // Draw land tiles
   for (const tile of tiles) drawHex(tile);
 
   computeVertexValues();
-  const maxDots = Math.max(...vertices.map(v => v.dots), 1);
-  const sorted = [...vertices].filter(v => v.dots > 0).sort((a, b) => b.dots - a.dots);
+  const maxDots = Math.max(...vertices.filter(v => v.isLand).map(v => v.dots), 1);
+  const sorted = [...vertices].filter(v => v.dots > 0 && v.isLand).sort((a, b) => b.dots - a.dots);
   const topN = parseInt(document.getElementById('topN').value);
   const topSet = new Set(sorted.slice(0, topN));
 
   for (const v of vertices) {
-    if (v.dots === 0) continue;
+    if (v.dots === 0 || !v.isLand) continue;
     const ratio = v.dots / maxDots;
     const rank = sorted.indexOf(v);
     let color, radius, glowColor;
 
     if (topSet.has(v) && rank < Math.ceil(topN * 0.3)) {
-      color = '#00ff88'; radius = 11; glowColor = 'rgba(0,255,136,0.5)';
+      color = '#00ff88'; radius = 10; glowColor = 'rgba(0,255,136,0.5)';
     } else if (topSet.has(v) && rank < Math.ceil(topN * 0.6)) {
-      color = '#ffdd00'; radius = 10; glowColor = 'rgba(255,221,0,0.4)';
+      color = '#ffdd00'; radius = 9; glowColor = 'rgba(255,221,0,0.4)';
     } else if (topSet.has(v)) {
-      color = '#ff8800'; radius = 9; glowColor = 'rgba(255,136,0,0.35)';
+      color = '#ff8800'; radius = 8; glowColor = 'rgba(255,136,0,0.35)';
     } else {
       color = `rgba(255,255,255,${0.12 + ratio * 0.3})`;
       radius = 4 + ratio * 3;
@@ -551,7 +774,7 @@ function drawBoard() {
     if (glowColor) {
       ctx.save();
       ctx.shadowColor = glowColor;
-      ctx.shadowBlur = 14;
+      ctx.shadowBlur = 12;
       ctx.beginPath();
       ctx.arc(v.x, v.y, radius, 0, Math.PI * 2);
       ctx.fillStyle = color;
@@ -567,7 +790,7 @@ function drawBoard() {
 
       // Dots number
       ctx.fillStyle = '#000';
-      ctx.font = 'bold 9px Inter, sans-serif';
+      ctx.font = 'bold 8px Inter, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(v.dots, v.x, v.y);
@@ -577,9 +800,99 @@ function drawBoard() {
       ctx.fillStyle = color;
       ctx.fill();
     }
+
+    // Port indicator on vertex
+    if (v.portAccess) {
+      const portColor = v.portAccess.type === 'generic' ? '#1e40af' : '#059669';
+      ctx.beginPath();
+      ctx.arc(v.x - radius - 3, v.y - radius - 3, 3, 0, Math.PI * 2);
+      ctx.fillStyle = portColor;
+      ctx.fill();
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
   }
 
   updateTopList(sorted, topN);
+}
+
+function drawOceanHex(oceanTile) {
+  const corners = [];
+  for (let i = 0; i < 6; i++) corners.push(hexCorner(oceanTile.cx, oceanTile.cy, HEX_R - 1, i));
+
+  // Ocean hex fill with wave-like gradient
+  ctx.beginPath();
+  ctx.moveTo(corners[0].x, corners[0].y);
+  for (let i = 1; i < 6; i++) ctx.lineTo(corners[i].x, corners[i].y);
+  ctx.closePath();
+
+  // Deep blue ocean with subtle gradient
+  const oceanGrad = ctx.createRadialGradient(oceanTile.cx - 10, oceanTile.cy - 10, 0, oceanTile.cx, oceanTile.cy, HEX_R);
+  oceanGrad.addColorStop(0, '#1e3a8a');
+  oceanGrad.addColorStop(0.5, '#1e40af');
+  oceanGrad.addColorStop(1, '#1d4ed8');
+  ctx.fillStyle = oceanGrad;
+  ctx.fill();
+
+  // Subtle wave texture
+  const waveGrad = ctx.createLinearGradient(
+    oceanTile.cx - HEX_R, oceanTile.cy - HEX_R,
+    oceanTile.cx + HEX_R, oceanTile.cy + HEX_R
+  );
+  waveGrad.addColorStop(0, 'rgba(255,255,255,0.05)');
+  waveGrad.addColorStop(0.3, 'rgba(255,255,255,0.15)');
+  waveGrad.addColorStop(0.7, 'rgba(255,255,255,0.05)');
+  waveGrad.addColorStop(1, 'rgba(255,255,255,0.1)');
+  ctx.fillStyle = waveGrad;
+  ctx.fill();
+
+  // Border
+  ctx.strokeStyle = 'rgba(30,58,138,0.8)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+}
+
+function drawPort(port) {
+  // Draw port indicator on ocean hex
+  const corners = [];
+  for (let i = 0; i < 6; i++) corners.push(hexCorner(port.cx, port.cy, HEX_R - 8, i));
+
+  // Port symbol background
+  ctx.beginPath();
+  ctx.arc(port.cx, port.cy, 12, 0, Math.PI * 2);
+  ctx.fillStyle = port.type === 'generic' ? '#1e40af' : '#059669';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Port ratio text
+  ctx.fillStyle = 'white';
+  ctx.font = 'bold 7px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(port.ratio, port.cx, port.cy - 2);
+
+  // Resource icon for resource-specific ports
+  if (port.type === 'resource' && port.resource) {
+    ctx.font = '6px Inter, sans-serif';
+    ctx.fillText(port.resource.charAt(0).toUpperCase(), port.cx, port.cy + 6);
+  }
+
+  // Draw connection lines to nearby land vertices
+  const nearbyVertices = vertices.filter(v => 
+    v.isLand && Math.hypot(v.x - port.cx, v.y - port.cy) < HEX_R * 2
+  );
+  
+  nearbyVertices.slice(0, 2).forEach(vertex => {
+    ctx.beginPath();
+    ctx.moveTo(port.cx, port.cy);
+    ctx.lineTo(vertex.x, vertex.y);
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
 }
 
 function drawHex(tile) {
@@ -628,41 +941,41 @@ function drawHex(tile) {
     ctx.shadowBlur = 6;
     ctx.shadowOffsetY = 2;
     ctx.beginPath();
-    ctx.arc(tile.cx, tile.cy, 17, 0, Math.PI * 2);
+    ctx.arc(tile.cx, tile.cy, 15, 0, Math.PI * 2);
     ctx.fillStyle = '#f5f0dc';
     ctx.fill();
     ctx.restore();
 
     // Token border
     ctx.beginPath();
-    ctx.arc(tile.cx, tile.cy, 17, 0, Math.PI * 2);
+    ctx.arc(tile.cx, tile.cy, 15, 0, Math.PI * 2);
     ctx.strokeStyle = isHot ? 'rgba(204,0,0,0.3)' : 'rgba(0,0,0,0.15)';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
     ctx.fillStyle = isHot ? '#cc0000' : '#1a1a2e';
-    ctx.font = isHot ? 'bold 15px Inter, sans-serif' : '600 14px Inter, sans-serif';
+    ctx.font = isHot ? 'bold 13px Inter, sans-serif' : '600 12px Inter, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(tile.number, tile.cx, tile.cy - 1);
 
     // Dots
     const d = DOTS[tile.number];
-    const dotY = tile.cy + 10;
-    const dotStart = tile.cx - (d - 1) * 3;
+    const dotY = tile.cy + 9;
+    const dotStart = tile.cx - (d - 1) * 2.5;
     ctx.fillStyle = isHot ? '#cc0000' : '#888';
     for (let i = 0; i < d; i++) {
       ctx.beginPath();
-      ctx.arc(dotStart + i * 6, dotY, 1.8, 0, Math.PI * 2);
+      ctx.arc(dotStart + i * 5, dotY, 1.5, 0, Math.PI * 2);
       ctx.fill();
     }
   }
 
   // Resource label
   ctx.fillStyle = 'rgba(255,255,255,0.65)';
-  ctx.font = '500 8.5px Inter, sans-serif';
+  ctx.font = '500 7px Inter, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText(tile.resource, tile.cx, tile.cy + (tile.number > 0 ? 24 : 5));
+  ctx.fillText(tile.resource, tile.cx, tile.cy + (tile.number > 0 ? 20 : 4));
 }
 
 function updateTopList(sorted, topN) {
@@ -678,7 +991,10 @@ function updateTopList(sorted, topN) {
       const t = tiles[i];
       return t.number > 0 ? `${t.resource}(${t.number})` : null;
     }).filter(Boolean).join(', ');
-    html += `<li><span class="dots">${v.dots} pips</span> <span class="res">— ${resList || 'none'}</span></li>`;
+    
+    const portText = v.portAccess ? ` | ${v.portAccess.ratio} ${v.portAccess.resource || 'any'}` : '';
+    
+    html += `<li><span class="dots">${v.dots} pips</span> <span class="res">— ${resList || 'none'}${portText}</span></li>`;
   }
   html += '</ol>';
   el.innerHTML = html;
@@ -712,7 +1028,7 @@ canvas.addEventListener('mousemove', (e) => {
   const my = (e.clientY - rect.top) * (canvas.height / rect.height);
   let closest = null, minDist = Infinity;
   for (const v of vertices) {
-    if (v.dots === 0) continue;
+    if (v.dots === 0 || !v.isLand) continue;
     const d = Math.hypot(mx - v.x, my - v.y);
     if (d < 15 && d < minDist) { closest = v; minDist = d; }
   }
@@ -723,6 +1039,9 @@ canvas.addEventListener('mousemove', (e) => {
       if (t.number > 0) lines.push(`${t.resource} ${t.number} (${DOTS[t.number]} pips)`);
     }
     lines.push(`Diversity: ${closest.resources.size} resource${closest.resources.size !== 1 ? 's' : ''}`);
+    if (closest.portAccess) {
+      lines.push(`Port: ${closest.portAccess.ratio} ${closest.portAccess.resource || 'any'}`);
+    }
     tooltip.innerHTML = lines.join('<br>');
     tooltip.style.display = 'block';
     tooltip.style.left = (e.clientX - rect.left + 15) + 'px';
@@ -733,6 +1052,9 @@ canvas.addEventListener('mousemove', (e) => {
 });
 canvas.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
 
+// Event listeners
+document.getElementById('mode4p').addEventListener('click', () => switchMode('4p'));
+document.getElementById('mode6p').addEventListener('click', () => switchMode('6p'));
 document.getElementById('randomBtn').addEventListener('click', () => { randomizeBoard(); drawBoard(); });
 document.getElementById('clearBtn').addEventListener('click', () => {
   for (const t of tiles) { t.number = 0; t.resource = 'desert'; }
@@ -822,13 +1144,9 @@ If you can't identify a tile clearly, use your best guess. Desert tiles have num
 
     const parsed = JSON.parse(jsonMatch[0]);
     if (parsed.length === 19) {
-      ROWS.length = 0;
-      ROWS.push(3, 4, 5, 4, 3);
-      buildBoard();
+      switchMode('4p');
     } else if (parsed.length >= 28 && parsed.length <= 30) {
-      ROWS.length = 0;
-      ROWS.push(3, 4, 5, 6, 5, 4, 3);
-      buildBoard();
+      switchMode('6p');
     }
 
     const count = Math.min(parsed.length, tiles.length);
