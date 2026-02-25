@@ -922,9 +922,10 @@ function drawResourceOverlay() {
   if (!anyAssigned) return;
 
   const dpr = window.devicePixelRatio || 1;
-  // Responsive sizing: compact on mobile (<500 CSS px)
   const cssPx = canvas.width / dpr;
-  const isMobile = cssPx < 500;
+  // On mobile, skip canvas overlay entirely — Rarity Ledger below board has same info
+  if (cssPx < 600) return;
+  const isMobile = false; // only desktop reaches here
   const scale = isMobile ? 0.7 : 1;
 
   const boxW = Math.round(140 * scale * dpr);
