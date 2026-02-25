@@ -210,6 +210,18 @@ export const PROJECTS = [
     cta: { label: 'View Live', url: 'https://btc-dashboard-amber.vercel.app' },
   },
   {
+    id: 15,
+    title: 'Catan Settlement Optimizer',
+    category: 'Tools',
+    featured: false,
+    description:
+      'Interactive 6-player Catan board tool that calculates optimal settlement placements. Assign tile numbers or generate random boards, then instantly see the highest-value intersections ranked by expected resource yield.',
+    tech: ['JavaScript', 'Canvas API', 'Algorithms'],
+    role: 'Solo builder',
+    metrics: ['Interactive hex board', 'Real-time scoring', 'Top-N ranking'],
+    cta: { label: 'Try It', url: 'https://peytoncampbell.ca/catan.html' },
+  },
+  {
     id: 1,
     title: 'Topspin360',
     category: 'Production',
