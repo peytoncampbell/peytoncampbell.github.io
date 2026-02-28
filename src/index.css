@@ -14,6 +14,7 @@
 
   html {
     scroll-behavior: smooth;
+    overflow-x: hidden;
   }
 
   body {
@@ -22,6 +23,32 @@
     background-image:
       url("data:image/svg+xml,%3Csvg width='140' height='140' viewBox='0 0 140 140' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.025' stroke-width='1'%3E%3Cpath d='M0 0h140v140H0z'/%3E%3Cpath d='M70 0v140M0 70h140'/%3E%3C/g%3E%3C/svg%3E");
   }
+}
+
+/* ── Noise / grain texture overlay for depth ── */
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* ── Cursor glow (mouse-follow via JS) ── */
+.cursor-glow {
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(79,142,247,0.07) 0%, rgba(34,211,238,0.03) 30%, transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.3s ease;
+  will-change: left, top;
 }
 
 /* ── Glass card with gradient border on hover ── */
@@ -37,6 +64,7 @@
   box-shadow:
     inset 0 1px 0 0 rgba(255,255,255,0.04),
     inset 0 0 40px rgba(79, 142, 247, 0.03);
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
 }
 
 .glass-premium::before {
@@ -57,6 +85,14 @@
 
 .glass-premium:hover::before {
   opacity: 1;
+}
+
+.glass-premium:hover {
+  border-color: rgba(255,255,255,0.1);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255,255,255,0.06),
+    inset 0 0 40px rgba(79, 142, 247, 0.05),
+    0 8px 32px rgba(0,0,0,0.3);
 }
 
 /* ── Aurora / animated mesh background for hero ── */
@@ -162,6 +198,29 @@
   background: linear-gradient(180deg, #4F8EF7, #22D3EE);
 }
 
+/* ── Nav link hover underline animation ── */
+.nav-link {
+  position: relative;
+  padding-bottom: 2px;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, #4F8EF7, #22D3EE);
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-link:hover::after {
+  width: 100%;
+  left: 0;
+}
+
 /* ── Featured project animated border ── */
 .featured-card {
   position: relative;
@@ -186,6 +245,29 @@
 @keyframes border-rotate {
   0% { filter: hue-rotate(0deg); }
   100% { filter: hue-rotate(360deg); }
+}
+
+/* ── Project card colored top border ── */
+.project-card-border {
+  position: relative;
+  overflow: hidden;
+}
+
+.project-card-border::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 2px 2px 0 0;
+  background: linear-gradient(90deg, var(--card-accent, #4F8EF7), var(--card-accent-end, #22D3EE));
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.project-card-border:hover::after {
+  opacity: 1;
 }
 
 /* ── Live pulse for status indicators ── */
@@ -214,12 +296,33 @@
   backdrop-filter: blur(12px);
 }
 
-/* ── Dashboard glow ── */
+/* ── Dashboard glow + reflection ── */
 .dashboard-glow {
   box-shadow:
     0 0 60px rgba(79,142,247,0.08),
     0 0 120px rgba(79,142,247,0.04),
     0 25px 50px -12px rgba(0,0,0,0.5);
+}
+
+.dashboard-reflection {
+  position: relative;
+}
+
+.dashboard-reflection::after {
+  content: '';
+  position: absolute;
+  bottom: -60%;
+  left: 5%;
+  right: 5%;
+  height: 60%;
+  background: inherit;
+  transform: scaleY(-1);
+  opacity: 0.04;
+  filter: blur(8px);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 70%);
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 70%);
+  pointer-events: none;
+  border-radius: 0 0 1rem 1rem;
 }
 
 /* ── Radar glow ── */
@@ -237,6 +340,11 @@
 .btn-primary:hover {
   box-shadow: 0 6px 25px rgba(79,142,247,0.4), 0 2px 6px rgba(0,0,0,0.3);
   transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 10px rgba(79,142,247,0.3);
 }
 
 /* ── Footer gradient line ── */
@@ -266,6 +374,114 @@
   background-size: 80px 80px;
 }
 
+/* ── Floating label inputs ── */
+.floating-input-group {
+  position: relative;
+}
+
+.floating-input-group input,
+.floating-input-group textarea {
+  @apply w-full rounded-xl bg-slate-900/80 border border-slate-700/50 px-4 pt-6 pb-2 text-white placeholder-transparent transition-all duration-300;
+}
+
+.floating-input-group input:focus,
+.floating-input-group textarea:focus {
+  @apply border-blue-500 ring-1 ring-blue-500/30 outline-none;
+}
+
+.floating-input-group label {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.875rem;
+  color: #64748b;
+  pointer-events: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.floating-input-group textarea ~ label {
+  top: 1.25rem;
+  transform: translateY(0);
+}
+
+.floating-input-group input:focus ~ label,
+.floating-input-group input:not(:placeholder-shown) ~ label {
+  top: 0.5rem;
+  transform: translateY(0);
+  font-size: 0.65rem;
+  color: #4F8EF7;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+}
+
+.floating-input-group textarea:focus ~ label,
+.floating-input-group textarea:not(:placeholder-shown) ~ label {
+  top: 0.35rem;
+  font-size: 0.65rem;
+  color: #4F8EF7;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+}
+
+/* ── Tech stack category group ── */
+.tech-category-header {
+  @apply text-xs font-bold uppercase tracking-[0.2em] text-slate-500 mb-3;
+}
+
+/* ── Timeline enhanced ── */
+.timeline-line {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, #4F8EF7 0%, #22D3EE 40%, #2DD4BF 70%, rgba(45,212,191,0.1) 100%);
+}
+
+@media (min-width: 768px) {
+  .timeline-line {
+    left: 31px;
+  }
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -6px;
+  top: 8px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4F8EF7, #22D3EE);
+  box-shadow: 0 0 12px rgba(79,142,247,0.4), 0 0 24px rgba(79,142,247,0.15);
+  border: 3px solid #0f172a;
+}
+
+@media (min-width: 768px) {
+  .timeline-dot {
+    left: 25px;
+  }
+}
+
+/* ── Experience card top accent ── */
+.experience-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.experience-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #4F8EF7, #22D3EE, #2DD4BF);
+  border-radius: 2px 2px 0 0;
+}
+
 /* ── Smooth section reveal ── */
 @media (prefers-reduced-motion: no-preference) {
   .reveal-section {
@@ -276,6 +492,75 @@
   .reveal-section.visible {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* ── Hero portrait floating card effect ── */
+.portrait-card {
+  position: relative;
+}
+
+.portrait-card::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 30px;
+  background: linear-gradient(135deg, rgba(79,142,247,0.3), rgba(34,211,238,0.15), rgba(45,212,191,0.2));
+  opacity: 0;
+  transition: opacity 0.6s ease;
+  z-index: -1;
+}
+
+.portrait-card:hover::before {
+  opacity: 1;
+}
+
+/* ── Stat card shimmer ── */
+.stat-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent);
+  transition: left 0.6s ease;
+}
+
+.stat-card:hover::before {
+  left: 100%;
+}
+
+/* ── Duality section split line ── */
+.duality-divider {
+  position: relative;
+}
+
+.duality-divider::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 10%;
+  bottom: 10%;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(79,142,247,0.3), rgba(34,211,238,0.2), transparent);
+}
+
+@media (max-width: 767px) {
+  .duality-divider::after {
+    right: auto;
+    left: 10%;
+    right: 10%;
+    top: auto;
+    bottom: 0;
+    width: auto;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(79,142,247,0.3), rgba(34,211,238,0.2), transparent);
   }
 }
 
