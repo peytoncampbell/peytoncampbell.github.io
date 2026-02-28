@@ -238,7 +238,7 @@ function mkChart(ctx,data){
 function mkPnlChart(ctx,data){
   const pts=(data||[]).map(d=>({x:new Date(d.timestamp),y:d.cumulative_pnl!=null?d.cumulative_pnl:(d.pnl!=null?d.pnl:0)}));
   const color = pts.length && pts[pts.length-1].y >= 0 ? '#3fb950' : '#f85149';
-  return new Chart(ctx,{type:'line',data:{datasets:[{data:pts,borderColor:color,backgroundColor:color+'15',fill:true,pointRadius:1,tension:.2,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:300},interaction:{intersect:false,mode:'index'},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+(c.parsed.y!=null?c.parsed.y.toFixed(2):'0.00')}}},scales:{x:{type:'time',grid:{color:'#161b22'},ticks:{color:'var(--text3)',maxTicksLimit:8,font:{size:10}}},y:{grid:{color:'#161b22'},ticks:{color:'var(--text3)',font:{size:10},callback:v=>'$'+(v!=null?v.toFixed(2):'0.00')}}}}});
+  return new Chart(ctx,{type:'line',data:{datasets:[{data:pts,borderColor:color,backgroundColor:color+'15',fill:true,pointRadius:1,tension:.2,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:300},interaction:{intersect:false,mode:'index'},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+(c.parsed.y!=null?c.parsed.y.toFixed(2):'0.00')}}},scales:{x:{type:'time',grid:{color:'#161b22'},ticks:{color:'var(--text3)',maxTicksLimit:8,font:{size:10}}},y:{grid:{color:'#161b22'},ticks:{color:'var(--text3)',font:{size:10},callback:v=>'$'+(Number(v)||0).toFixed(2)}}}}});
 }
 
 async function setPnlPeriod(period){
