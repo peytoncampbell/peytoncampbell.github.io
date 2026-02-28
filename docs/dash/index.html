@@ -186,12 +186,14 @@ th:hover{color:var(--text)}
 <script>
 const API='https://api.peytoncampbell.ca',KEY='65bc4d4ad01756a528c74480067c330da9461584b3b7347e',H={headers:{'X-API-Key':KEY}};
 let pChart,pnlChart,strats=[],ss={col:'pnl',asc:false},currentPnlPeriod='1d';
+Chart.register({id:'nullGuard',beforeUpdate(chart){chart.data.datasets.forEach(ds=>{ds.data=ds.data.map(p=>p&&typeof p==='object'?{...p,y:p.y!=null&&isFinite(p.y)?p.y:0}:p!=null&&isFinite(p)?p:0)})}});
 async function q(p){try{const r=await fetch(API+p,H);if(!r.ok)throw r;return r.json()}catch{return null}}
 function sw(t){const tabs=['paper','v2','live','arb','whale'];const paneIds=['p-paper','p-v2','p-live','p-arb','p-whale'];document.querySelectorAll('.tab').forEach((e,i)=>e.classList.toggle('on',i===tabs.indexOf(t)));paneIds.forEach(id=>document.getElementById(id).classList.toggle('on',id==='p-'+t))}
 const f2=(v,d=2)=>v==null?'—':Number(v).toFixed(d);
 const f$=v=>v==null?'—':'$'+f2(v);
 const fP=v=>v==null?'—':f2(v,1)+'%';
 const pc=v=>v>=0?'g':'r';
+const safeY=v=>v!=null&&isFinite(v)?v:0;
 
 // Strategy table columns
 const cols=[
@@ -231,12 +233,12 @@ function renderSigs(sigs){
 }
 
 function mkChart(ctx,data){
-  const pts=(data||[]).map(d=>({x:new Date(d.t),y:d.b!=null?d.b:0}));
+  const pts=(data||[]).map(d=>({x:new Date(d.t),y:safeY(d.b)}));
   return new Chart(ctx,{type:'line',data:{datasets:[{data:pts,borderColor:'#58a6ff',backgroundColor:'rgba(88,166,255,.06)',fill:true,pointRadius:0,tension:.3,borderWidth:1.5}]},options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{intersect:false,mode:'index'},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+(c.parsed.y!=null?c.parsed.y.toFixed(2):'0.00')}}},scales:{x:{type:'time',grid:{color:'#161b22'},ticks:{color:'var(--text3)',maxTicksLimit:6,font:{size:10}}},y:{grid:{color:'#161b22'},ticks:{color:'var(--text3)',font:{size:10},callback:v=>'$'+v}}}}});
 }
 
 function mkPnlChart(ctx,data){
-  const pts=(data||[]).map(d=>({x:new Date(d.timestamp),y:d.cumulative_pnl!=null?d.cumulative_pnl:(d.pnl!=null?d.pnl:0)}));
+  const pts=(data||[]).map(d=>({x:new Date(d.timestamp),y:safeY(d.cumulative_pnl??d.pnl)}));
   const color = pts.length && pts[pts.length-1].y >= 0 ? '#3fb950' : '#f85149';
   return new Chart(ctx,{type:'line',data:{datasets:[{data:pts,borderColor:color,backgroundColor:color+'15',fill:true,pointRadius:1,tension:.2,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:300},interaction:{intersect:false,mode:'index'},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+(c.parsed.y!=null?c.parsed.y.toFixed(2):'0.00')}}},scales:{x:{type:'time',grid:{color:'#161b22'},ticks:{color:'var(--text3)',maxTicksLimit:8,font:{size:10}}},y:{grid:{color:'#161b22'},ticks:{color:'var(--text3)',font:{size:10},callback:v=>'$'+(Number(v)||0).toFixed(2)}}}}});
 }
@@ -263,7 +265,7 @@ async function refreshPnl(){
     if(!pnlChart){
       pnlChart=mkPnlChart(document.getElementById('pnlChart'),pnl.equity_curve);
     }else{
-      const pts=(pnl.equity_curve||[]).map(d=>({x:new Date(d.timestamp),y:d.cumulative_pnl!=null?d.cumulative_pnl:(d.pnl!=null?d.pnl:0)}));
+      const pts=(pnl.equity_curve||[]).map(d=>({x:new Date(d.timestamp),y:safeY(d.cumulative_pnl??d.pnl)}));
       const color=pts.length&&pts[pts.length-1].y>=0?'#3fb950':'#f85149';
       pnlChart.data.datasets[0].data=pts;
       pnlChart.data.datasets[0].borderColor=color;
@@ -300,7 +302,7 @@ async function refresh(){
   // Chart
   const pe=(eq?.equity)||[];
   if(!pChart)pChart=mkChart(document.getElementById('pChart'),pe);
-  else{pChart.data.datasets[0].data=pe.map(d=>({x:new Date(d.t),y:d.b!=null?d.b:0}));pChart.update('none')}
+  else{pChart.data.datasets[0].data=pe.map(d=>({x:new Date(d.t),y:safeY(d.b)}));pChart.update('none')}
   // Signals
   renderSigs((sigs?.signals)||[]);
   // Strategy table
