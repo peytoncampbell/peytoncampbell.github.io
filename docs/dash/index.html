@@ -263,7 +263,7 @@ async function refreshPnl(){
     if(!pnlChart){
       pnlChart=mkPnlChart(document.getElementById('pnlChart'),pnl.equity_curve);
     }else{
-      const pts=(pnl.equity_curve||[]).map(d=>({x:new Date(d.timestamp),y:d.cumulative_pnl!=null?d.cumulative_pnl:d.pnl}));
+      const pts=(pnl.equity_curve||[]).map(d=>({x:new Date(d.timestamp),y:d.cumulative_pnl!=null?d.cumulative_pnl:(d.pnl!=null?d.pnl:0)}));
       const color=pts.length&&pts[pts.length-1].y>=0?'#3fb950':'#f85149';
       pnlChart.data.datasets[0].data=pts;
       pnlChart.data.datasets[0].borderColor=color;
