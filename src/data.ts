@@ -16,7 +16,7 @@ export const HERO = {
   stats: [
     { label: '4+ Live Positions', icon: Code2 },
     { label: 'Whale Copy-Trading System', icon: Brain },
-    { label: '$4532.72+ Resolved Profit', icon: Trophy },
+    { label: '$4516.73+ Resolved Profit', icon: Trophy },
   ],
 };
 
@@ -146,7 +146,7 @@ export const PROJECTS = [
     description: 'Live Polymarket prediction market system that copies trades from a high-performing whale wallet. Gasless relay execution via proxy wallet, automated position management, and real USDC profit. Running 24/7 with 9 supervised services.',
     tech: ['Python', 'Web3', 'Polymarket CLOB', 'Polygon', 'Cloudflare'],
     role: 'Solo builder',
-    metrics: ['4+ live positions', '$4532.72+ resolved profit (1989W/3649L)', 'Gasless relay execution', 'Proxy wallet architecture', '0 supervised services'],
+    metrics: ['4+ live positions', '$4516.73+ resolved profit (1989W/3660L)', 'Gasless relay execution', 'Proxy wallet architecture', '0 supervised services'],
     cta: null,
   },
   {
@@ -271,7 +271,7 @@ export const BUILDING_NOW = [
     name: 'Whale Copy-Trading',
     status: 'Live',
     statusColor: 'green',
-    detail: '4+ positions, $4532.72+ resolved profit, real USDC',
+    detail: '4+ positions, $4516.73+ resolved profit, real USDC',
     icon: Rocket,
   },
   {
