@@ -10,20 +10,20 @@ export const NAV_LINKS = [
 ];
 
 export const HERO = {
-  headline: 'I build things that work autonomously.',
+  headline: 'I build intelligent systems that run themselves.',
   subheadline:
-    'Full-stack engineer building autonomous trading systems on Polymarket. I design systems that copy whale trades, manage risk, and profit — without human intervention.',
+    'Full-stack engineer specializing in AI-powered automation, real-time systems, and infrastructure that operates autonomously. From AI workspace dashboards to supervised service architectures — I ship production systems that work 24/7.',
   stats: [
-    { label: '918+ Live Positions', icon: Code2 },
-    { label: 'Whale Copy-Trading System', icon: Brain },
-    { label: '$2661.83+ Resolved Profit', icon: Trophy },
+    { label: '8+ Supervised Services', icon: Code2 },
+    { label: 'AI-Powered Automation', icon: Brain },
+    { label: 'Full-Stack + AI/ML', icon: Trophy },
   ],
 };
 
 export const HIGHLIGHTS = [
   {
-    label: '24/7 Whale Copy-Trading Bot',
-    detail: 'Polymarket prediction market bot copying whale trades with gasless relays, proxy wallet architecture, and real USDC profit.',
+    label: 'AI Workspace Dashboard',
+    detail: 'Built Jarvis Console: a Next.js dashboard with real-time chat, session management, memory browser, and cron monitoring — all in a PWA.',
     icon: Sparkles,
   },
   {
@@ -32,29 +32,29 @@ export const HIGHLIGHTS = [
     icon: Award,
   },
   {
-    label: 'AI-Powered Automation',
-    detail: 'Personal AI agent running 24/7 across Telegram, Discord, and Signal with persistent memory.',
+    label: 'Autonomous Agent Infrastructure',
+    detail: 'Personal AI agent running 24/7 across Telegram, Discord, and Signal. Manages 8+ services with health monitoring, auto-recovery, and persistent memory.',
     icon: Database,
   },
 ];
 
 export const SKILLS = [
   {
-    title: 'Autonomous Trading Systems',
-    tags: ['Python', 'Web3', 'Polymarket', 'Trading Bots', 'Dashboards'],
-    copy: 'Building whale copy-trading systems on Polymarket with gasless relays, proxy wallets, and 9 supervised services. From on-chain trade copying to real-time dashboards — I ship production systems that run 24/7.',
+    title: 'AI & Automation Systems',
+    tags: ['Python', 'TypeScript', 'Claude API', 'WebSocket', 'Cron'],
+    copy: 'Building autonomous agent systems with 8+ supervised services, health monitoring, and auto-recovery. From AI workspace dashboards to cross-platform messaging — I ship production systems that run 24/7.',
     icon: Layout,
   },
   {
-    title: 'Data & ML Intelligence',
-    tags: ['Python', 'scikit-learn', 'XGBoost', 'Regime Detection', 'NLP'],
-    copy: '62,000+ trades executed across 23 ML strategies. Real-time regime detection, feature engineering on market microstructure, and transformer-based sentiment analysis.',
+    title: 'Full-Stack Engineering',
+    tags: ['React', 'Next.js', 'Node.js', 'REST APIs', 'PWA'],
+    copy: 'Real-time dashboards and production applications. From responsive PWAs with offline support to WebSocket-powered interfaces — I build robust frontend systems that scale.',
     icon: Database,
   },
   {
-    title: 'Leadership & Strategy',
-    tags: ['Consulting', 'Campbell Solutions', 'Agile', 'Team Strategy'],
-    copy: 'Running Campbell Solutions for consulting engagements. Translating athletic discipline into development velocity — bridging complex technical systems with business outcomes.',
+    title: 'Infrastructure & DevOps',
+    tags: ['Process Management', 'Cloudflare', 'SQLite', 'Windows Services', 'CI/CD'],
+    copy: 'Supervised service architectures with health checks, automated deployment pipelines, and cross-platform architecture. Translating athletic discipline into system reliability and development velocity.',
     icon: Users,
   },
 ];
@@ -66,7 +66,7 @@ export const SCOUTING_REPORT = [
   { axis: 'Architecture', value: 0.85, fullMark: 1 },
   { axis: 'Leadership', value: 0.95, fullMark: 1 },
   { axis: 'Data Eng', value: 0.85, fullMark: 1 },
-  { axis: 'Trading Systems', value: 0.88, fullMark: 1 },
+  { axis: 'DevOps/Infra', value: 0.85, fullMark: 1 },
 ];
 
 export const PROCESS = [
@@ -101,10 +101,10 @@ export const PROCESS = [
 ];
 
 export const LIVE_STATUS = [
-  { label: 'Focus', value: 'Polymarket + Autonomous Systems' },
-  { label: 'Status', value: 'Building 24/7' },
+  { label: 'Focus', value: 'AI Systems + Full-Stack Engineering' },
+  { label: 'Status', value: 'Open to opportunities' },
   { label: 'Location', value: 'London, ON → Toronto' },
-  { label: 'Bot', value: '918+ live positions' },
+  { label: 'Current', value: 'Building autonomous systems' },
 ];
 
 export const EXPERIENCE = [
@@ -115,9 +115,11 @@ export const EXPERIENCE = [
     period: 'Aug 2025 - Present',
     description: 'Building next-gen scoreboard control software.',
     bullets: [
-      'Automated regression testing in Python, cutting validation time by 40% while improving defect catch rate.',
-      'Modernizing legacy codebases into cross-platform .NET MAUI apps using MVVM and shared component libraries.',
-      'Architecting REST APIs to sync scoreboard hardware, edge devices, and mobile clients in real time.',
+      'Building cross-platform .NET MAUI scoreboard control apps with MVVM architecture and shared component libraries.',
+      'Architecting REST APIs for real-time sync between scoreboard hardware, edge devices, and mobile clients.',
+      'Automated regression testing in Python, cutting validation time by 40%.',
+      'Designing deployment pipelines and CI/CD workflows for multi-platform releases.',
+      'Leading migration from legacy codebases to modern cross-platform architecture.',
     ],
   },
 ];
@@ -139,14 +141,26 @@ export const EDUCATION = [
 
 export const PROJECTS = [
   {
-    id: 10,
-    title: 'Whale Copy-Trading System',
-    category: 'ML/AI',
+    id: 16,
+    title: 'Jarvis Console',
+    category: 'Production',
     featured: true,
-    description: 'Live Polymarket prediction market system that copies trades from a high-performing whale wallet. Gasless relay execution via proxy wallet, automated position management, and real USDC profit. Running 24/7 with 9 supervised services.',
-    tech: ['Python', 'Web3', 'Polymarket CLOB', 'Polygon', 'Cloudflare'],
-    role: 'Solo builder',
-    metrics: ['918+ live positions', '$2661.83+ resolved profit (1593W/3637L)', 'Gasless relay execution', 'Proxy wallet architecture', '0 supervised services'],
+    description: 'AI workspace management dashboard providing real-time monitoring and control for my entire agent ecosystem. Features chat interface, session management, memory browser, and cron viewer — all in a responsive PWA architecture.',
+    tech: ['Next.js', 'WebSocket', 'RPC', 'PWA', 'Real-time'],
+    role: 'Full-Stack Engineer',
+    metrics: ['Real-time chat interface', 'Session management system', 'Memory browser & search', 'Cron job viewer', 'PWA with offline support'],
+    cta: { label: 'View Console', url: 'https://peytoncampbell.ca/console/' },
+  },
+
+  {
+    id: 17,
+    title: 'OpenClaw Agent Infrastructure',
+    category: 'Production',
+    featured: false,
+    description: 'Personal AI agent ecosystem managing my digital life across multiple platforms. Features 7 supervised services after cleanup, automated research pipelines, and cross-platform messaging with health monitoring, auto-recovery, and system optimization.',
+    tech: ['Node.js', 'Python', 'Cron Scheduling', 'Multi-service', 'Cross-platform'],
+    role: 'Infrastructure Architect',
+    metrics: ['7 supervised services', 'Health monitoring', 'Auto-recovery', 'System optimization', 'Persistent memory system'],
     cta: null,
   },
   {
@@ -155,10 +169,10 @@ export const PROJECTS = [
     category: 'Production',
     featured: false,
     description:
-      'Technology consulting practice offering full-stack development, AI/ML integration, and trading system architecture for businesses and startups.',
+      'Technology consulting practice offering full-stack development, AI/ML integration, and system architecture for businesses and startups.',
     tech: ['React', 'Next.js', 'Python', 'AI/ML', 'Consulting'],
     role: 'Founder',
-    metrics: ['Full-stack consulting', 'AI integration', 'Trading systems'],
+    metrics: ['Full-stack consulting', 'AI integration', 'System architecture'],
     cta: { label: 'Visit Site', url: 'https://campbell-solutions.vercel.app' },
   },
   {
@@ -170,20 +184,10 @@ export const PROJECTS = [
       'Multi-platform AI agent with persistent memory, cron scheduling, autonomous job applications across 6 ATS platforms, browser automation, and proactive monitoring.',
     tech: ['TypeScript', 'Claude API', 'Playwright', 'Node.js'],
     role: 'Solo builder',
-    metrics: ['3 platforms (Telegram/Discord/Signal)', '6 ATS integrations', 'Persistent memory', '24/7 uptime'],
+    metrics: ['3 platforms (Telegram/Discord/Signal)', '8+ supervised services', 'Persistent memory', '24/7 uptime monitoring'],
     cta: null,
   },
-  {
-    id: 13,
-    title: 'Real-Time Trading Dashboard',
-    category: 'Production',
-    featured: false,
-    description: 'Live performance dashboard for autonomous trading systems. Real-time data through Cloudflare tunnel, P&L tracking, trade history, and system monitoring.',
-    tech: ['Next.js', 'TypeScript', 'Tailwind', 'Cloudflare Tunnel', 'Vercel'],
-    role: 'Solo builder',
-    metrics: ['Real-time data via tunnel', 'Auto-refresh', 'Mobile responsive'],
-    cta: { label: 'View Live', url: 'https://peytoncampbell.ca/dash/' },
-  },
+
   {
     id: 15,
     title: 'Catan Settlement Optimizer',
@@ -195,18 +199,7 @@ export const PROJECTS = [
     metrics: ['Dynamic scarcity scoring', 'Port concentration engine', 'Resource rarity ledger', 'Weighted probability analysis'],
     cta: { label: 'Try It', url: 'https://peytoncampbell.ca/catan/' },
   },
-  {
-    id: 1,
-    title: 'Topspin360',
-    category: 'Production',
-    featured: false,
-    description:
-      'iOS app migration and full development. Dedicated neck-strength training tool for athletes; shipped analytics and improved crash-free sessions.',
-    tech: ['Swift', 'iOS', 'Mobile Architecture'],
-    role: 'Mobile lead',
-    metrics: ['Crash-free sessions +8%', 'Avg session length +12%', 'User NPS +0.6'],
-    cta: { label: 'App Store', url: 'https://apps.apple.com/ca/app/topspin360/id1281507774' },
-  },
+
   {
     id: 2,
     title: 'Score Controller',
@@ -249,17 +242,20 @@ export const TECH_STACK = [
   { name: 'Python', category: 'Languages' },
   { name: 'TypeScript', category: 'Languages' },
   { name: 'C# / .NET', category: 'Languages' },
+  { name: 'Swift', category: 'Languages' },
   { name: 'React', category: 'Frontend' },
   { name: 'Next.js', category: 'Frontend' },
   { name: 'Tailwind', category: 'Frontend' },
   { name: 'scikit-learn', category: 'ML/AI' },
   { name: 'XGBoost', category: 'ML/AI' },
   { name: 'Claude API', category: 'ML/AI' },
-  { name: 'Binance API', category: 'Trading' },
-  { name: 'OKX API', category: 'Trading' },
-  { name: 'Polymarket', category: 'Trading' },
-  { name: 'Web3', category: 'Trading' },
+  { name: 'OpenAI API', category: 'ML/AI' },
+  { name: 'Playwright', category: 'ML/AI' },
+
   { name: 'PostgreSQL', category: 'Infrastructure' },
+  { name: 'SQLite', category: 'Infrastructure' },
+  { name: 'Docker', category: 'Infrastructure' },
+  { name: 'Node.js', category: 'Infrastructure' },
   { name: 'Cloudflare', category: 'Infrastructure' },
   { name: 'Vercel', category: 'Infrastructure' },
   { name: 'Playwright', category: 'Tools' },
@@ -268,40 +264,40 @@ export const TECH_STACK = [
 
 export const BUILDING_NOW = [
   {
-    name: 'Whale Copy-Trading',
+    name: 'Jarvis Console',
     status: 'Live',
     statusColor: 'green',
-    detail: '918+ positions, $2661.83+ resolved profit, real USDC',
+    detail: 'AI workspace dashboard with real-time monitoring',
     icon: Rocket,
   },
   {
-    name: 'Jarvis AI Agent',
+    name: 'Agent Infrastructure',
     status: 'Live',
     statusColor: 'green',
-    detail: 'OpenClaw-powered agent across Telegram/Signal/Discord',
+    detail: '7 supervised services, auto-recovery, health monitoring',
     icon: Brain,
   },
   {
-    name: 'Catan Optimizer',
-    status: 'Live',
+    name: 'Job Hunt Pipeline',
+    status: 'Active',
     statusColor: 'green',
-    detail: 'Dynamic scarcity scoring, port engine, rarity ledger',
+    detail: 'Automated job discovery, scoring, and application tracking',
     icon: Bot,
   },
 ];
 
 export const BLOG_POSTS = [
   {
-    title: 'How I Built a Whale Copy-Trading System on Polymarket',
-    date: 'Feb 2026',
+    title: 'How I Built an AI Agent That Manages My Digital Life',
+    date: 'Mar 2026',
     readTime: '8 min',
-    excerpt: 'Architecture deep-dive: gasless relays, proxy wallets, on-chain trade detection, and turning whale alpha into real USDC profit.',
-    tags: ['Python', 'Web3', 'Trading'],
+    excerpt: 'Architecture deep-dive: OpenClaw/Jarvis infrastructure with 7 supervised services, health monitoring, auto-recovery, and persistent memory across platforms.',
+    tags: ['AI', 'TypeScript', 'Infrastructure'],
     href: '#'
   },
   {
     title: 'Running 9 Services on a Single Machine with a Custom Supervisor',
-    date: 'Feb 2026',
+    date: 'Mar 2026',
     readTime: '6 min',
     excerpt: 'How I built a process supervisor managing signal engines, traders, WebSocket listeners, and API servers — with health checks, auto-restart, and Windows Task Scheduler integration.',
     tags: ['Infrastructure', 'Python', 'DevOps'],
@@ -309,7 +305,7 @@ export const BLOG_POSTS = [
   },
   {
     title: 'Building Jarvis: An AI Agent That Runs My Digital Life',
-    date: 'Feb 2026',
+    date: 'Mar 2026',
     readTime: '5 min',
     excerpt: 'From Telegram to Discord to Signal — building a persistent-memory AI assistant with autonomous job applications, browser automation, and proactive monitoring.',
     tags: ['AI', 'TypeScript', 'Automation'],

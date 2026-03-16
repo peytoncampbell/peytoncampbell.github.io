@@ -68,7 +68,7 @@ const CATEGORY_COLORS: Record<string, { bg: string; border: string; text: string
   Languages: { bg: 'bg-blue-500/10', border: 'border-blue-500/25', text: 'text-blue-300', dot: 'bg-blue-500' },
   Frontend: { bg: 'bg-cyan-500/10', border: 'border-cyan-500/25', text: 'text-cyan-300', dot: 'bg-cyan-500' },
   'ML/AI': { bg: 'bg-purple-500/10', border: 'border-purple-500/25', text: 'text-purple-300', dot: 'bg-purple-500' },
-  Trading: { bg: 'bg-amber-500/10', border: 'border-amber-500/25', text: 'text-amber-300', dot: 'bg-amber-500' },
+  DevOps: { bg: 'bg-amber-500/10', border: 'border-amber-500/25', text: 'text-amber-300', dot: 'bg-amber-500' },
   Infrastructure: { bg: 'bg-green-500/10', border: 'border-green-500/25', text: 'text-green-300', dot: 'bg-green-500' },
   Tools: { bg: 'bg-slate-500/10', border: 'border-slate-500/25', text: 'text-slate-300', dot: 'bg-slate-400' },
 };
