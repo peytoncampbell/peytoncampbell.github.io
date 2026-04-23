@@ -296,33 +296,39 @@
   backdrop-filter: blur(12px);
 }
 
-/* ── Dashboard glow + reflection ── */
-.dashboard-glow {
-  box-shadow:
-    0 0 60px rgba(79,142,247,0.08),
-    0 0 120px rgba(79,142,247,0.04),
-    0 25px 50px -12px rgba(0,0,0,0.5);
-}
-
-.dashboard-reflection {
+/* ── Selected work treatment ── */
+.featured-case {
   position: relative;
+  background:
+    linear-gradient(140deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.72)),
+    radial-gradient(circle at top right, rgba(34, 211, 238, 0.08), transparent 32%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.04),
+    0 18px 50px rgba(2, 6, 23, 0.35);
 }
 
-.dashboard-reflection::after {
+.featured-case::before {
   content: '';
   position: absolute;
-  bottom: -60%;
-  left: 5%;
-  right: 5%;
-  height: 60%;
-  background: inherit;
-  transform: scaleY(-1);
-  opacity: 0.04;
-  filter: blur(8px);
-  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 70%);
-  mask-image: linear-gradient(to bottom, rgba(0,0,0,0.3), transparent 70%);
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(79,142,247,0.08), transparent 40%, rgba(34,211,238,0.06));
   pointer-events: none;
-  border-radius: 0 0 1rem 1rem;
+}
+
+.proof-row {
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 1.5rem;
+  background: rgba(15, 23, 42, 0.42);
+  padding: 1.1rem 1.15rem;
+  transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+}
+
+.proof-row:hover {
+  transform: translateY(-2px);
+  border-color: rgba(79, 142, 247, 0.22);
+  background: rgba(15, 23, 42, 0.58);
 }
 
 /* ── Radar glow ── */

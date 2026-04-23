@@ -25,9 +25,9 @@ export default function GitHubActivity() {
     <section className="py-24 relative" id="github">
       <div className="container mx-auto px-6">
         <SectionHeading>
-          GitHub <span className="gradient-text">Activity</span>
+          GitHub <span className="gradient-text">Signal</span>
         </SectionHeading>
-        
+
         <motion.div
           initial="hidden"
           whileInView="visible"
@@ -41,7 +41,7 @@ export default function GitHubActivity() {
                 <div>
                   <h3 className="text-2xl font-bold text-white mb-2">Contribution Graph</h3>
                   <p className="text-slate-400 text-sm">
-                    My coding activity over the past year — building autonomous systems, trading bots, and AI tools.
+                    A quick read on how consistently I ship code across automation, product, and infrastructure work.
                   </p>
                 </div>
                 <a
@@ -54,7 +54,7 @@ export default function GitHubActivity() {
                   View Profile
                 </a>
               </div>
-              
+
               <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
                 <img
                   src="https://ghchart.rshah.org/3b82f6/peytoncampbell"

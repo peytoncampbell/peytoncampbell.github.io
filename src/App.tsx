@@ -14,7 +14,7 @@ import {
   CalendarClock,
   Star,
 } from 'lucide-react';
-import { NAV_LINKS, HERO, EXPERIENCE, PROJECTS, TECH_STACK } from './data';
+import { NAV_LINKS, HERO, EXPERIENCE, PROJECTS, TECH_STACK, HIGHLIGHTS, BUILDING_NOW } from './data';
 import LiveTicker from './LiveTicker';
 import ScrollProgress from './ScrollProgress';
 import Certifications from './Certifications';
@@ -314,7 +314,7 @@ export default function App() {
             <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="max-w-3xl">
               <motion.div variants={fadeInUp} className="mb-6">
                 <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.25em] text-blue-400/80 bg-blue-500/8 border border-blue-500/15 px-4 py-2 rounded-full">
-                  Full-Stack Engineer · ML Developer
+                  Full-Stack Engineer | AI Systems Builder
                 </span>
               </motion.div>
               <motion.h1
@@ -329,16 +329,16 @@ export default function App() {
 
               <motion.div variants={fadeInUp} className="flex items-center gap-4 flex-wrap">
                 <a
-                  href="#dashboard"
+                  href="#projects"
                   className="btn-primary px-8 py-4 text-white font-bold rounded-xl flex items-center gap-2 text-base"
                 >
-                  See Live Dashboard <ArrowRight size={18} />
+                  See Selected Work <ArrowRight size={18} />
                 </a>
                 <a
-                  href={`${import.meta.env.BASE_URL}PeytonCampbellResume.pdf`}
+                  href="#contact"
                   className="px-8 py-4 border border-slate-700 text-slate-300 font-bold rounded-xl transition-all hover:bg-white/5 hover:border-slate-600 flex items-center gap-2"
                 >
-                  Download CV <Download size={18} />
+                  Start a Conversation <ArrowRight size={18} />
                 </a>
                 <div className="flex gap-2">
                   <a
@@ -401,74 +401,136 @@ export default function App() {
         </div>
       </section>
 
-      {/* Live Dashboard Preview */}
-      <section className="py-28 relative overflow-hidden" id="dashboard">
+      {/* Selected Work */}
+      <section className="py-24 relative">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute w-[800px] h-[800px] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-blue-600/8 via-transparent to-cyan-500/5 blur-3xl" />
+          <div className="absolute left-[8%] top-10 h-56 w-56 rounded-full bg-cyan-500/8 blur-3xl" />
+          <div className="absolute right-[12%] bottom-0 h-64 w-64 rounded-full bg-blue-500/8 blur-3xl" />
         </div>
         <div className="container mx-auto px-6 relative z-10">
-          <SectionHeading>
-            Live Trading <span className="gradient-text">Dashboard</span>
-          </SectionHeading>
-          <motion.p
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeInUp}
-            className="text-slate-400 text-lg mb-12 max-w-2xl -mt-8"
-          >
-            Real-time monitoring for my autonomous trading systems. Live P&L, position tracking, service health for 9 supervised processes, and trade history — all tunneled through Cloudflare.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="relative rounded-2xl overflow-visible dashboard-glow dashboard-reflection"
-          >
-            {/* Browser chrome */}
-            <div className="browser-chrome border border-slate-700/50 rounded-t-2xl flex items-center px-5 py-3.5 gap-3">
-              <div className="flex gap-2">
-                <div className="w-3 h-3 rounded-full bg-red-500/70 hover:bg-red-500 transition-colors cursor-pointer" />
-                <div className="w-3 h-3 rounded-full bg-amber-500/70 hover:bg-amber-500 transition-colors cursor-pointer" />
-                <div className="w-3 h-3 rounded-full bg-green-500/70 hover:bg-green-500 transition-colors cursor-pointer" />
-              </div>
-              <div className="flex-1 mx-4">
-                <div className="bg-slate-900/80 rounded-lg px-3 sm:px-4 py-2 text-[10px] sm:text-xs text-slate-500 font-mono border border-slate-800/50 max-w-md mx-auto text-center flex items-center justify-center gap-1.5 sm:gap-2 truncate">
-                  <span className="text-green-400/70 flex-shrink-0">🔒</span> <span className="truncate">peytoncampbell.ca/dash/</span>
-                </div>
-              </div>
-            </div>
-            <div className="border border-t-0 border-slate-700/50 rounded-b-2xl overflow-hidden bg-slate-950">
-              <iframe
-                src="https://peytoncampbell.ca/dash/"
-                title="BTC Trading Dashboard"
-                className="w-full h-[350px] sm:h-[500px] md:h-[650px] border-0"
-                loading="lazy"
-              />
-            </div>
-          </motion.div>
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={fadeInUp}
-            className="mt-10 flex justify-center"
-          >
-            <a
-              href="https://peytoncampbell.ca/dash/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-primary inline-flex items-center gap-3 px-8 py-3.5 text-white font-bold rounded-full text-base"
+          <div className="grid gap-16 xl:grid-cols-[1.1fr,0.9fr] items-start">
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={staggerContainer}
+              className="space-y-8"
             >
-              <ExternalLink size={18} />
-              View Live Dashboard
-            </a>
-          </motion.div>
+              <motion.div variants={fadeInUp}>
+                <span className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-400">Selected Work</span>
+                <h2 className="text-4xl md:text-6xl font-bold text-white tracking-tight mt-4 leading-[1.02]">
+                  Building the operating layer behind AI products.
+                </h2>
+                <p className="mt-6 max-w-2xl text-lg text-slate-400 leading-relaxed">
+                  The work I care about most sits between product, tooling, and operations. It has to be useful to
+                  people, dependable in production, and clear enough that someone can operate it under pressure.
+                </p>
+              </motion.div>
+
+              {featuredProject && (
+                <motion.div variants={fadeInUp} className="featured-case rounded-[32px] p-8 md:p-10">
+                  <div className="flex flex-wrap items-center gap-3 mb-6">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-200 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full">
+                      Featured Build
+                    </span>
+                    <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-cyan-300 bg-cyan-500/10 border border-cyan-500/20 px-3 py-1.5 rounded-full">
+                      {featuredProject.category}
+                    </span>
+                  </div>
+
+                  <div className="grid gap-8 lg:grid-cols-[1fr,220px]">
+                    <div>
+                      <h3 className="text-3xl md:text-4xl font-bold text-white">{featuredProject.title}</h3>
+                      <p className="mt-3 text-sm uppercase tracking-[0.14em] text-amber-300/80 font-semibold">
+                        {featuredProject.role}
+                      </p>
+                      <p className="mt-5 max-w-2xl text-slate-300 leading-relaxed">{featuredProject.description}</p>
+                      <div className="mt-6 flex flex-wrap gap-2.5">
+                        {featuredProject.tech.map((tech) => (
+                          <span key={tech} className="px-3 py-1.5 rounded-full border border-slate-700/70 text-sm text-slate-300">
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
+                      {featuredProject.cta?.url && (
+                        <a
+                          href={featuredProject.cta.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-primary inline-flex items-center gap-2 px-6 py-3 rounded-full text-white font-bold mt-8"
+                        >
+                          {featuredProject.cta.label}
+                          <ArrowRight size={16} />
+                        </a>
+                      )}
+                    </div>
+
+                    <div className="space-y-3">
+                      {featuredProject.metrics?.map((metric) => (
+                        <div key={metric} className="border border-slate-700/60 rounded-2xl px-4 py-4 text-sm text-slate-200 bg-slate-950/35">
+                          {metric}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </motion.div>
+
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={staggerContainer}
+              className="space-y-10"
+            >
+              <motion.div variants={fadeInUp}>
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500 mb-5">Operating Now</p>
+                <div className="space-y-4">
+                  {BUILDING_NOW.map((item) => (
+                    <div key={item.name} className="proof-row">
+                      <div className="flex items-start gap-4">
+                        <div className="w-11 h-11 rounded-2xl bg-blue-500/10 border border-blue-500/15 flex items-center justify-center flex-shrink-0">
+                          <item.icon size={20} className="text-cyan-300" />
+                        </div>
+                        <div>
+                          <div className="flex flex-wrap items-center gap-3">
+                            <h3 className="text-lg font-bold text-white">{item.name}</h3>
+                            <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-300">
+                              {item.status}
+                            </span>
+                          </div>
+                          <p className="mt-2 text-sm text-slate-400 leading-relaxed">{item.detail}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              <motion.div variants={fadeInUp}>
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500 mb-5">Proof Points</p>
+                <div className="space-y-4">
+                  {HIGHLIGHTS.map((item) => (
+                    <div key={item.label} className="proof-row">
+                      <div className="flex items-start gap-4">
+                        <div className="w-11 h-11 rounded-2xl bg-white/5 border border-white/8 flex items-center justify-center flex-shrink-0">
+                          <item.icon size={20} className="text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold text-white">{item.label}</h3>
+                          <p className="mt-2 text-sm text-slate-400 leading-relaxed">{item.detail}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
-      {/* Tech Stack — Grouped by Category */}
       <section className="py-24 border-y border-slate-800/50 relative">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-900/15 to-transparent pointer-events-none" />
         <div className="container mx-auto px-6 relative z-10">
@@ -515,7 +577,7 @@ export default function App() {
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-end mb-14">
             <SectionHeading className="mb-0">
-              Projects I've <span className="gradient-text">Worked On</span>
+              Selected <span className="gradient-text">Projects</span>
             </SectionHeading>
             <div className="flex gap-2 mt-6 md:mt-0 overflow-x-auto pb-2 md:pb-0">
               {['All', 'Production', 'ML/AI', 'Tools'].map((filter) => (
@@ -699,7 +761,7 @@ export default function App() {
                     <span className="text-sm font-mono text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full">{exp.period}</span>
                   </div>
                   <div className="text-slate-400 font-medium mb-5">
-                    {exp.title} — {exp.location}
+                    {exp.title} - {exp.location}
                   </div>
                   <ul className="space-y-3">
                     {exp.bullets.map((bullet, bIdx) => (
@@ -789,10 +851,10 @@ export default function App() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="text-lg text-slate-300 leading-relaxed max-w-md"
             >
-              Autonomous systems builder and prediction market architect.
+              Autonomous systems builder and product-minded engineer.
               <br />
               <br />
-              I build systems that trade real money without intervention. From whale copy-trading on Polymarket with gasless relays and proxy wallets, to an AI agent managing my digital life across three platforms, to a 9-service supervisor running 24/7 — I architect infrastructure that works while I sleep.
+              I build systems that carry real operational weight. From multi-platform agent workflows to a supervised service stack running around the clock, I design infrastructure that keeps moving without constant babysitting.
             </motion.p>
           </motion.div>
         </div>
@@ -812,8 +874,8 @@ export default function App() {
               Let's talk <span className="gradient-text">game plan.</span>
             </h2>
             <p className="text-slate-400 mb-10 text-lg leading-relaxed">
-              Based in London, ON (EST). I reply within 24 hours. Whether it is about code, basketball, or building something new,
-              let's chat.
+              Based in London, ON and working across the Toronto market. I reply within 24 hours if the conversation is
+              about product, systems, or a role where I can build useful things.
             </p>
 
             <form onSubmit={handleContactSubmit} className="grid gap-5 text-left">
@@ -855,8 +917,7 @@ export default function App() {
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="text-sm text-amber-300 flex items-center gap-2"
-                >
-                  ⚠ {contactError}
+                >Error: {contactError}
                 </motion.p>
               )}
               {contactSuccess && (
@@ -864,8 +925,7 @@ export default function App() {
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="text-sm text-green-400 flex items-center gap-2"
-                >
-                  ✓ Thanks! I'll reply within 24 hours.
+                >Sent. I will reply within 24 hours.
                 </motion.p>
               )}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-2">
@@ -884,7 +944,7 @@ export default function App() {
                   className="inline-flex items-center gap-3 px-8 py-3.5 border border-slate-700 text-slate-300 font-semibold rounded-full hover:bg-white/5 hover:border-slate-600 transition-all duration-300"
                 >
                   <CalendarClock size={18} className="text-cyan-400" />
-                  Book a chat
+                  Message on LinkedIn
                 </a>
               </div>
             </form>
@@ -896,7 +956,7 @@ export default function App() {
       <footer className="relative pt-10 pb-8 bg-slate-950 text-center text-slate-500 text-sm">
         <div className="footer-gradient-line mb-10" />
         <p className="font-medium">Built with React, Tailwind, and caffeine by Peyton Campbell.</p>
-        <p className="mt-2 text-slate-600">© {new Date().getFullYear()} Peyton Campbell</p>
+        <p className="mt-2 text-slate-600">(c) {new Date().getFullYear()} Peyton Campbell</p>
       </footer>
 
       {/* Back to Top */}

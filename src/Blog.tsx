@@ -1,21 +1,9 @@
 import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
 import { BLOG_POSTS } from './data';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 24 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
-};
-
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.12,
-      delayChildren: 0.1,
-    },
-  },
 };
 
 function SectionHeading({ children, className = '' }: { children: React.ReactNode; className?: string }) {
@@ -36,58 +24,51 @@ export default function Blog() {
   return (
     <section className="py-24 relative" id="blog">
       <div className="container mx-auto px-6">
-        <SectionHeading>
-          Latest <span className="gradient-text">Blog Posts</span>
-        </SectionHeading>
-        
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          variants={staggerContainer}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-14">
+          <SectionHeading className="mb-0">
+            Writing <span className="gradient-text">In Progress</span>
+          </SectionHeading>
+          <p className="max-w-xl text-sm md:text-base text-slate-400 leading-relaxed">
+            I am turning active build notes into a proper writing archive. These are the first essays in the queue.
+          </p>
+        </div>
+
+        <div className="border border-slate-800/70 rounded-3xl overflow-hidden bg-slate-950/35 backdrop-blur-sm">
           {BLOG_POSTS.map((post, index) => (
             <motion.article
-              key={index}
+              key={post.title}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
               variants={fadeInUp}
-              className="glass-premium rounded-2xl overflow-hidden group hover:scale-[1.02] transition-all duration-300"
+              className="grid gap-6 lg:grid-cols-[180px,1fr,180px] px-6 py-7 md:px-8 md:py-8 border-b border-slate-800/60 last:border-b-0"
             >
-              <div className="p-7 h-full flex flex-col">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs text-cyan-400 font-mono">{post.date}</span>
-                  <span className="text-xs text-slate-500">{post.readTime}</span>
-                </div>
-                
-                <h3 className="text-xl font-bold text-white mb-3 group-hover:text-cyan-400 transition-colors duration-300">
-                  {post.title}
-                </h3>
-                
-                <p className="text-slate-400 text-sm mb-5 flex-grow leading-relaxed">
-                  {post.excerpt}
-                </p>
-                
-                <div className="flex flex-wrap gap-2 mb-5">
-                  {post.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="text-xs text-slate-500 font-mono bg-slate-800/50 px-2 py-1 rounded-md"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-                
-                <a
-                  href={post.href}
-                  className="inline-flex items-center text-sm font-bold text-cyan-400 hover:text-white transition-colors duration-300 mt-auto"
-                >
-                  Read more <ArrowRight size={16} className="ml-1" />
-                </a>
+              <div className="flex items-start justify-between lg:block">
+                <span className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-400">{post.date}</span>
+                <span className="inline-flex mt-0 lg:mt-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                  {post.readTime}
+                </span>
+              </div>
+
+              <div>
+                <h3 className="text-xl md:text-2xl font-bold text-white mb-3">{post.title}</h3>
+                <p className="text-slate-400 leading-relaxed max-w-3xl">{post.excerpt}</p>
+              </div>
+
+              <div className="flex flex-wrap lg:justify-end gap-2 content-start">
+                {post.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="px-3 py-1.5 rounded-full border border-slate-700/70 text-xs font-mono text-slate-400"
+                  >
+                    {tag}
+                  </span>
+                ))}
+                <span className="w-full lg:text-right text-sm font-semibold text-slate-500 mt-2">Draft in progress</span>
               </div>
             </motion.article>
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   );
