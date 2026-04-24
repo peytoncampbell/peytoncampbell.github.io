@@ -23,7 +23,7 @@ function SectionHeading({ children, className = '' }: { children: React.ReactNod
 export default function Blog() {
   return (
     <section className="py-24 relative" id="blog">
-      <div className="container mx-auto px-6">
+      <div className="container mx-auto px-5 sm:px-6">
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-14">
           <SectionHeading className="mb-0">
             Writing <span className="gradient-text">In Progress</span>
@@ -33,7 +33,7 @@ export default function Blog() {
           </p>
         </div>
 
-        <div className="border border-slate-800/70 rounded-3xl overflow-hidden bg-slate-950/35 backdrop-blur-sm">
+        <div className="border border-white/10 rounded-[24px] overflow-hidden bg-slate-950/35 backdrop-blur-sm shadow-2xl shadow-black/20">
           {BLOG_POSTS.map((post, index) => (
             <motion.article
               key={post.title}
@@ -41,7 +41,7 @@ export default function Blog() {
               whileInView="visible"
               viewport={{ once: true }}
               variants={fadeInUp}
-              className="grid gap-6 lg:grid-cols-[180px,1fr,180px] px-6 py-7 md:px-8 md:py-8 border-b border-slate-800/60 last:border-b-0"
+              className="grid gap-6 lg:grid-cols-[180px,1fr,180px] px-5 py-7 md:px-8 md:py-8 border-b border-white/10 last:border-b-0 hover:bg-white/[0.025] transition-colors duration-300"
             >
               <div className="flex items-start justify-between lg:block">
                 <span className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-400">{post.date}</span>
@@ -59,7 +59,7 @@ export default function Blog() {
                 {post.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="px-3 py-1.5 rounded-full border border-slate-700/70 text-xs font-mono text-slate-400"
+                    className="chip font-mono"
                   >
                     {tag}
                   </span>

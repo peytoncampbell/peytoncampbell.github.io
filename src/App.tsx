@@ -80,7 +80,7 @@ const PROJECT_ACCENTS: Record<string, string> = {
 };
 
 export default function App() {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [projectFilter, setProjectFilter] = useState('All');
@@ -232,18 +232,23 @@ export default function App() {
       <nav
         className={clsx(
           'fixed top-0 left-0 right-0 z-50 transition-all duration-500 border-b',
-          scrolled ? 'bg-slate-950/85 backdrop-blur-xl border-slate-800/50 py-3' : 'bg-transparent border-transparent py-5'
+          scrolled ? 'bg-slate-950/82 backdrop-blur-xl border-white/10 py-3 shadow-lg shadow-black/20' : 'bg-transparent border-transparent py-5'
         )}
       >
-        <div className="container mx-auto px-6 flex items-center justify-between">
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-5 sm:px-6">
           <div className="flex items-center gap-6">
-            <a href="#" className="text-xl font-bold tracking-tighter text-white hover:text-blue-400 transition-colors">
-              PEYTON CAMPBELL
+            <a href="#" className="group flex items-center gap-3 text-white transition-colors">
+              <span className="grid h-9 w-9 place-items-center rounded-xl border border-white/10 bg-white/[0.04] text-sm font-black tracking-tight text-white shadow-inner shadow-white/5 group-hover:border-blue-300/30 group-hover:text-blue-200 transition-all">
+                PC
+              </span>
+              <span className="hidden sm:block text-sm font-bold uppercase tracking-[0.18em] text-slate-200 group-hover:text-white transition-colors">
+                Peyton Campbell
+              </span>
             </a>
             <LiveTicker />
           </div>
 
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden md:flex items-center gap-7 rounded-full border border-white/8 bg-slate-950/28 px-3 py-2 backdrop-blur-md">
             {NAV_LINKS.map((link) => (
               <a key={link.label} href={link.href} className="nav-link text-sm font-medium text-slate-400 hover:text-white transition-colors duration-200">
                 {link.label}
@@ -310,44 +315,44 @@ export default function App() {
           <div className="absolute inset-0 pattern-grid opacity-40" />
         </div>
 
-        <div className="container mx-auto px-6 relative z-10">
-          <div className="grid gap-16 lg:grid-cols-[1.2fr,0.8fr] items-center">
-            <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="max-w-3xl">
+        <div className="mx-auto w-full max-w-7xl px-5 sm:px-6 relative z-10 overflow-hidden lg:overflow-visible">
+          <div className="grid gap-10 lg:gap-16 lg:grid-cols-[1.12fr,0.88fr] items-center min-w-0">
+            <motion.div initial="hidden" animate="visible" variants={staggerContainer} className="w-full max-w-[calc(100vw-2.5rem)] sm:max-w-3xl min-w-0">
               <motion.div variants={fadeInUp} className="mb-6">
-                <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.25em] text-blue-400/80 bg-blue-500/8 border border-blue-500/15 px-4 py-2 rounded-full">
+                <span className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.25em] text-blue-200 bg-white/[0.04] border border-white/10 px-4 py-2 rounded-full">
                   Full-Stack Developer
                 </span>
               </motion.div>
               <motion.h1
                 variants={fadeInUp}
-                className="text-4xl sm:text-6xl md:text-8xl font-extrabold tracking-tight mb-8 leading-[1.05] gradient-text-hero"
+                className="text-[2.15rem] sm:text-6xl md:text-7xl xl:text-8xl font-extrabold tracking-tight mb-7 leading-[1.06] sm:leading-[1.02] gradient-text-hero max-w-full break-words"
               >
                 {HERO.headline}
               </motion.h1>
-              <motion.p variants={fadeInUp} className="text-lg md:text-xl text-slate-400 mb-12 max-w-2xl leading-relaxed">
+              <motion.p variants={fadeInUp} className="text-base sm:text-lg md:text-xl text-slate-300/90 mb-10 max-w-[340px] sm:max-w-2xl leading-relaxed">
                 {HERO.subheadline}
               </motion.p>
 
-              <motion.div variants={fadeInUp} className="flex items-center gap-4 flex-wrap">
+              <motion.div variants={fadeInUp} className="hero-actions flex items-center gap-4 flex-wrap">
                 <a
                   href="#projects"
-                  className="btn-primary px-8 py-4 text-white font-bold rounded-xl flex items-center gap-2 text-base"
+                  className="btn-primary px-8 py-4 text-white font-bold rounded-xl flex items-center justify-center gap-2 text-base w-[calc(100vw-2.5rem)] max-w-full sm:w-auto"
                 >
                   See Selected Work <ArrowRight size={18} />
                 </a>
                 <a
                   href="#contact"
-                  className="px-8 py-4 border border-slate-700 text-slate-300 font-bold rounded-xl transition-all hover:bg-white/5 hover:border-slate-600 flex items-center gap-2"
+                  className="px-8 py-4 border border-white/10 bg-white/[0.03] text-slate-200 font-bold rounded-xl transition-all hover:bg-white/[0.07] hover:border-white/20 flex items-center justify-center gap-2 w-[calc(100vw-2.5rem)] max-w-full sm:w-auto"
                 >
                   Start a Conversation <ArrowRight size={18} />
                 </a>
-                <div className="flex gap-2">
+                <div className="flex gap-2 w-[calc(100vw-2.5rem)] max-w-full sm:w-auto">
                   <a
                     aria-label="GitHub profile"
                     href="https://github.com/peytoncampbell"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-3.5 bg-slate-900/80 border border-slate-800 rounded-xl hover:border-blue-500/40 hover:text-blue-400 hover:bg-blue-500/5 transition-all duration-300"
+                    className="p-3.5 bg-white/[0.035] border border-white/10 rounded-xl hover:border-blue-300/35 hover:text-blue-200 hover:bg-blue-500/8 transition-all duration-300 flex-1 sm:flex-none flex items-center justify-center"
                   >
                     <Github size={20} />
                   </a>
@@ -356,21 +361,21 @@ export default function App() {
                     href="https://www.linkedin.com/in/peyton-campbell/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-3.5 bg-slate-900/80 border border-slate-800 rounded-xl hover:border-blue-500/40 hover:text-blue-400 hover:bg-blue-500/5 transition-all duration-300"
+                    className="p-3.5 bg-white/[0.035] border border-white/10 rounded-xl hover:border-blue-300/35 hover:text-blue-200 hover:bg-blue-500/8 transition-all duration-300 flex-1 sm:flex-none flex items-center justify-center"
                   >
                     <Linkedin size={20} />
                   </a>
                 </div>
               </motion.div>
 
-              <motion.div variants={fadeInUp} className="mt-14 grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <motion.div variants={fadeInUp} className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {HERO.stats.map((stat, idx) => (
-                  <div key={stat.label} className="stat-card glass-premium rounded-xl p-5 flex items-center gap-4 group cursor-default">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      <stat.icon className="text-cyan-400" size={20} />
+                  <div key={stat.label} className="stat-card glass-premium rounded-xl p-4 flex items-center gap-3 group cursor-default">
+                    <div className="w-10 h-10 rounded-lg bg-white/[0.04] border border-white/10 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+                      <stat.icon className="text-cyan-300" size={20} />
                     </div>
                     <div>
-                      <p className="text-sm font-bold text-white">{stat.label}</p>
+                      <p className="text-sm font-semibold leading-snug text-slate-100">{stat.label}</p>
                     </div>
                   </div>
                 ))}
@@ -381,12 +386,16 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="relative hidden lg:block"
+              className="relative block max-w-[380px] sm:max-w-[430px] lg:max-w-none mx-auto lg:mx-0 w-full"
             >
-              <div className="absolute -inset-12 rounded-[36px] bg-gradient-to-br from-blue-500/15 via-cyan-500/5 to-teal-500/10 blur-3xl animate-float" />
-              <div className="portrait-card relative aspect-[4/5] max-w-[400px] ml-auto overflow-hidden rounded-[28px] border border-slate-700/40 shadow-2xl shadow-blue-950/40 bg-slate-900/30 group">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-cyan-500/10 z-10 pointer-events-none mix-blend-overlay" />
-                <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-slate-950/80 to-transparent z-10 pointer-events-none" />
+              <div className="absolute -inset-8 rounded-[32px] bg-gradient-to-br from-blue-500/12 via-cyan-500/5 to-amber-500/8 blur-3xl animate-float" />
+              <div className="portrait-card relative aspect-[4/5] lg:max-w-[410px] lg:ml-auto overflow-hidden rounded-[24px] border border-white/10 shadow-2xl shadow-blue-950/30 bg-slate-900/30 group">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/8 via-transparent to-amber-500/8 z-10 pointer-events-none mix-blend-overlay" />
+                <div className="absolute bottom-0 left-0 right-0 h-2/5 bg-gradient-to-t from-slate-950/85 to-transparent z-10 pointer-events-none" />
+                <div className="absolute bottom-5 left-5 right-5 z-20 rounded-2xl border border-white/10 bg-slate-950/58 p-4 backdrop-blur-md">
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-200">London, ON</p>
+                  <p className="mt-1 text-sm font-medium text-slate-200">Full-stack builder with product delivery instincts.</p>
+                </div>
                 <img
                   src={portraitImage}
                   alt="Peyton Campbell"
@@ -401,9 +410,8 @@ export default function App() {
         </div>
       </section>
 
-      <section className="py-24 border-y border-slate-800/50 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-900/15 to-transparent pointer-events-none" />
-        <div className="container mx-auto px-6 relative z-10">
+      <section className="py-24 surface-band">
+        <div className="container mx-auto px-5 sm:px-6 relative z-10">
           <SectionHeading>
             Tech <span className="gradient-text">Stack</span>
           </SectionHeading>
@@ -412,22 +420,22 @@ export default function App() {
             whileInView="visible"
             viewport={{ once: true }}
             variants={staggerContainer}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
           >
             {Object.entries(TECH_BY_CATEGORY).map(([category, techs]) => {
               const colors = CATEGORY_COLORS[category] || CATEGORY_COLORS.Tools;
               return (
-                <motion.div key={category} variants={fadeInUp} className="glass-premium rounded-2xl p-6">
-                  <div className="flex items-center gap-2.5 mb-4">
-                    <span className={`w-2.5 h-2.5 rounded-full ${colors.dot}`} />
-                    <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">{category}</h3>
+                <motion.div key={category} variants={fadeInUp} className="glass-premium rounded-2xl p-5 md:p-6">
+                  <div className="flex items-center justify-between gap-3 mb-5">
+                    <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-300">{category}</h3>
+                    <span className={`w-2.5 h-2.5 rounded-full ${colors.dot} shadow-sm`} />
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {techs.map((tech) => (
                       <span
                         key={tech.name}
                         className={clsx(
-                          'px-3.5 py-2 rounded-lg text-sm font-semibold border backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:-translate-y-0.5 cursor-default',
+                          'chip cursor-default',
                           colors.bg, colors.border, colors.text
                         )}
                       >
@@ -444,12 +452,12 @@ export default function App() {
 
       {/* Projects */}
       <section className="py-28" id="projects">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-14">
+        <div className="container mx-auto px-5 sm:px-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-14">
             <SectionHeading className="mb-0">
               Selected <span className="gradient-text">Projects</span>
             </SectionHeading>
-            <div className="flex gap-2 mt-6 md:mt-0 overflow-x-auto pb-2 md:pb-0">
+            <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 max-w-full">
               {['All', 'Production', 'ML/AI', 'Tools'].map((filter) => (
                 <button
                   key={filter}
@@ -457,8 +465,8 @@ export default function App() {
                   className={clsx(
                     'px-5 py-2.5 text-sm font-semibold rounded-full transition-all duration-300 border whitespace-nowrap',
                     projectFilter === filter
-                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500 border-transparent text-white shadow-lg shadow-blue-500/20'
-                      : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700 hover:text-slate-300'
+                      ? 'bg-white text-slate-950 border-transparent shadow-lg shadow-blue-500/15'
+                      : 'bg-white/[0.035] border-white/10 text-slate-300 hover:border-white/20 hover:text-white'
                   )}
                 >
                   {filter}
@@ -473,44 +481,57 @@ export default function App() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
-              className="mb-12 catan-embed rounded-[28px] overflow-hidden"
+              className="mb-12 catan-embed rounded-[24px] overflow-hidden"
             >
-              <div className="p-8 md:p-10 border-b border-white/8">
-                <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+              <div className="p-6 md:p-10 border-b border-white/10">
+                <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
                   <div className="max-w-3xl">
-                    <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-amber-300 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-full">
-                      Featured Side Project
+                    <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-amber-200 bg-amber-500/10 border border-amber-400/20 px-3 py-1.5 rounded-full">
+                      Live interactive tool
                     </span>
                     <h3 className="mt-5 text-3xl md:text-4xl font-bold text-white">{catanProject.title}</h3>
-                    <p className="mt-4 text-base md:text-lg text-slate-300 leading-relaxed">
-                      One of my favorite builds. It scores settlement openings with probability weighting, resource scarcity,
-                      and port value so people can actually use the tool instead of just reading about it.
+                    <p className="mt-4 text-base md:text-lg text-slate-300 leading-relaxed max-w-2xl">
+                      Generate or scan a board, then get ranked settlement openings with production, scarcity, port,
+                      robber-risk, and expansion context. The tool is ready below, and the full-screen version is one click away.
                     </p>
+                    <div className="mt-6 grid gap-3 sm:grid-cols-3 max-w-3xl">
+                      {[
+                        ['1', 'Open the tool', 'Use the embedded board or launch the full-screen version.'],
+                        ['2', 'Generate or scan', 'Start with a random board or match a real setup.'],
+                        ['3', 'Pick a spot', 'Read the ranked openings and scoring details.'],
+                      ].map(([step, title, copy]) => (
+                        <div key={title} className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
+                          <div className="mb-3 grid h-7 w-7 place-items-center rounded-full bg-amber-300 text-sm font-black text-slate-950">{step}</div>
+                          <div className="text-sm font-bold text-white">{title}</div>
+                          <div className="mt-1 text-xs leading-relaxed text-slate-400">{copy}</div>
+                        </div>
+                      ))}
+                    </div>
                     <div className="mt-6 flex flex-wrap gap-2.5">
                       {catanProject.tech.map((tech) => (
-                        <span key={tech} className="px-3 py-1.5 rounded-full border border-slate-700/70 text-sm text-slate-300">
+                        <span key={tech} className="chip text-sm">
                           {tech}
                         </span>
                       ))}
                     </div>
                   </div>
-                  <div className="flex flex-wrap gap-3">
+                  <div className="flex w-full flex-col gap-3 sm:w-auto sm:min-w-[260px]">
                     {catanProject.cta?.url && (
                       <a
                         href={catanProject.cta.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="btn-primary inline-flex items-center gap-2 px-6 py-3 rounded-full text-white font-bold"
+                        className="btn-primary inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full text-white font-bold"
                       >
-                        Open full page
+                        Launch optimizer
                         <ExternalLink size={16} />
                       </a>
                     )}
                     <a
                       href="#catan-live"
-                      className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-white/10 text-slate-200 hover:bg-white/5 transition-colors"
+                      className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full border border-white/10 bg-white/[0.035] text-slate-200 hover:bg-white/[0.07] transition-colors"
                     >
-                      Use it here
+                      Use embedded board
                       <ArrowRight size={16} />
                     </a>
                   </div>
@@ -518,8 +539,25 @@ export default function App() {
               </div>
 
               <div id="catan-live" className="catan-embed-frame-wrap">
+                <div className="catan-embed-toolbar">
+                  <div>
+                    <div className="text-xs font-bold uppercase tracking-[0.18em] text-amber-200">Playable embed</div>
+                    <div className="mt-1 text-sm text-slate-400">Scroll inside the frame to use the board, rankings, and controls.</div>
+                  </div>
+                  {catanProject.cta?.url && (
+                    <a
+                      href={catanProject.cta.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-bold text-slate-200 hover:bg-white/[0.08]"
+                    >
+                      Full screen
+                      <ExternalLink size={14} />
+                    </a>
+                  )}
+                </div>
                 <iframe
-                  src={`${import.meta.env.BASE_URL}catan/`}
+                  src="https://peytoncampbell.ca/catan/"
                   title="Catan Settlement Optimizer"
                   className="catan-embed-frame"
                   loading="lazy"
@@ -535,7 +573,7 @@ export default function App() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
-              className="mb-10 featured-card rounded-2xl overflow-hidden relative"
+              className="mb-10 featured-card rounded-[24px] overflow-hidden relative"
             >
               <div className="absolute top-5 right-5 z-10">
                 <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-amber-200 uppercase tracking-[0.15em] bg-amber-500/15 border border-amber-500/30 px-3 py-1.5 rounded-full backdrop-blur-sm">
@@ -543,7 +581,7 @@ export default function App() {
                   Featured
                 </span>
               </div>
-              <div className="p-8 md:p-12 relative z-10">
+              <div className="p-6 pt-16 md:p-12 relative z-10">
                 <div className="flex flex-col md:flex-row md:items-start gap-10">
                   <div className="flex-1">
                     <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-[0.2em] border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 rounded-full">
@@ -551,10 +589,10 @@ export default function App() {
                     </span>
                     <h3 className="text-3xl md:text-4xl font-bold text-white mt-4 mb-2">{featuredProject.title}</h3>
                     <p className="text-xs text-amber-300/80 font-semibold mb-4 uppercase tracking-wider">{featuredProject.role}</p>
-                    <p className="text-slate-300 text-base mb-8 max-w-2xl leading-relaxed">{featuredProject.description}</p>
+                    <p className="text-slate-300 text-base md:text-lg mb-8 max-w-2xl leading-relaxed">{featuredProject.description}</p>
                     <div className="flex flex-wrap gap-2 mb-8">
                       {featuredProject.tech.map((t) => (
-                        <span key={t} className="tech-tag border-slate-600/50 text-slate-200">
+                        <span key={t} className="chip">
                           {t}
                         </span>
                       ))}
@@ -570,13 +608,13 @@ export default function App() {
                       </a>
                     )}
                   </div>
-                  <div className="flex-shrink-0">
+                  <div className="flex-shrink-0 md:min-w-[280px] rounded-2xl border border-white/10 bg-slate-950/35 p-5">
                     {featuredProject.metrics && (
                       <ul className="space-y-3 text-sm">
                         {featuredProject.metrics.map((metric: string, idx: number) => (
                           <li key={idx} className="flex items-start gap-3">
-                            <span className="mt-1 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-amber-400 to-amber-500 flex-shrink-0 shadow-sm shadow-amber-400/30" />
-                            <span className="font-bold text-white text-base">{metric}</span>
+                            <span className="mt-1 w-2 h-2 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 flex-shrink-0 shadow-sm shadow-amber-400/30" />
+                            <span className="font-semibold text-slate-100 text-sm md:text-base">{metric}</span>
                           </li>
                         ))}
                       </ul>
@@ -587,7 +625,7 @@ export default function App() {
             </motion.div>
           )}
 
-          <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             <AnimatePresence>
               {nonFeaturedFiltered.map((project) => (
                 <motion.div
@@ -596,7 +634,7 @@ export default function App() {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
-                  className="project-card-border glass-premium rounded-2xl overflow-hidden group hover:scale-[1.02] transition-all duration-300"
+                  className="project-card-border glass-premium rounded-2xl overflow-hidden group hover:-translate-y-1 transition-all duration-300"
                   style={{
                     '--card-accent': PROJECT_ACCENTS[project.category] || '#4F8EF7',
                     '--card-accent-end': '#22D3EE',
@@ -604,7 +642,7 @@ export default function App() {
                 >
                   <div className="p-7 h-full flex flex-col">
                     <div className="flex justify-between items-start mb-5">
-                      <span className="text-[10px] font-bold text-blue-400 uppercase tracking-[0.2em] border border-blue-500/30 bg-blue-500/10 px-3 py-1 rounded-full">
+                      <span className="text-[10px] font-bold text-blue-200 uppercase tracking-[0.2em] border border-blue-300/20 bg-blue-500/10 px-3 py-1 rounded-full">
                         {project.category}
                       </span>
                       {project.cta?.url && (
@@ -620,7 +658,7 @@ export default function App() {
                       )}
                     </div>
 
-                    <h3 className="text-xl font-bold text-white mb-1 group-hover:text-blue-400 transition-colors duration-300">
+                    <h3 className="text-xl font-bold text-white mb-1 group-hover:text-blue-200 transition-colors duration-300">
                       {project.title}
                     </h3>
                     <p className="text-xs text-amber-300/70 font-semibold mb-3 uppercase tracking-wider">{project.role}</p>
@@ -650,7 +688,7 @@ export default function App() {
                           href={project.cta.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center text-sm font-bold px-5 py-2.5 rounded-full border border-blue-500/30 text-blue-300 hover:bg-blue-500/10 hover:border-blue-500/50 transition-all duration-300"
+                          className="inline-flex items-center text-sm font-bold px-5 py-2.5 rounded-full border border-blue-300/25 text-blue-200 hover:bg-blue-500/10 hover:border-blue-300/45 transition-all duration-300"
                           aria-label={`View ${project.title}`}
                         >
                           {project.cta.label} <ChevronRight size={16} className="ml-1" />
@@ -666,13 +704,13 @@ export default function App() {
       </section>
 
       {/* Experience Timeline */}
-      <section className="py-28 relative" id="experience">
-        <div className="container mx-auto px-6">
+      <section className="py-28 surface-band" id="experience">
+        <div className="container mx-auto px-5 sm:px-6">
           <SectionHeading>
             <span className="gradient-text">Experience</span>
           </SectionHeading>
 
-          <div className="relative max-w-3xl mx-auto">
+          <div className="relative max-w-4xl mx-auto">
             <div className="timeline-line" />
 
             {EXPERIENCE.map((exp, idx) => (
@@ -686,18 +724,18 @@ export default function App() {
               >
                 <div className="timeline-dot" />
 
-                <div className="experience-card glass-premium p-7 rounded-2xl hover:scale-[1.01] transition-transform duration-300">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between mb-3">
+                <div className="experience-card glass-premium p-6 md:p-8 rounded-2xl hover:-translate-y-1 transition-transform duration-300">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
                     <h3 className="text-xl font-bold text-white">{exp.company}</h3>
-                    <span className="text-sm font-mono text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full">{exp.period}</span>
+                    <span className="text-sm font-mono text-blue-200 bg-blue-500/10 border border-blue-300/15 px-3 py-1 rounded-full w-fit">{exp.period}</span>
                   </div>
-                  <div className="text-slate-400 font-medium mb-5">
+                  <div className="text-slate-300 font-medium mb-5">
                     {exp.title} - {exp.location}
                   </div>
                   <ul className="space-y-3">
                     {exp.bullets.map((bullet, bIdx) => (
                       <li key={bIdx} className="flex items-start gap-3 text-slate-400 text-sm leading-relaxed">
-                        <span className="mt-1.5 w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0" />
+                        <span className="mt-1.5 w-1.5 h-1.5 bg-cyan-300 rounded-full flex-shrink-0" />
                         {bullet}
                       </li>
                     ))}
@@ -763,8 +801,8 @@ export default function App() {
         </div>
 
         <div className="flex-1 p-6 sm:p-12 md:p-20 flex flex-col justify-center relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-950/20 to-slate-950 pointer-events-none" />
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 bg-gradient-to-br from-blue-500/5 to-cyan-500/3 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-slate-950 to-slate-950 pointer-events-none" />
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 bg-gradient-to-br from-blue-500/6 to-amber-500/4 pointer-events-none" />
           <motion.div className="relative z-10" style={{ y: dualityY }}>
             <motion.h3
               initial={{ opacity: 0, x: 30 }}
@@ -793,13 +831,13 @@ export default function App() {
 
       {/* Contact */}
       <section className="py-32 contact-bg relative" id="contact">
-        <div className="container mx-auto px-6 text-center">
+        <div className="container mx-auto px-5 sm:px-6 text-center">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="max-w-2xl mx-auto glass-premium p-10 md:p-14 rounded-3xl"
+            className="max-w-3xl mx-auto glass-premium p-6 sm:p-10 md:p-14 rounded-[24px]"
           >
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
               Let's talk <span className="gradient-text">game plan.</span>
@@ -859,11 +897,11 @@ export default function App() {
                 >Sent. I will reply within 24 hours.
                 </motion.p>
               )}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-2">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mt-2">
                 <button
                   type="submit"
                   disabled={contactLoading}
-                  className="btn-primary inline-flex items-center gap-3 px-8 py-3.5 text-white font-bold text-base rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn-primary inline-flex justify-center items-center gap-3 px-8 py-3.5 text-white font-bold text-base rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Mail size={18} />
                   {contactLoading ? 'Sending...' : 'Send message'}
@@ -872,7 +910,7 @@ export default function App() {
                   href="https://www.linkedin.com/in/peyton-campbell/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-3 px-8 py-3.5 border border-slate-700 text-slate-300 font-semibold rounded-full hover:bg-white/5 hover:border-slate-600 transition-all duration-300"
+                  className="inline-flex justify-center items-center gap-3 px-8 py-3.5 border border-white/10 bg-white/[0.03] text-slate-300 font-semibold rounded-full hover:bg-white/[0.07] hover:border-white/20 transition-all duration-300"
                 >
                   <CalendarClock size={18} className="text-cyan-400" />
                   Message on LinkedIn

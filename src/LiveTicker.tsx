@@ -13,7 +13,7 @@ export default function LiveTicker() {
   }, []);
 
   return (
-    <div className="hidden lg:flex items-center gap-3 px-4 py-2 bg-slate-900/60 border border-slate-800/60 rounded-full backdrop-blur-xl shadow-inner shadow-blue-950/20">
+    <div className="hidden lg:flex items-center gap-3 px-4 py-2 bg-white/[0.035] border border-white/10 rounded-full backdrop-blur-xl shadow-inner shadow-white/5">
       <div className="relative flex items-center justify-center w-2 h-2">
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
         <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
@@ -34,8 +34,8 @@ export default function LiveTicker() {
             <span className="text-slate-600 font-bold uppercase tracking-wider whitespace-nowrap">
               {LIVE_STATUS[index].label}
             </span>
-            <span className="text-slate-700">›</span>
-            <span className="text-blue-400 font-medium truncate">
+            <span className="text-slate-600">/</span>
+            <span className="text-blue-200 font-medium truncate">
               {LIVE_STATUS[index].value}
             </span>
           </motion.div>
@@ -44,3 +44,4 @@ export default function LiveTicker() {
     </div>
   );
 }
+

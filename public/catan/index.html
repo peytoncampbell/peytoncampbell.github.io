@@ -30,8 +30,8 @@ body {
   flex-direction: column;
   align-items: center;
   min-height: 100vh;
-  padding: 20px 12px 40px;
-  animation: fadeInUp 0.6s ease-out;
+  padding: 10px 12px 40px;
+  overflow-x: hidden;
 }
 
 /* --- Header --- */
@@ -152,10 +152,10 @@ label {
 /* --- Canvas --- */
 .canvas-wrap {
   position: relative;
-  display: inline-block;
+  display: block;
   width: 100%;
   max-width: 920px;
-  animation: fadeInUp 0.6s ease-out 0.2s both;
+  margin-inline: auto;
 }
 canvas {
   border-radius: 16px;
@@ -321,19 +321,118 @@ canvas {
 }
 
 .page-shell {
-  width: 100%;
+  width: min(1380px, calc(100vw - 24px));
   max-width: 1380px;
   margin: 0 auto;
+  min-width: 0;
+}
+
+.product-bar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  border-radius: 14px;
+  background: rgba(10, 14, 26, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.22);
+}
+
+.product-mark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.product-logo {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(230,168,23,0.2), rgba(16,185,129,0.16));
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #f8fafc;
+  font-weight: 900;
+}
+
+.product-name {
+  color: #f8fafc;
+  font-size: 0.86rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.product-status {
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.product-nav,
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.product-nav {
+  justify-content: flex-end;
+}
+
+.nav-pill,
+.primary-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.nav-pill:hover,
+.primary-link:hover {
+  transform: translateY(-1px);
+  border-color: rgba(230,168,23,0.28);
+  color: #f8fafc;
+  background: rgba(255,255,255,0.07);
+}
+
+.primary-link {
+  color: #0a0e1a;
+  background: linear-gradient(135deg, #f0c040, #e6a817);
+  border-color: transparent;
+  box-shadow: 0 8px 22px rgba(230, 168, 23, 0.2);
 }
 
 .hero-shell,
 .board-shell {
   width: 100%;
   max-width: none;
+  min-width: 0;
 }
 
 .hero-shell {
-  display: grid;
+  display: none;
   grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
   gap: 20px;
   padding: 26px;
@@ -369,6 +468,15 @@ canvas {
   line-height: 1.7;
 }
 
+.hero-actions {
+  margin-top: 22px;
+}
+
+.hero-action-button {
+  min-height: 44px;
+  padding-inline: 18px;
+}
+
 .hero-points {
   margin-top: 18px;
   display: grid;
@@ -400,6 +508,7 @@ canvas {
 }
 
 .hero-stat {
+  min-width: 0;
   padding: 16px;
   border-radius: 16px;
   background: rgba(255,255,255,0.03);
@@ -426,6 +535,7 @@ canvas {
   color: #cbd5e1;
   font-size: 0.83rem;
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .controls {
@@ -434,12 +544,13 @@ canvas {
   justify-content: flex-start;
   align-items: stretch;
   display: grid;
-  gap: 14px;
-  padding: 16px;
+  gap: 10px;
+  padding: 12px;
+  margin-top: 14px;
 }
 
 .controls-head {
-  display: flex;
+  display: none;
   justify-content: space-between;
   gap: 10px;
   align-items: center;
@@ -455,20 +566,61 @@ canvas {
 .controls-copy {
   color: #94a3b8;
   font-size: 0.88rem;
+  overflow-wrap: anywhere;
+}
+
+.quick-start {
+  display: none;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.quick-step {
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+  padding: 13px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.quick-step-number {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  color: #0a0e1a;
+  background: #e6a817;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.quick-step-title {
+  color: #f8fafc;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.quick-step-copy {
+  color: #94a3b8;
+  font-size: 0.8rem;
+  line-height: 1.45;
 }
 
 .controls-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: 190px 210px minmax(320px, 1fr) 190px;
+  gap: 10px;
 }
 
 .control-group {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 12px;
-  border-radius: 16px;
+  padding: 10px;
+  border-radius: 14px;
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.05);
 }
@@ -495,14 +647,14 @@ canvas {
 
 .board-shell {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.75fr);
-  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 12px;
   align-items: start;
 }
 
 .board-panel,
 .sidebar-panel {
-  padding: 16px;
+  padding: 10px;
 }
 
 .board-head {
@@ -510,7 +662,7 @@ canvas {
   justify-content: space-between;
   align-items: end;
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 6px;
 }
 
 .board-title {
@@ -523,27 +675,45 @@ canvas {
 .board-note,
 .canvas-foot {
   color: #94a3b8;
-  font-size: 0.84rem;
-  line-height: 1.6;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .board-copy {
   margin-top: 4px;
 }
 
+.canvas-foot,
+.sidebar-panel #resourcePool,
+.info-toggle {
+  display: none;
+}
+
+.sidebar-panel .summary-card,
+.sidebar-panel .top-list {
+  border-radius: 12px;
+}
+
 .legend {
   justify-content: flex-start;
   margin-top: 0;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
+  gap: 5px;
+}
+
+.legend-item {
+  padding: 4px 8px 4px 6px;
+  font-size: 0.68rem;
 }
 
 .sidebar-panel {
   display: grid;
-  gap: 16px;
+  gap: 12px;
 }
 
 .summary-card {
-  padding: 18px;
+  padding: 14px;
 }
 
 .summary-title,
@@ -564,8 +734,8 @@ canvas {
 }
 
 .summary-stat {
-  padding: 14px;
-  border-radius: 14px;
+  padding: 11px;
+  border-radius: 12px;
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.05);
 }
@@ -586,6 +756,7 @@ canvas {
 }
 
 .summary-stat-copy {
+  display: none;
   margin-top: 6px;
   color: #cbd5e1;
   font-size: 0.82rem;
@@ -644,10 +815,16 @@ canvas {
   margin-bottom: 0;
   display: grid;
   gap: 8px;
-  padding: 14px;
-  border-radius: 14px;
+  padding: 11px;
+  border-radius: 12px;
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.05);
+}
+
+.top-list li:first-child {
+  border-color: rgba(16,185,129,0.32);
+  background:
+    linear-gradient(135deg, rgba(16,185,129,0.08), rgba(255,255,255,0.03));
 }
 
 .top-list li::before {
@@ -686,6 +863,10 @@ canvas {
   line-height: 1.55;
 }
 
+.top-breakdown {
+  display: none;
+}
+
 .info-toggle {
   margin-top: 0;
   max-width: none;
@@ -713,15 +894,54 @@ canvas {
   .controls-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
 }
 
 @media (max-width: 700px) {
+  .product-bar {
+    position: sticky;
+    align-items: center;
+    flex-direction: row;
+  }
+
+  .product-nav {
+    display: none;
+  }
+
+  .product-status,
+  .board-copy,
+  .board-note,
+  .legend,
+  .summary-title {
+    display: none;
+  }
+
   .hero-shell,
   .controls,
   .board-panel,
   .summary-card,
   .top-list {
-    padding: 14px;
+    width: calc(100vw - 24px);
+    max-width: calc(100vw - 24px);
+    overflow: hidden;
+    padding: 10px;
+  }
+
+  .hero-shell .subtitle,
+  .hero-points,
+  .hero-points li,
+  .hero-stat-copy,
+  .controls-copy,
+  .quick-step-copy,
+  .board-copy,
+  .board-note {
+    width: min(100%, 318px);
+    max-width: 318px;
+    overflow-wrap: anywhere;
+  }
+
+  .hero-shell h1 {
+    max-width: 318px;
   }
 
   .hero-stats,
@@ -735,23 +955,76 @@ canvas {
   }
 
   .board-head {
-    flex-direction: column;
-    align-items: start;
+    margin-bottom: 6px;
+  }
+
+  .hero-actions > * {
+    width: 100%;
+  }
+
+  .board-title {
+    font-size: 0.95rem;
+  }
+
+  .summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .summary-stat {
+    padding: 8px 6px;
+  }
+
+  .summary-stat-label {
+    font-size: 0.56rem;
+    letter-spacing: 0.06em;
+  }
+
+  .summary-stat-value {
+    margin-top: 4px;
+    font-size: 0.9rem;
+  }
+
+  .top-list li {
+    padding: 9px;
+  }
+
+  .top-meta {
+    display: none;
   }
 }
 </style>
 </head>
 <body>
 <div class="page-shell">
+  <nav class="product-bar">
+    <div class="product-mark">
+      <div class="product-logo">C</div>
+      <div>
+        <div class="product-name">Catan Settlement Optimizer</div>
+        <div class="product-status">Live board scoring tool</div>
+      </div>
+    </div>
+    <div class="product-nav">
+      <a href="#board-workspace" class="nav-pill">Board</a>
+      <a href="#topList" class="nav-pill">Rankings</a>
+      <a href="#controls" class="primary-link">Controls</a>
+    </div>
+  </nav>
+
   <section class="hero-shell glass">
     <div>
       <span class="eyebrow">Board analysis tool</span>
-      <h1 id="mainTitle">Catan Settlement Optimizer</h1>
-      <p class="subtitle" id="subtitle">Score settlement openings with weighted pips, resource scarcity, port access, and expansion value.</p>
+      <h1 id="mainTitle">Find the best Catan opening in seconds.</h1>
+      <p class="subtitle" id="subtitle">Generate or scan a board, then get ranked settlement spots with production, scarcity, port, robber-risk, and expansion context.</p>
+      <div class="hero-actions">
+        <button id="heroRandomBtn" class="hero-action-button">Generate a board</button>
+        <a href="#board-workspace" class="primary-link">Jump to workspace</a>
+      </div>
       <ul class="hero-points">
-        <li>Build or scan a board, then inspect the best starting spots immediately.</li>
-        <li>Use the canvas for fast experimentation instead of manually comparing every intersection.</li>
-        <li>Designed to be practical first: clear scores, resource probabilities, and opening guidance.</li>
+        <li>The page starts with a playable board so you can read the top openings immediately.</li>
+        <li>Use Random board for quick scenarios, or click tiles to match a real game setup.</li>
+        <li>Rankings update as you edit, so there is no separate submit step.</li>
       </ul>
     </div>
     <div class="hero-stats">
@@ -778,54 +1051,14 @@ canvas {
     </div>
   </section>
 
-  <section class="controls glass">
-    <div class="controls-head">
-      <div>
-        <div class="controls-title">Board controls</div>
-        <div class="controls-copy">Set the board, assign numbers, and decide how much analysis you want to see.</div>
-      </div>
-    </div>
-    <div class="controls-grid">
-      <div class="control-group">
-        <div class="control-kicker">Board size</div>
-        <button id="mode4p" class="mode-btn active">4-Player</button>
-        <button id="mode6p" class="mode-btn">6-Player</button>
-      </div>
-      <div class="control-group">
-        <div class="control-kicker">Tile assignment</div>
-        <label class="control-label">Number token
-          <select id="numberSelect">
-            <option value="0">Desert</option>
-            <option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
-            <option value="6">6</option><option value="8">8</option><option value="9">9</option>
-            <option value="10">10</option><option value="11">11</option><option value="12">12</option>
-          </select>
-        </label>
-      </div>
-      <div class="control-group span-2">
-        <div class="control-kicker">Actions</div>
-        <button id="randomBtn">Random board</button>
-        <button id="scanBtn">Scan board photo</button>
-        <button id="clearBtn" class="secondary">Clear board</button>
-      </div>
-      <div class="control-group">
-        <div class="control-kicker">Ranking depth</div>
-        <label class="control-label">Show top settlements
-          <select id="topN"><option value="5">5</option><option value="10" selected>10</option><option value="15">15</option><option value="20">20</option></select>
-        </label>
-      </div>
-    </div>
-    <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none">
-  </section>
-
-  <section class="board-shell">
+  <section class="board-shell" id="board-workspace">
     <div class="board-panel glass">
       <div class="board-head">
         <div>
-          <div class="board-title">Board workspace</div>
-          <div class="board-copy">Click a tile to assign the selected number token. Hover settlement dots to inspect the reasoning.</div>
+          <div class="board-title">Board</div>
+          <div class="board-copy">Click tiles to edit. Hover dots for scores.</div>
         </div>
-        <div class="board-note">Dots on vertices represent the current opening score.</div>
+        <div class="board-note">Green = best opening.</div>
       </div>
 
       <div class="legend">
@@ -839,10 +1072,10 @@ canvas {
       </div>
 
       <div class="canvas-wrap">
-        <canvas id="board" width="920" height="860"></canvas>
+        <canvas id="board" width="700" height="560"></canvas>
         <div id="tooltip"></div>
       </div>
-      <div class="canvas-foot">Tip: use Random board for fast testing, or scan a photo if you want to analyze a real game setup.</div>
+      <div class="canvas-foot">Rankings update instantly as the board changes.</div>
     </div>
 
     <aside class="sidebar-panel">
@@ -863,6 +1096,46 @@ canvas {
       </details>
     </aside>
   </section>
+
+  <section class="controls glass" id="controls">
+    <div class="controls-head">
+      <div>
+        <div class="controls-title">Controls</div>
+        <div class="controls-copy">Change board size, generate a new board, scan a real setup, or edit numbers manually.</div>
+      </div>
+    </div>
+    <div class="controls-grid">
+      <div class="control-group">
+        <div class="control-kicker">Board size</div>
+        <button id="mode4p" class="mode-btn active">4-Player</button>
+        <button id="mode6p" class="mode-btn">6-Player</button>
+      </div>
+      <div class="control-group">
+        <div class="control-kicker">Tile assignment</div>
+        <label class="control-label">Number token
+          <select id="numberSelect">
+            <option value="0">Desert</option>
+            <option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+            <option value="6">6</option><option value="8">8</option><option value="9">9</option>
+            <option value="10">10</option><option value="11">11</option><option value="12">12</option>
+          </select>
+        </label>
+      </div>
+      <div class="control-group span-2">
+        <div class="control-kicker">Fast start</div>
+        <button id="randomBtn">Generate playable board</button>
+        <button id="scanBtn">Scan real board</button>
+        <button id="clearBtn" class="secondary">Reset board</button>
+      </div>
+      <div class="control-group">
+        <div class="control-kicker">Ranking depth</div>
+        <label class="control-label">Show top settlements
+          <select id="topN"><option value="5">5</option><option value="10" selected>10</option><option value="15">15</option><option value="20">20</option></select>
+        </label>
+      </div>
+    </div>
+    <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none">
+  </section>
 </div>
 <script>
 let currentMode = '4p'; // '4p' or '6p'
@@ -876,7 +1149,9 @@ const BOARD_CONFIGS = {
     resources: { desert: 1, brick: 3, ore: 3, wood: 4, wheat: 4, sheep: 4 },
     tokens: [0, 2,3,3,4,4,5,5,6,6,8,8,9,9,10,10,11,11,12],
     ports: 9, // 4 generic (3:1) + 5 resource-specific (2:1)
-    title: "Catan 4P Settlement Optimizer"
+    title: "Catan 4P Settlement Optimizer",
+    canvasWidth: 700,
+    canvasHeight: 560
   },
   '6p': {
     rows: [3,4,5,6,5,4,3],
@@ -884,7 +1159,9 @@ const BOARD_CONFIGS = {
     resources: { desert: 2, brick: 5, ore: 5, wood: 6, wheat: 6, sheep: 6 },
     tokens: [0,0,2,2,3,3,3,4,4,4,5,5,5,6,6,6,6,8,8,8,8,9,9,9,10,10,10,11,11,11,12,12],
     ports: 11, // 5 generic (3:1) + 6 resource-specific (2:1)
-    title: "Catan 6P Settlement Optimizer"
+    title: "Catan 6P Settlement Optimizer",
+    canvasWidth: 780,
+    canvasHeight: 720
   }
 };
 
@@ -1020,8 +1297,16 @@ const tooltip = document.getElementById('tooltip');
 
 const HEX_R = 40; // Reduced to fit ocean border
 const HEX_H = HEX_R * Math.sqrt(3);
-const CX = canvas.width / 2;
-const CY = canvas.height / 2;
+let CX = canvas.width / 2;
+let CY = canvas.height / 2;
+
+function setCanvasForMode(mode) {
+  const config = BOARD_CONFIGS[mode];
+  canvas.width = config.canvasWidth;
+  canvas.height = config.canvasHeight;
+  CX = canvas.width / 2;
+  CY = canvas.height / 2;
+}
 
 function hexCorner(cx, cy, r, i) {
   const angle = Math.PI / 180 * (60 * i - 30);
@@ -1035,13 +1320,14 @@ function switchMode(newMode) {
   const config = BOARD_CONFIGS[currentMode];
   ROWS = [...config.rows];
   TOTAL_TILES = config.totalTiles;
+  setCanvasForMode(currentMode);
   
-  // Update title
-  document.getElementById('mainTitle').textContent = config.title;
+  // Keep the product promise stable while mode changes update the supporting copy.
+  document.getElementById('mainTitle').textContent = 'Find the best Catan opening in seconds.';
   document.getElementById('subtitle').textContent =
     newMode === '6p'
-      ? 'Analyze the expanded board with the same weighted scoring, port access, and expansion logic.'
-      : 'Score settlement openings with weighted pips, resource scarcity, port access, and expansion value.';
+      ? 'Analyze the expanded board with weighted pips, resource scarcity, port access, robber-risk, and expansion logic.'
+      : 'Generate or scan a board, then get ranked settlement spots with production, scarcity, port, robber-risk, and expansion context.';
   
   // Update button states
   document.getElementById('mode4p').classList.toggle('active', newMode === '4p');
@@ -1049,6 +1335,7 @@ function switchMode(newMode) {
   
   // Rebuild board
   buildBoard();
+  randomizeBoard();
   drawBoard();
 }
 
@@ -1775,6 +2062,11 @@ canvas.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; })
 document.getElementById('mode4p').addEventListener('click', () => switchMode('4p'));
 document.getElementById('mode6p').addEventListener('click', () => switchMode('6p'));
 document.getElementById('randomBtn').addEventListener('click', () => { randomizeBoard(); drawBoard(); });
+document.getElementById('heroRandomBtn').addEventListener('click', () => {
+  randomizeBoard();
+  drawBoard();
+  document.getElementById('board-workspace').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
 document.getElementById('clearBtn').addEventListener('click', () => {
   for (const t of tiles) { t.number = 0; t.resource = 'desert'; }
   drawBoard();
@@ -1889,7 +2181,9 @@ If you can't identify a tile clearly, use your best guess. Desert tiles have num
 });
 
 // Init
+setCanvasForMode(currentMode);
 buildBoard();
+randomizeBoard();
 drawBoard();
 </script>
 </body>
