@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prebuild": "node scripts/cleanDocsBuild.js",
     "dev": "vite",
     "build": "vite build",
     "postbuild": "node scripts/copy404.js",
