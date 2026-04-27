@@ -152,7 +152,7 @@ export const PROJECTS = [
     id: 16,
     title: 'Jarvis Console',
     category: 'Production',
-    featured: true,
+    featured: false,
     description:
       'Operational console for my agent ecosystem. It centralizes chat, memory browsing, cron visibility, and session control in a single responsive workspace.',
     tech: ['Next.js', 'WebSocket', 'RPC', 'PWA', 'Real-time'],
@@ -194,7 +194,7 @@ export const PROJECTS = [
     id: 15,
     title: 'Catan Settlement Optimizer',
     category: 'Tools',
-    featured: false,
+    featured: true,
     description:
       'Interactive Catan optimizer that ranks settlement positions using weighted probability, scarcity analysis, and port-aware heuristics.',
     tech: ['JavaScript', 'Canvas API', 'Algorithms'],
