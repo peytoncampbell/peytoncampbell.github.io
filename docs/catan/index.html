@@ -993,6 +993,414 @@ canvas {
     display: none;
   }
 }
+
+/* --- Catan UI/UX overhaul: premium board-first workspace --- */
+:root {
+  --page: #efe3cb;
+  --page-deep: #dfca9f;
+  --panel: #fff8ea;
+  --panel-strong: #f9edcf;
+  --ink: #233127;
+  --muted: #76684f;
+  --line: #cfb987;
+  --line-soft: rgba(105, 77, 35, 0.16);
+  --green: #253a2d;
+  --amber: #c98225;
+  --amber-strong: #a95f18;
+  --water: #557f97;
+  --brick: #a94735;
+  --ore: #667078;
+  --wood: #3f7545;
+  --wheat: #d3a43d;
+  --sheep: #799b4b;
+  --desert: #c8ad76;
+}
+
+body {
+  background:
+    radial-gradient(circle at 18% -10%, rgba(255, 248, 222, 0.85), transparent 34rem),
+    radial-gradient(circle at 88% 8%, rgba(123, 151, 112, 0.18), transparent 30rem),
+    linear-gradient(180deg, var(--page), var(--page-deep));
+  color: var(--ink);
+  padding: 14px 14px 44px;
+}
+
+.glass,
+.board-panel,
+.sidebar-panel .summary-card,
+.top-list,
+.info-toggle,
+.controls {
+  background: rgba(255, 248, 234, 0.86);
+  border: 1px solid var(--line-soft);
+  box-shadow: 0 18px 40px rgba(72, 50, 20, 0.12);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.page-shell {
+  width: min(1460px, calc(100vw - 28px));
+}
+
+.product-bar {
+  background: rgba(255, 248, 234, 0.88);
+  border-color: var(--line-soft);
+  box-shadow: 0 14px 34px rgba(76, 49, 15, 0.12);
+}
+
+.product-logo {
+  background: linear-gradient(135deg, var(--green), #466348);
+  color: #fff8ea;
+  border-color: rgba(37, 58, 45, 0.12);
+}
+
+.product-name,
+.board-title,
+.controls-title,
+.summary-title,
+.resource-title,
+.top-list h3,
+.info-toggle summary {
+  color: var(--ink);
+}
+
+.product-status,
+.board-copy,
+.board-note,
+.canvas-foot,
+.controls-copy,
+.control-kicker,
+.summary-stat-label,
+.summary-stat-copy,
+.top-meta,
+.top-breakdown,
+.top-list p,
+.resource-value,
+.info-content,
+label {
+  color: var(--muted);
+}
+
+.nav-pill,
+.primary-link {
+  border-color: var(--line-soft);
+  color: var(--green);
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.nav-pill:hover,
+.primary-link:hover {
+  border-color: rgba(169, 95, 24, 0.32);
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.primary-link,
+button {
+  color: #fffaf0;
+  background: linear-gradient(135deg, var(--amber), var(--amber-strong));
+  box-shadow: 0 10px 22px rgba(169, 95, 24, 0.18);
+}
+
+button:hover {
+  background: linear-gradient(135deg, #d99737, var(--amber));
+  box-shadow: 0 12px 28px rgba(169, 95, 24, 0.24);
+}
+
+button.secondary,
+select {
+  background: rgba(255, 255, 255, 0.54);
+  border: 1px solid var(--line-soft);
+  color: var(--green);
+  box-shadow: none;
+}
+
+button.secondary:hover {
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--ink);
+}
+
+button.active {
+  background: linear-gradient(135deg, var(--green), #39583e);
+  color: #fff8ea;
+}
+
+select {
+  background-image: none;
+}
+
+.board-shell {
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 390px);
+  gap: 16px;
+}
+
+.board-panel,
+.sidebar-panel {
+  padding: 14px;
+  border-radius: 18px;
+}
+
+.board-panel {
+  background:
+    linear-gradient(180deg, rgba(255, 248, 234, 0.94), rgba(248, 236, 207, 0.92));
+}
+
+.canvas-wrap {
+  max-width: none;
+  padding: 10px;
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(68, 93, 78, 0.1), rgba(92, 70, 35, 0.08)),
+    #f7ebcf;
+  border: 1px solid rgba(105, 77, 35, 0.18);
+}
+
+canvas {
+  border-radius: 14px;
+  border-color: rgba(49, 62, 44, 0.22);
+  box-shadow: 0 16px 36px rgba(64, 44, 18, 0.22);
+}
+
+#tooltip {
+  background: rgba(35, 49, 39, 0.96);
+  color: #fff8ea;
+  border-color: rgba(255, 248, 234, 0.18);
+}
+
+.legend-item {
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.48);
+  border-color: var(--line-soft);
+}
+
+.sidebar-panel {
+  align-self: stretch;
+  position: sticky;
+  top: 72px;
+  max-height: calc(100vh - 88px);
+  overflow: auto;
+  padding-right: 6px;
+  align-content: start;
+}
+
+.best-opening {
+  padding: 16px;
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, rgba(37, 58, 45, 0.96), rgba(58, 82, 58, 0.94)),
+    var(--green);
+  color: #fff8ea;
+  border-color: rgba(255, 248, 234, 0.12);
+}
+
+.best-kicker,
+.rail-kicker {
+  color: rgba(255, 248, 234, 0.72);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.best-title {
+  margin-top: 8px;
+  font-size: 1.15rem;
+  font-weight: 850;
+  letter-spacing: -0.01em;
+}
+
+.best-score-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.score-pill,
+.strategy-pill,
+.port-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.score-pill {
+  background: #fff8ea;
+  color: var(--green);
+}
+
+.strategy-pill {
+  background: rgba(211, 164, 61, 0.18);
+  color: #ffe6a2;
+  border: 1px solid rgba(255, 230, 162, 0.16);
+}
+
+.port-pill {
+  background: rgba(85, 127, 151, 0.14);
+  color: var(--water);
+}
+
+.best-reason {
+  margin-top: 12px;
+  color: rgba(255, 248, 234, 0.78);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.summary-stat,
+.control-group,
+.top-list li {
+  background: rgba(255, 255, 255, 0.52);
+  border-color: var(--line-soft);
+}
+
+.summary-stat-value,
+.top-score {
+  color: var(--ink);
+}
+
+.top-list li {
+  cursor: pointer;
+  transition: border-color 0.16s ease, transform 0.16s ease, background 0.16s ease;
+}
+
+.top-list li:hover,
+.top-list li.is-hovered,
+.top-list li.is-selected {
+  transform: translateY(-1px);
+  border-color: rgba(169, 95, 24, 0.38);
+  background: rgba(255, 250, 239, 0.88);
+}
+
+.top-list li.is-selected {
+  box-shadow: inset 0 0 0 2px rgba(169, 95, 24, 0.2);
+}
+
+.top-list .strategy-pill {
+  background: rgba(201, 130, 37, 0.14);
+  color: var(--amber-strong);
+  border: 1px solid rgba(201, 130, 37, 0.18);
+}
+
+.top-list li:first-child {
+  border-color: rgba(37, 58, 45, 0.32);
+  background: linear-gradient(135deg, rgba(121, 155, 75, 0.14), rgba(255,255,255,0.58));
+}
+
+.top-headline {
+  justify-content: space-between;
+}
+
+.top-rank {
+  background: var(--green);
+  color: #fff8ea;
+}
+
+.top-main {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  min-width: 0;
+}
+
+.resource-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.resource-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.58);
+  color: var(--green);
+  border: 1px solid var(--line-soft);
+  font-size: 0.7rem;
+  font-weight: 750;
+}
+
+.resource-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+
+.controls {
+  margin-top: 16px;
+  border-radius: 18px;
+}
+
+.controls-grid {
+  grid-template-columns: 190px 220px minmax(320px, 1fr) 190px;
+}
+
+.control-group {
+  border-radius: 14px;
+}
+
+.resource-label {
+  color: var(--ink);
+}
+
+.resource-bar {
+  background: rgba(85, 70, 42, 0.12);
+}
+
+@media (max-width: 1100px) {
+  .sidebar-panel {
+    position: static;
+    max-height: none;
+    padding-right: 0;
+  }
+
+  .board-shell {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  body {
+    padding: 10px 10px 34px;
+  }
+
+  .page-shell,
+  .hero-shell,
+  .controls,
+  .board-panel,
+  .summary-card,
+  .best-opening,
+  .top-list {
+    width: calc(100vw - 20px);
+    max-width: calc(100vw - 20px);
+  }
+
+  .board-panel,
+  .sidebar-panel,
+  .controls {
+    padding: 10px;
+  }
+
+  .best-opening {
+    position: static;
+  }
+
+  .top-headline {
+    align-items: flex-start;
+  }
+
+  .top-meta {
+    display: block;
+  }
+}
 </style>
 </head>
 <body>
@@ -1079,9 +1487,10 @@ canvas {
     </div>
 
     <aside class="sidebar-panel">
+      <div id="bestOpening" class="best-opening glass"></div>
+      <div class="top-list glass" id="topList"></div>
       <div id="boardStats" class="summary-card glass"></div>
       <div id="resourcePool" class="summary-card glass"></div>
-      <div class="top-list glass" id="topList"></div>
       <details class="info-toggle glass">
         <summary>How the scoring works</summary>
         <div class="info-content">
@@ -1290,6 +1699,8 @@ let tiles = [];
 let oceanTiles = [];
 let ports = [];
 let vertices = [];
+let hoveredVertex = null;
+let selectedVertex = null;
 
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
@@ -1313,6 +1724,102 @@ function hexCorner(cx, cy, r, i) {
   return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
 }
 
+function getVertexLabel(v) {
+  const rank = Number.isFinite(v.rank) ? v.rank + 1 : '?';
+  return `Spot ${rank}`;
+}
+
+function getResourceColor(resource) {
+  return RESOURCE_COLORS[resource] || '#8a7550';
+}
+
+function getResourceChips(v) {
+  const chips = [];
+  for (const tIdx of v.adjacentTiles) {
+    const t = tiles[tIdx];
+    if (!t || t.number <= 0 || t.resource === 'desert') continue;
+    chips.push({
+      resource: t.resource,
+      number: t.number,
+      label: `${t.resource} ${t.number}`,
+      color: getResourceColor(t.resource)
+    });
+  }
+  return chips;
+}
+
+function getPortText(v) {
+  if (!v.portAccess) return 'No port';
+  return `${v.portAccess.ratio}${v.portAccess.resource ? ' ' + v.portAccess.resource : ' any'} port`;
+}
+
+function getStrategyTag(v) {
+  const s = v.score;
+  const resources = s.resources || new Set();
+  if (v.portAccess && v.portAccess.type === 'resource' && resources.has(v.portAccess.resource)) return 'port leverage';
+  if (resources.has('ore') && resources.has('wheat')) return 'ore-wheat engine';
+  if (s.diversity >= 3 && s.spreadBonus > 0) return 'balanced production';
+  if (s.rawPips >= 10) return 'high tempo';
+  if (s.expansionScore >= 1.5) return 'strong expansion';
+  return 'steady opener';
+}
+
+function getReason(v) {
+  const s = v.score;
+  const reasons = [];
+  if (s.rawPips >= 10) reasons.push(`${s.rawPips} raw pips`);
+  if (s.diversity >= 3) reasons.push('three resource types');
+  if (s.spreadBonus > 0) reasons.push('spread-out numbers');
+  if (s.portBonus > 0) reasons.push(getPortText(v));
+  if (s.robberPenalty === 0) reasons.push('low concentration risk');
+  if (reasons.length === 0) reasons.push('the strongest weighted score currently available');
+  return reasons.slice(0, 3).join(', ') + '.';
+}
+
+function findBestPair(sorted) {
+  const candidates = sorted.slice(0, Math.min(sorted.length, 18));
+  let best = null;
+  for (let i = 0; i < candidates.length; i++) {
+    for (let j = i + 1; j < candidates.length; j++) {
+      const a = candidates[i];
+      const b = candidates[j];
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (d < HEX_R * 1.8) continue;
+      const diversity = new Set([...a.score.resources, ...b.score.resources]).size;
+      const portBonus = (a.score.portBonus || 0) + (b.score.portBonus || 0);
+      const combined = a.score.totalScore + b.score.totalScore + diversity * 0.35 + portBonus * 0.2;
+      if (!best || combined > best.combined) best = { a, b, combined };
+    }
+  }
+  if (!best && sorted.length) {
+    best = { a: sorted[0], b: sorted[1] || null, combined: sorted[0].score.totalScore + (sorted[1]?.score.totalScore || 0) };
+  }
+  return best;
+}
+
+function getCanvasPoint(e) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    rect,
+    x: (e.clientX - rect.left) * (canvas.width / rect.width),
+    y: (e.clientY - rect.top) * (canvas.height / rect.height)
+  };
+}
+
+function findClosestScoredVertex(x, y, maxDistance = 18) {
+  let closest = null;
+  let minDist = Infinity;
+  for (const v of vertices) {
+    if (!v.score || !v.isLand) continue;
+    const d = Math.hypot(x - v.x, y - v.y);
+    if (d < maxDistance && d < minDist) {
+      closest = v;
+      minDist = d;
+    }
+  }
+  return closest;
+}
+
 function switchMode(newMode) {
   if (newMode === currentMode) return;
   
@@ -1334,6 +1841,8 @@ function switchMode(newMode) {
   document.getElementById('mode6p').classList.toggle('active', newMode === '6p');
   
   // Rebuild board
+  hoveredVertex = null;
+  selectedVertex = null;
   buildBoard();
   randomizeBoard();
   drawBoard();
@@ -1671,24 +2180,34 @@ function drawBoard() {
   const scored = vertices.filter(v => v.isLand && v.score);
   const maxScore = Math.max(...scored.map(v => v.score.totalScore), 1);
   const sorted = [...scored].sort((a, b) => b.score.totalScore - a.score.totalScore);
+  sorted.forEach((v, index) => { v.rank = index; });
   const topN = parseInt(document.getElementById('topN').value);
   const topSet = new Set(sorted.slice(0, topN));
+  if (selectedVertex && !selectedVertex.score) selectedVertex = null;
+  if (hoveredVertex && !hoveredVertex.score) hoveredVertex = null;
 
   for (const v of scored) {
     const ratio = v.score.totalScore / maxScore;
-    const rank = sorted.indexOf(v);
+    const rank = v.rank;
     let color, radius, glowColor;
 
     if (topSet.has(v) && rank < Math.ceil(topN * 0.3)) {
-      color = '#00ff88'; radius = 10; glowColor = 'rgba(0,255,136,0.5)';
+      color = '#2f8f54'; radius = 10; glowColor = 'rgba(47,143,84,0.42)';
     } else if (topSet.has(v) && rank < Math.ceil(topN * 0.6)) {
-      color = '#ffdd00'; radius = 9; glowColor = 'rgba(255,221,0,0.4)';
+      color = '#d3a43d'; radius = 9; glowColor = 'rgba(211,164,61,0.38)';
     } else if (topSet.has(v)) {
-      color = '#ff8800'; radius = 8; glowColor = 'rgba(255,136,0,0.35)';
+      color = '#c98225'; radius = 8; glowColor = 'rgba(201,130,37,0.34)';
     } else {
-      color = `rgba(255,255,255,${0.12 + ratio * 0.3})`;
+      color = `rgba(255,248,234,${0.18 + ratio * 0.34})`;
       radius = 4 + ratio * 3;
       glowColor = null;
+    }
+
+    const isSelected = selectedVertex === v;
+    const isHovered = hoveredVertex === v;
+    if (isSelected || isHovered) {
+      radius += isSelected ? 4 : 2;
+      glowColor = isSelected ? 'rgba(169,95,24,0.58)' : 'rgba(255,248,234,0.5)';
     }
 
     // Glow for top spots
@@ -1710,7 +2229,7 @@ function drawBoard() {
       ctx.stroke();
 
       // Score number on dot
-      ctx.fillStyle = '#000';
+      ctx.fillStyle = '#1f271f';
       ctx.font = 'bold 7px Inter, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
@@ -1722,9 +2241,17 @@ function drawBoard() {
       ctx.fill();
     }
 
+    if (isSelected || isHovered) {
+      ctx.beginPath();
+      ctx.arc(v.x, v.y, radius + 4, 0, Math.PI * 2);
+      ctx.strokeStyle = isSelected ? '#a95f18' : 'rgba(255,248,234,0.78)';
+      ctx.lineWidth = isSelected ? 3 : 2;
+      ctx.stroke();
+    }
+
     // Port indicator on vertex
     if (v.portAccess) {
-      const portColor = v.portAccess.type === 'generic' ? '#1e40af' : '#059669';
+      const portColor = v.portAccess.type === 'generic' ? '#557f97' : '#3f7545';
       ctx.beginPath();
       ctx.arc(v.x - radius - 3, v.y - radius - 3, 3, 0, Math.PI * 2);
       ctx.fillStyle = portColor;
@@ -1735,9 +2262,45 @@ function drawBoard() {
     }
   }
 
-  updateTopList(sorted, topN);
+  updateBestOpening(sorted);
+  try {
+    updateTopList(sorted, topN);
+  } catch (err) {
+    console.error(err);
+    document.getElementById('topList').innerHTML = `<h3>Ranked settlement spots</h3><p>${err.message}</p>`;
+  }
   updateResourcePool();
   updateBoardStats(sorted);
+}
+
+function updateBestOpening(sorted) {
+  const el = document.getElementById('bestOpening');
+  const pair = findBestPair(sorted);
+  if (!pair || !pair.a) {
+    el.innerHTML = `
+      <div class="best-kicker">Best opening</div>
+      <div class="best-title">Generate a board</div>
+      <div class="best-reason">Ranked settlement pairs appear here once the board has numbered production tiles.</div>
+    `;
+    return;
+  }
+  const first = pair.a;
+  const second = pair.b;
+  const title = second ? `${getVertexLabel(first)} + ${getVertexLabel(second)}` : getVertexLabel(first);
+  const combined = pair.combined.toFixed(1);
+  const tag = getStrategyTag(first);
+  const reason = second
+    ? `${getReason(first)} Paired with ${getVertexLabel(second).toLowerCase()} for broader coverage.`
+    : getReason(first);
+  el.innerHTML = `
+    <div class="best-kicker">Best opening</div>
+    <div class="best-title">${title}</div>
+    <div class="best-score-row">
+      <span class="score-pill">${combined} combined</span>
+      <span class="strategy-pill">${tag}</span>
+    </div>
+    <div class="best-reason">${reason}</div>
+  `;
 }
 
 function updateBoardStats(sorted) {
@@ -1962,18 +2525,19 @@ function updateTopList(sorted, topN) {
   const el = document.getElementById('topList');
   const shown = sorted.slice(0, topN);
   if (shown.length === 0) {
-    el.innerHTML = '<h3>Top settlement spots</h3><p>Assign numbers to the board first, then the highest-value openings will appear here.</p>';
+    el.innerHTML = '<h3>Ranked settlement spots</h3><p>Generate a board or assign numbers to see the strongest openings.</p>';
     return;
   }
-  let html = `<h3>Top ${topN} Settlement Spots</h3><ol>`;
+  let html = `<h3>Top ${topN} settlement spots</h3><ol>`;
   shown.forEach((v, index) => {
     const s = v.score;
-    const resList = v.adjacentTiles.map(i => {
-      const t = tiles[i];
-      return t.number > 0 ? `${t.resource}(${t.number})` : null;
-    }).filter(Boolean).join(', ');
-    
-    const portText = v.portAccess ? `${v.portAccess.ratio}${v.portAccess.resource ? ' ' + v.portAccess.resource : ''}` : 'No port';
+    const chips = getResourceChips(v);
+    const chipHtml = chips.map((chip) => `
+      <span class="resource-chip">
+        <span class="resource-dot" style="background:${chip.color};"></span>${chip.label}
+      </span>
+    `).join('');
+    const portText = getPortText(v);
     const probParts = Object.entries(s.resourceProbs).map(([res, prob]) => 
       `${res}: ${(prob * 100).toFixed(1)}%`
     ).join(', ');
@@ -1987,24 +2551,51 @@ function updateTopList(sorted, topN) {
     if (s.expansionScore > 0) breakdown.push(`expansion +${s.expansionScore}`);
     if (s.spreadBonus > 0) breakdown.push(`spread +${s.spreadBonus}`);
 
-    html += `<li>
+    const selectedClass = selectedVertex === v ? ' is-selected' : '';
+    const hoveredClass = hoveredVertex === v ? ' is-hovered' : '';
+    html += `<li class="${selectedClass}${hoveredClass}" data-rank="${index}">
       <div class="top-headline">
-        <span class="top-rank">${index + 1}</span>
-        <span class="top-score">Score ${s.totalScore}</span>
+        <div class="top-main">
+          <span class="top-rank">${index + 1}</span>
+          <span class="top-score">Score ${s.totalScore}</span>
+        </div>
+        <span class="strategy-pill">${getStrategyTag(v)}</span>
       </div>
-      <div class="top-meta">${resList || 'No active resources'} · ${portText}</div>
+      <div class="resource-chips">${chipHtml || '<span class="resource-chip">No active resources</span>'}</div>
+      <div class="top-meta">${portText} · ${getReason(v)}</div>
       <div class="top-breakdown">${breakdown.join(' · ')}</div>
     </li>`;
   });
   html += '</ol>';
   el.innerHTML = html;
+  el.querySelectorAll('li[data-rank]').forEach((row) => {
+    const v = shown[parseInt(row.dataset.rank, 10)];
+    row.addEventListener('mouseenter', () => {
+      hoveredVertex = v;
+      drawBoard();
+    });
+    row.addEventListener('mouseleave', () => {
+      if (hoveredVertex === v) hoveredVertex = null;
+      drawBoard();
+    });
+    row.addEventListener('click', () => {
+      selectedVertex = selectedVertex === v ? null : v;
+      drawBoard();
+    });
+  });
 }
 
 // Click handling
 canvas.addEventListener('click', (e) => {
-  const rect = canvas.getBoundingClientRect();
-  const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
-  const my = (e.clientY - rect.top) * (canvas.height / rect.height);
+  const point = getCanvasPoint(e);
+  const mx = point.x;
+  const my = point.y;
+  const vertexHit = findClosestScoredVertex(mx, my, 18);
+  if (vertexHit) {
+    selectedVertex = selectedVertex === vertexHit ? null : vertexHit;
+    drawBoard();
+    return;
+  }
   let closest = null, minDist = Infinity;
   for (const tile of tiles) {
     const d = Math.hypot(mx - tile.cx, my - tile.cy);
@@ -2017,24 +2608,26 @@ canvas.addEventListener('click', (e) => {
     else if (closest.resource === 'desert') {
       closest.resource = RESOURCE_NAMES[Math.floor(Math.random() * RESOURCE_NAMES.length)];
     }
+    selectedVertex = null;
     drawBoard();
   }
 });
 
 // Tooltip
 canvas.addEventListener('mousemove', (e) => {
-  const rect = canvas.getBoundingClientRect();
-  const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
-  const my = (e.clientY - rect.top) * (canvas.height / rect.height);
-  let closest = null, minDist = Infinity;
-  for (const v of vertices) {
-    if (v.dots === 0 || !v.isLand) continue;
-    const d = Math.hypot(mx - v.x, my - v.y);
-    if (d < 15 && d < minDist) { closest = v; minDist = d; }
+  const point = getCanvasPoint(e);
+  const mx = point.x;
+  const my = point.y;
+  const rect = point.rect;
+  const closest = findClosestScoredVertex(mx, my, 15);
+  if (hoveredVertex !== closest) {
+    hoveredVertex = closest;
+    drawBoard();
   }
   if (closest && closest.score) {
     const s = closest.score;
-    const lines = [`<b>Score: ${s.totalScore}</b>`];
+    const lines = [`<b>${getVertexLabel(closest)} · Score ${s.totalScore}</b>`];
+    lines.push(`<b>${getStrategyTag(closest)}</b>`);
     lines.push(`<b>${s.rawPips} pips</b> (weighted: ${s.weightedPips})`);
     for (const tIdx of closest.adjacentTiles) {
       const t = tiles[tIdx];
@@ -2056,19 +2649,32 @@ canvas.addEventListener('mousemove', (e) => {
     tooltip.style.display = 'none';
   }
 });
-canvas.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+canvas.addEventListener('mouseleave', () => {
+  tooltip.style.display = 'none';
+  hoveredVertex = null;
+  drawBoard();
+});
 
 // Event listeners
 document.getElementById('mode4p').addEventListener('click', () => switchMode('4p'));
 document.getElementById('mode6p').addEventListener('click', () => switchMode('6p'));
-document.getElementById('randomBtn').addEventListener('click', () => { randomizeBoard(); drawBoard(); });
+document.getElementById('randomBtn').addEventListener('click', () => {
+  hoveredVertex = null;
+  selectedVertex = null;
+  randomizeBoard();
+  drawBoard();
+});
 document.getElementById('heroRandomBtn').addEventListener('click', () => {
+  hoveredVertex = null;
+  selectedVertex = null;
   randomizeBoard();
   drawBoard();
   document.getElementById('board-workspace').scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 document.getElementById('clearBtn').addEventListener('click', () => {
   for (const t of tiles) { t.number = 0; t.resource = 'desert'; }
+  hoveredVertex = null;
+  selectedVertex = null;
   drawBoard();
 });
 document.getElementById('topN').addEventListener('change', drawBoard);
